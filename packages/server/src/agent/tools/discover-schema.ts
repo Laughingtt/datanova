@@ -19,15 +19,16 @@ export function createDiscoverSchemaTool(): AgentTool<typeof DiscoverSchemaParam
     description: "Discover the database schema (tables, columns, foreign keys) for a datasource. Use this to understand the database structure before writing SQL queries.",
     label: "Discover Schema",
     parameters: DiscoverSchemaParams,
-    execute: async (_toolCallId: string, params: DiscoverSchemaParams) => {
+    execute: async (_toolCallId: string, params: any) => {
+      const typedParams = params as DiscoverSchemaParams;
       try {
         const schema = await discoverSchema(
-          params.datasource_id,
-          params.table_names
+          typedParams.datasource_id,
+          typedParams.table_names
         );
 
         // Get annotations and build map
-        const annotations = getAnnotations(params.datasource_id);
+        const annotations = getAnnotations(typedParams.datasource_id);
         const annotationMap = new Map<string, string>();
         for (const ann of annotations) {
           const key = ann.field_name

@@ -1,4 +1,4 @@
-import { AgentHarness, InMemorySessionRepo, type Skill, type AgentTool } from "@earendil-works/pi-agent-core";
+import { AgentHarness, InMemorySessionRepo, type Skill, type AgentTool, type ExecutionEnv } from "@earendil-works/pi-agent-core";
 import { getModel } from "@earendil-works/pi-ai";
 import { createDiscoverSchemaTool } from "./tools/discover-schema.js";
 import { createExecuteSqlTool } from "./tools/execute-sql.js";
@@ -100,33 +100,31 @@ export async function removeHarness(conversationId: string): Promise<void> {
 /**
  * Create a minimal ExecutionEnv for the harness.
  * DataNova doesn't need shell or filesystem access.
+ * We use a type assertion since all stub methods are intentionally disabled
+ * but the full interface requires specific parameter signatures.
  */
-function createMinimalEnv() {
+function createMinimalEnv(): ExecutionEnv {
   return {
     cwd: process.cwd(),
-
-    // FileSystem methods (stubbed - not needed for DataNova)
     absolutePath: async (p: string) => ({ ok: true as const, value: p }),
     joinPath: async (parts: string[]) => ({ ok: true as const, value: parts.join("/") }),
-    readTextFile: async () => ({ ok: false as const, error: { code: "not_supported" as const, message: "Not supported", path: "" } }),
-    readTextLines: async () => ({ ok: false as const, error: { code: "not_supported" as const, message: "Not supported", path: "" } }),
-    readBinaryFile: async () => ({ ok: false as const, error: { code: "not_supported" as const, message: "Not supported", path: "" } }),
-    writeFile: async () => ({ ok: false as const, error: { code: "not_supported" as const, message: "Not supported", path: "" } }),
-    appendFile: async () => ({ ok: false as const, error: { code: "not_supported" as const, message: "Not supported", path: "" } }),
-    fileInfo: async () => ({ ok: false as const, error: { code: "not_supported" as const, message: "Not supported", path: "" } }),
-    listDir: async () => ({ ok: false as const, error: { code: "not_supported" as const, message: "Not supported", path: "" } }),
+    readTextFile: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
+    readTextLines: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
+    readBinaryFile: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
+    writeFile: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
+    appendFile: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
+    fileInfo: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
+    listDir: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
     canonicalPath: async (p: string) => ({ ok: true as const, value: p }),
     exists: async () => ({ ok: true as const, value: false }),
-    createDir: async () => ({ ok: false as const, error: { code: "not_supported" as const, message: "Not supported", path: "" } }),
-    remove: async () => ({ ok: false as const, error: { code: "not_supported" as const, message: "Not supported", path: "" } }),
-    createTempDir: async () => ({ ok: false as const, error: { code: "not_supported" as const, message: "Not supported", path: "" } }),
-    createTempFile: async () => ({ ok: false as const, error: { code: "not_supported" as const, message: "Not supported", path: "" } }),
+    createDir: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
+    remove: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
+    createTempDir: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
+    createTempFile: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
     cleanup: async () => {},
-
-    // Shell methods (stubbed - not needed for DataNova)
     exec: async () => ({
       ok: false as const,
-      error: { code: "shell_unavailable" as const, message: "Shell not available in DataNova" },
+      error: new Error("Shell not available in DataNova") as any,
     }),
-  };
+  } as ExecutionEnv;
 }

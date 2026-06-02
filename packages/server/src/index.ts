@@ -54,12 +54,14 @@ const server = serve(
   {
     fetch: app.fetch,
     port,
-    upgrade: injectWebSocket,
   },
   () => {
     console.log(`DataNova server running on http://localhost:${port}`);
   }
 );
+
+// Inject WebSocket upgrade handler
+injectWebSocket(server);
 
 // Graceful shutdown
 process.on("SIGTERM", async () => {

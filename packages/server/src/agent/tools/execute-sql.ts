@@ -15,10 +15,11 @@ export function createExecuteSqlTool(): AgentTool<typeof ExecuteSqlParams, { row
     description: "Execute a SELECT SQL query against a datasource. Only read-only queries (SELECT, SHOW, DESCRIBE, EXPLAIN) are permitted. Results are limited to 1000 rows with a 30-second timeout.",
     label: "Execute SQL",
     parameters: ExecuteSqlParams,
-    execute: async (_toolCallId: string, params: ExecuteSqlParams) => {
+    execute: async (_toolCallId: string, params: any) => {
+      const typedParams = params as ExecuteSqlParams;
       try {
         // Guard: only allow SELECT queries
-        if (!isSelectQuery(params.sql)) {
+        if (!isSelectQuery(typedParams.sql)) {
           return {
             content: [{
               type: "text" as const,
@@ -29,7 +30,7 @@ export function createExecuteSqlTool(): AgentTool<typeof ExecuteSqlParams, { row
           };
         }
 
-        const result = await executeSql(params.datasource_id, params.sql);
+        const result = await executeSql(typedParams.datasource_id, typedParams.sql);
 
         // Format result as text
         let text = `Query executed in ${result.executionTime}ms. ${result.rowCount} rows returned.\n\n`;
