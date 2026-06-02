@@ -27,9 +27,9 @@ DataNova is a Text2SQL system built on top of the pi agent framework. Users quer
 │  │                                               │    │
 │  │  systemPrompt: (dynamic function)             │    │
 │  │    = 基础指令                                 │    │
-│  │    + Schema 信息 (from discover_schema tool) │    │
-│  │    + 业务语义标注 (from annotations)           │    │
-│  │    + Skill 上下文 (from loaded skills)         │    │
+│  │    + 业务语义标注 (from annotations DB)        │    │
+│  │    + Skill 列表 (from loaded skills)           │    │
+│  │    (Schema 信息通过 discover_schema 工具获取)  │    │
 │  │                                               │    │
 │  │  tools: [discover_schema, execute_sql]        │    │
 │  │                                               │    │
@@ -89,10 +89,10 @@ DataNova uses `AgentHarness` from pi-agent-core, NOT the `Agent` class directly 
 import { AgentHarness, loadSkills } from "@earendil-works/pi-agent-core";
 import { getModel } from "@earendil-works/pi-ai";
 
-// 1. Create ExecutionEnv — pi requires this for skill loading
-const env: ExecutionEnv = createNodeExecutionEnv({
-  cwd: appDataDir  // base directory for skill file resolution
-});
+// 1. Create ExecutionEnv — pi requires this for skill loading and file operations.
+//    Exact import path and constructor to be verified against pi-agent-core exports at implementation time.
+//    DataNova only needs file system read/write for skill loading (no bash/edit/write like coding-agent).
+const env = createExecutionEnv({ cwd: appDataDir });
 
 // 2. Load skills from directories
 const { skills, diagnostics } = await loadSkills(env, [
@@ -100,9 +100,9 @@ const { skills, diagnostics } = await loadSkills(env, [
   path.join(appDataDir, "annotations")       // auto-generated annotation skills
 ]);
 
-// 3. Create session — use pi's JsonlSessionRepo for persistence
-const sessionRepo = new JsonlSessionRepo({ cwd: sessionsDir });
-const session = await sessionRepo.create({ id: conversationId });
+// 3. Create/Load session — use pi's session persistence mechanism.
+//    Exact API (SessionRepo or similar) to be verified against pi-agent-core exports at implementation time.
+const session = await loadOrCreateSession(sessionsDir, conversationId);
 
 // 4. Define tools using pi's AgentTool interface
 const discoverSchemaTool: AgentTool = {
@@ -503,7 +503,7 @@ pi_datanova/
 | LLM API | pi `pi-ai` | Unified multi-provider interface, consistent with pi ecosystem |
 | Tool interface | pi `AgentTool` | Standard interface with TypeBox schemas, execution modes |
 | Skill mechanism | pi `loadSkills()` + SKILL.md | Standard agentskills.io format, dynamic injection via `setResources()` |
-| Session storage | pi `JsonlSessionRepo` | Native AgentHarness session persistence |
+| Session storage | pi session persistence (API to be verified at implementation) | Native AgentHarness session persistence |
 | Data storage | better-sqlite3 | Lightweight, no extra service, Node.js native |
 | Password encryption | Node.js crypto (aes-256-gcm) | Datasource password encryption at rest |
 | Frontend state | Zustand | Lightweight, TypeScript-friendly |
@@ -528,6 +528,57 @@ Although user chose "direct execution", basic protections apply:
 - Datasource connection failure → Frontend notification, agent informs user
 - LLM call failure → pi's built-in retry mechanism, frontend displays error
 - WebSocket disconnect → Client auto-reconnects, agent continues server-side
+
+## Frontend Design System
+
+The frontend follows the Cohere-inspired design system defined in `docs/DESIGN.md`. Key principles applied to DataNova:
+
+### Color Application
+
+| Element | Color | Token |
+|---------|-------|-------|
+| App background | Canvas White `#ffffff` | Default surface |
+| Sidebar | Near-Black `#17171c` | Dark panel (like agent-console-card) |
+| Agent console chat area | Near-Black `#17171c` | Dark product field |
+| Chat text | White on dark panels | Inverted text |
+| User messages | Action Blue `#1863dc` chip | Secondary emphasis |
+| Tool call steps | Coral `#ff7759` status chips | Warm product markers |
+| Success indicators | Deep Enterprise Green `#003c33` | Status chips |
+| Table headers | Soft Stone `#eeece7` | Warm neutral surface |
+| Table borders | Hairline `#d9d9dd` | Thin rules |
+| Muted metadata | Muted Slate `#93939f` | Dates, tool names |
+| Schema annotation tags | Coral outline chips | Taxonomy style |
+| Primary CTA | Near-Black `#17171c` pill | button-primary |
+| Secondary actions | Underlined text links | button-secondary |
+| Focus ring | Focus Blue `#4c6ee6` | Keyboard focus |
+
+### Typography
+
+- **Display/Headings**: Space Grotesk (CohereText fallback), tight tracking, 400 weight
+- **Body/UI**: Inter (Unica77 fallback), 16px, 400 weight, 1.50 line height
+- **Code/Mono**: Monospace (CohereMono fallback), for SQL display and technical labels
+- **Agent step labels**: Uppercase mono, 14px, 0.28px tracking (like Mono Label)
+
+### Shape & Elevation
+
+- Chat container: 22px radius (`lg`) — like hero-photo-card
+- Message bubbles: 8px radius (`sm`)
+- Table cards: 16px radius (`md`)
+- Input fields: 8px radius (`sm`), thin `#e5e7eb` border
+- Primary buttons: 32px pill radius (`pill`), near-black fill
+- No drop shadows — depth from surface alternation and thin borders only
+
+### Layout Application
+
+- Sidebar: 280px dark panel (like agent-console-card)
+- Chat area: full remaining width, dark background
+- Schema annotation page: white canvas with rule-separated rows (like research-table)
+- Datasource form: rounded white card on dark section (like contact-form-card)
+- Generous whitespace as trust signal — especially between chat sections
+
+### Frontend Development
+
+Use the `frontend-design` skill when implementing UI components to ensure design system consistency.
 
 ## Future Extensions (V2+)
 
