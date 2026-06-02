@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@layer base {
+  body {
+    @apply bg-canvas-white text-ink font-body antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-hairline rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-slate;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-near-black text-white font-body text-button font-medium
+           px-6 py-3 rounded-pill
+           hover:bg-cohere-black transition-colors duration-150
+           focus:outline-none focus:ring-2 focus:ring-focus-blue focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply text-ink font-body text-button font-medium
+           underline underline-offset-4 decoration-hairline
+           hover:decoration-ink transition-colors duration-150;
+  }
+
+  .mono-label {
+    @apply font-mono text-mono-label uppercase tracking-wider text-muted-slate;
+  }
+
+  .card {
+    @apply bg-canvas-white border border-card-border rounded-sm p-6;
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2 border border-border-light rounded-xs
+           text-body-base font-body text-ink
+           placeholder:text-muted-slate
+           focus:outline-none focus:border-form-focus-violet focus:ring-1 focus:ring-form-focus-violet
+           transition-colors duration-150;
+  }
+}
