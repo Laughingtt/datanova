@@ -29,3 +29,10 @@ $RECYCLE.BIN/
 
 
 .omc
+
+### DataNova
+node_modules/
+dist/
+data/
+*.db
+.env
