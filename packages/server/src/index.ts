@@ -2,7 +2,10 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { createNodeWebSocket } from "@hono/node-ws";
-import { ensureDataDirs } from "./config.js";
+import path from "node:path";
+import fs from "node:fs";
+import { ensureDataDirs, SKILLS_DIR, APP_DIR } from "./config.js";
+import { closeAllPools } from "./mysql/pool.js";
 import datasourcesRoutes from "./routes/datasources.js";
 import schemasRoutes from "./routes/schemas.js";
 import skillsRoutes from "./routes/skills.js";
@@ -11,6 +14,16 @@ import { createChatHandler } from "./ws/chat-handler.js";
 
 // Ensure data directories exist
 ensureDataDirs();
+
+// Copy sample skill if not already present
+const sampleSkillSrc = path.join(process.cwd(), "data", "skills", "bill-query", "SKILL.md");
+const sampleSkillDest = path.join(SKILLS_DIR, "bill-query", "SKILL.md");
+
+if (fs.existsSync(sampleSkillSrc) && !fs.existsSync(sampleSkillDest)) {
+  fs.mkdirSync(path.join(SKILLS_DIR, "bill-query"), { recursive: true });
+  fs.copyFileSync(sampleSkillSrc, sampleSkillDest);
+  console.log("Copied sample skill: bill-query");
+}
 
 const app = new Hono();
 
@@ -37,7 +50,7 @@ app.get(
 
 const port = parseInt(process.env.PORT || "3000", 10);
 
-serve(
+const server = serve(
   {
     fetch: app.fetch,
     port,
@@ -47,5 +60,20 @@ serve(
     console.log(`DataNova server running on http://localhost:${port}`);
   }
 );
+
+// Graceful shutdown
+process.on("SIGTERM", async () => {
+  console.log("Shutting down...");
+  await closeAllPools();
+  server.close();
+  process.exit(0);
+});
+
+process.on("SIGINT", async () => {
+  console.log("Shutting down...");
+  await closeAllPools();
+  server.close();
+  process.exit(0);
+});
 
 export { app };
