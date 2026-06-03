@@ -1,5 +1,5 @@
 import { AgentHarness, InMemorySessionRepo, type Skill, type AgentTool, type ExecutionEnv } from "@earendil-works/pi-agent-core";
-import { getModel } from "@earendil-works/pi-ai";
+import { getModel, getEnvApiKey } from "@earendil-works/pi-ai";
 import { createDiscoverSchemaTool } from "./tools/discover-schema.js";
 import { createExecuteSqlTool } from "./tools/execute-sql.js";
 import { buildDataNovaSystemPrompt, type DataNovaSystemPromptOptions } from "./prompt-builder.js";
@@ -15,7 +15,6 @@ export interface CreateHarnessOptions {
   modelProvider?: string;
   modelId?: string;
   customInstructions?: string;
-  apiKey?: string;
 }
 
 export async function createHarness(options: CreateHarnessOptions): Promise<AgentHarness> {
@@ -49,7 +48,10 @@ export async function createHarness(options: CreateHarnessOptions): Promise<Agen
   const modelId = options.modelId ?? "claude-sonnet-4-20250514";
   const model = getModel(provider as "anthropic", modelId as "claude-sonnet-4-20250514");
 
-  // Create harness
+  // Create harness — API key is resolved automatically by pi-ai from
+  // environment variables (ANTHROPIC_API_KEY, OPENAI_API_KEY, etc.)
+  // via getEnvApiKey(). We provide getApiKeyAndHeaders so that
+  // compact() / navigateTree() also work (they require explicit auth).
   const harness = new AgentHarness({
     env: createMinimalEnv(),
     session,
@@ -59,12 +61,16 @@ export async function createHarness(options: CreateHarnessOptions): Promise<Agen
     },
     systemPrompt: buildDataNovaSystemPrompt(promptOptions),
     model,
-    getApiKeyAndHeaders: options.apiKey
-      ? async () => ({
-          apiKey: options.apiKey!,
-          headers: {},
-        })
-      : undefined,
+    getApiKeyAndHeaders: async (model) => {
+      const apiKey = getEnvApiKey(model.provider);
+      if (!apiKey) {
+        throw new Error(
+          `No API key found for provider "${model.provider}". ` +
+          `Please set the corresponding environment variable (e.g. ANTHROPIC_API_KEY, OPENAI_API_KEY).`
+        );
+      }
+      return { apiKey, headers: {} };
+    },
   });
 
   harnessMap.set(options.conversationId, harness);

@@ -67,7 +67,6 @@ async function handleInit(ws: WSContext, data: WsMessage): Promise<void> {
     modelProvider: payload.modelProvider as string | undefined,
     modelId: payload.modelId as string | undefined,
     customInstructions: payload.customInstructions as string | undefined,
-    apiKey: payload.apiKey as string | undefined,
   };
 
   if (!options.conversationId) {
