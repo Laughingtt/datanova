@@ -7,7 +7,7 @@ import MessageList from "./MessageList";
 import ChatInput from "./ChatInput";
 import ModelSelector from "./ModelSelector";
 
-const WS_URL = import.meta.env.VITE_WS_URL || `ws://${window.location.host}/ws/chat`;
+const WS_URL = import.meta.env.VITE_WS_URL || `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/ws/chat`;
 
 export default function ChatWindow() {
   const {

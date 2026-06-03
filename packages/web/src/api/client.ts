@@ -1,4 +1,6 @@
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
+// Use relative path so requests go through Vite proxy in dev mode.
+// In production, set VITE_API_URL to the actual backend URL.
+const API_BASE = import.meta.env.VITE_API_URL || "";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE}${path}`;
