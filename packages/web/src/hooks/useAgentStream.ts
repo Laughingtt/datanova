@@ -54,6 +54,12 @@ interface UseAgentStreamReturn {
   sendMessage: (text: string, conversationId: string) => void;
 }
 
+/** Generate a unique message ID to avoid React key collisions */
+let msgCounter = 0;
+function uniqueId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${++msgCounter}`;
+}
+
 export function useAgentStream(options: UseAgentStreamOptions): UseAgentStreamReturn {
   const { send, onEvent } = options;
   const onEventRef = useRef(onEvent);
@@ -105,12 +111,10 @@ export function processWsEvent(
   event: WsEvent,
   currentAssistantMessage: ChatMessage | null
 ): ChatMessage | null {
-  const msgId = currentAssistantMessage?.id ?? `msg-${Date.now()}`;
-
   switch (event.type) {
     case "agent_start":
       return {
-        id: msgId,
+        id: uniqueId("assistant"),
         role: "assistant",
         content: "",
         timestamp: Date.now(),
@@ -125,12 +129,26 @@ export function processWsEvent(
         steps: [
           ...(currentAssistantMessage.steps ?? []),
           {
-            id: `step-${Date.now()}`,
-            type: "thinking",
+            id: uniqueId("step"),
+            type: "thinking" as const,
             content: (event.content as string) ?? "Thinking...",
           },
         ],
       };
+
+    case "message_start":
+      // A new assistant message stream is starting — create if not yet
+      if (!currentAssistantMessage) {
+        return {
+          id: uniqueId("assistant"),
+          role: "assistant",
+          content: "",
+          timestamp: Date.now(),
+          steps: [],
+          isStreaming: true,
+        };
+      }
+      return null;
 
     case "text_delta": {
       if (!currentAssistantMessage) return null;
@@ -147,8 +165,8 @@ export function processWsEvent(
         steps: [
           ...(currentAssistantMessage.steps ?? []),
           {
-            id: `step-${Date.now()}`,
-            type: "tool_call",
+            id: uniqueId("step"),
+            type: "tool_call" as const,
             toolName: event.toolName as string,
             args: event.args as Record<string, unknown>,
           },
@@ -160,7 +178,6 @@ export function processWsEvent(
       return {
         ...currentAssistantMessage,
         steps: (currentAssistantMessage.steps ?? []).map((step) => {
-          // Update the matching tool_call step with result
           if (
             step.type === "tool_call" &&
             step.toolName === event.toolName
@@ -169,11 +186,42 @@ export function processWsEvent(
               ...step,
               type: "tool_result" as const,
               isError: event.isError as boolean,
-              result: event.details,
+              result: event.result,
             };
           }
           return step;
         }),
+      };
+
+    case "tool_result": {
+      // Rich tool result with details (from harness tool_result event)
+      if (!currentAssistantMessage) return null;
+      return {
+        ...currentAssistantMessage,
+        steps: (currentAssistantMessage.steps ?? []).map((step) => {
+          if (
+            step.type === "tool_call" &&
+            step.toolName === event.toolName
+          ) {
+            return {
+              ...step,
+              type: "tool_result" as const,
+              isError: event.isError as boolean,
+              result: event.details ?? event.result,
+            };
+          }
+          return step;
+        }),
+      };
+    }
+
+    case "response_complete":
+      // Final complete response — update content if we have it
+      if (!currentAssistantMessage) return null;
+      return {
+        ...currentAssistantMessage,
+        content: (event.content as string) || currentAssistantMessage.content,
+        isStreaming: false,
       };
 
     case "agent_end":
@@ -183,11 +231,28 @@ export function processWsEvent(
         isStreaming: false,
       };
 
-    case "error":
+    case "settled":
+      // Agent has fully settled — mark streaming complete
       if (!currentAssistantMessage) return null;
       return {
         ...currentAssistantMessage,
-        content: currentAssistantMessage.content || `Error: ${event.error}`,
+        isStreaming: false,
+      };
+
+    case "error":
+      if (!currentAssistantMessage) {
+        // Create an error message if no assistant message exists yet
+        return {
+          id: uniqueId("assistant"),
+          role: "assistant",
+          content: `❌ Error: ${event.error ?? "Unknown error"}`,
+          timestamp: Date.now(),
+          isStreaming: false,
+        };
+      }
+      return {
+        ...currentAssistantMessage,
+        content: currentAssistantMessage.content || `❌ Error: ${event.error}`,
         isStreaming: false,
       };
 
