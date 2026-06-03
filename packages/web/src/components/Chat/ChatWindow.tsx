@@ -5,11 +5,18 @@ import { conversationsApi, type Conversation } from "../../api/client";
 import { useAppStore } from "../../stores/app";
 import MessageList from "./MessageList";
 import ChatInput from "./ChatInput";
+import ModelSelector from "./ModelSelector";
 
 const WS_URL = import.meta.env.VITE_WS_URL || `ws://${window.location.host}/ws/chat`;
 
 export default function ChatWindow() {
-  const { selectedDatasourceId, selectedConversationId, setSelectedConversationId } = useAppStore();
+  const {
+    selectedDatasourceId,
+    selectedConversationId,
+    setSelectedConversationId,
+    modelProvider,
+    modelId,
+  } = useAppStore();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -75,11 +82,13 @@ export default function ChatWindow() {
       setSelectedConversationId(conv.id);
       setMessages([]);
 
-      // Initialize agent session
+      // Initialize agent session with selected model
       initSession({
         conversationId: conv.id,
         datasourceId: selectedDatasourceId ?? undefined,
         datasourceName: undefined,
+        modelProvider,
+        modelId,
       });
     } catch (err) {
       console.error("Failed to create conversation:", err);
@@ -91,10 +100,12 @@ export default function ChatWindow() {
     setMessages([]);
     initializedRef.current = null;
 
-    // Re-initialize agent session
+    // Re-initialize agent session with selected model
     initSession({
       conversationId: id,
       datasourceId: selectedDatasourceId ?? undefined,
+      modelProvider,
+      modelId,
     });
   };
 
@@ -132,10 +143,12 @@ export default function ChatWindow() {
           };
           setMessages([userMsg]);
 
-          // Init and send
+          // Init and send with selected model
           initSession({
             conversationId: conv.id,
             datasourceId: selectedDatasourceId ?? undefined,
+            modelProvider,
+            modelId,
           });
 
           // Small delay to allow init to complete
@@ -218,6 +231,14 @@ export default function ChatWindow() {
 
       {/* Chat area */}
       <div className="flex-1 flex flex-col">
+        {/* Header with model selector */}
+        <div className="h-12 border-b border-hairline bg-canvas-white flex items-center px-4 justify-between">
+          <div className="text-caption text-muted-slate">
+            {selectedConversationId ? "Conversation" : "Start a new conversation"}
+          </div>
+          <ModelSelector />
+        </div>
+
         <MessageList messages={messages} />
         <ChatInput onSend={handleSend} disabled={isStreaming} />
       </div>

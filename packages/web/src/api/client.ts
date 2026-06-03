@@ -192,3 +192,20 @@ export const conversationsApi = {
 export const healthApi = {
   check: () => request<{ status: string; version: string }>("/api/health"),
 };
+
+// ==================== Models ====================
+
+export interface ModelInfo {
+  id: string;
+  name: string;
+  contextWindow: number;
+}
+
+export interface ProviderModels {
+  provider: string;
+  models: ModelInfo[];
+}
+
+export const modelsApi = {
+  list: () => request<ProviderModels[]>("/api/models"),
+};

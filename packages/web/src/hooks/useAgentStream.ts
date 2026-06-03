@@ -48,7 +48,8 @@ interface UseAgentStreamReturn {
     conversationId: string;
     datasourceId?: string;
     datasourceName?: string;
-    apiKey?: string;
+    modelProvider?: string | null;
+    modelId?: string | null;
   }) => void;
   sendMessage: (text: string, conversationId: string) => void;
 }
@@ -63,7 +64,8 @@ export function useAgentStream(options: UseAgentStreamOptions): UseAgentStreamRe
       conversationId: string;
       datasourceId?: string;
       datasourceName?: string;
-      apiKey?: string;
+      modelProvider?: string | null;
+      modelId?: string | null;
     }) => {
       send({
         type: "init",
@@ -71,7 +73,8 @@ export function useAgentStream(options: UseAgentStreamOptions): UseAgentStreamRe
           conversationId: params.conversationId,
           datasourceId: params.datasourceId,
           datasourceName: params.datasourceName,
-          apiKey: params.apiKey,
+          modelProvider: params.modelProvider ?? undefined,
+          modelId: params.modelId ?? undefined,
         },
       });
     },

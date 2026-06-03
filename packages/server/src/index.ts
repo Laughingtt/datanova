@@ -10,6 +10,7 @@ import datasourcesRoutes from "./routes/datasources.js";
 import schemasRoutes from "./routes/schemas.js";
 import skillsRoutes from "./routes/skills.js";
 import conversationsRoutes from "./routes/conversations.js";
+import modelsRoutes from "./routes/models.js";
 import { createChatHandler } from "./ws/chat-handler.js";
 
 // Ensure data directories exist
@@ -38,6 +39,7 @@ app.route("/api/datasources", datasourcesRoutes);
 app.route("/api/schemas", schemasRoutes);
 app.route("/api/skills", skillsRoutes);
 app.route("/api/conversations", conversationsRoutes);
+app.route("/api/models", modelsRoutes);
 
 // WebSocket setup
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
