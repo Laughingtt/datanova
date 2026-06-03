@@ -46,6 +46,14 @@ if [ -f "$SERVER_PID_FILE" ] && kill -0 "$(cat "$SERVER_PID_FILE")" 2>/dev/null;
   exit 1
 fi
 
+# Check if port is already in use
+PORT="${PORT:-3000}"
+if lsof -i:$PORT -t >/dev/null 2>&1; then
+  echo "❌ 端口 $PORT 已被占用"
+  echo "   运行 ./scripts/stop.sh 停止现有进程，或设置 PORT=xxxx 使用其他端口"
+  exit 1
+fi
+
 # 检查依赖
 if [ ! -d "node_modules" ]; then
   echo "📦 安装依赖..."
@@ -54,7 +62,6 @@ fi
 
 # 启动 Server
 echo "🚀 启动 DataNova Server..."
-PORT="${PORT:-3000}"
 cd "$PROJECT_DIR/packages/server"
 npx tsx src/index.ts &
 SERVER_PID=$!

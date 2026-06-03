@@ -50,6 +50,16 @@ app.get(
 
 const port = parseInt(process.env.PORT || "3000", 10);
 
+// Handle EADDRINUSE gracefully (e.g. tsx watch HMR restart)
+process.on("uncaughtException", (err: any) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(`\n❌ Port ${port} 已被占用，可能已有 DataNova 实例在运行。`);
+    console.error(`   运行 ./scripts/stop.sh 停止，或设置 PORT=xxxx 使用其他端口。\n`);
+    process.exit(1);
+  }
+  throw err;
+});
+
 const server = serve(
   {
     fetch: app.fetch,
