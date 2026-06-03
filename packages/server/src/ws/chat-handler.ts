@@ -172,14 +172,31 @@ function forwardEvent(ws: WSContext, event: AgentHarnessEvent<Skill, PromptTempl
       break;
 
     case "message_update": {
-      // Streaming delta — the key event for real-time text
+      // Streaming delta — the key event for real-time text.
+      //
+      // assistantMessageEvent has a nested "type" field:
+      //   type: "text_start"   — first text chunk (contentIndex, partial)
+      //   type: "text_delta"   — incremental text delta (delta field)
+      //   type: "thinking_delta" — thinking content (delta field)
+      //   type: "done"         — stream complete
       if ("assistantMessageEvent" in event && event.assistantMessageEvent) {
         const ame = event.assistantMessageEvent as Record<string, unknown>;
-        if ("textDelta" in ame && ame.textDelta) {
-          sendEvent(ws, { type: "text_delta", delta: ame.textDelta });
-        }
-        if ("thinkingDelta" in ame && ame.thinkingDelta) {
-          sendEvent(ws, { type: "thinking", content: ame.thinkingDelta });
+        const subType = ame.type as string;
+
+        if (subType === "text_delta" && ame.delta) {
+          sendEvent(ws, { type: "text_delta", delta: ame.delta });
+        } else if (subType === "text_start") {
+          // First chunk may carry initial text in partial.content[0].text
+          // Forward it as a text_delta so the frontend sees immediate output
+          const partial = ame.partial as Record<string, unknown> | undefined;
+          if (partial) {
+            const content = partial.content as Array<Record<string, unknown>> | undefined;
+            if (content && content.length > 0 && content[0].text) {
+              sendEvent(ws, { type: "text_delta", delta: content[0].text });
+            }
+          }
+        } else if (subType === "thinking_delta" && ame.delta) {
+          sendEvent(ws, { type: "thinking", content: ame.delta });
         }
       }
       break;
