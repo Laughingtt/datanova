@@ -8,7 +8,6 @@ interface MessageItemProps {
 }
 
 function extractSqlFromContent(content: string): { sql: string | null; text: string } {
-  // Extract SQL from markdown code blocks
   const sqlMatch = content.match(/```sql\n([\s\S]*?)```/i);
   if (sqlMatch) {
     const sql = sqlMatch[1].trim();
@@ -23,46 +22,49 @@ export default function MessageItem({ message }: MessageItemProps) {
   const { sql, text } = extractSqlFromContent(message.content);
 
   return (
-    <div className={`px-6 py-4 ${isUser ? "" : "bg-near-black text-white"}`}>
-      <div className={`max-w-3xl mx-auto`}>
-        {/* Role indicator */}
-        <div className="flex items-center gap-2 mb-2">
-          <span
-            className={`mono-label ${
-              isUser ? "text-muted-slate" : "text-white/50"
-            }`}
-          >
-            {isUser ? "YOU" : "DATANOVA"}
+    <div className={`px-6 py-4 ${isUser ? "flex justify-end" : ""}`}>
+      <div className={`max-w-3xl ${isUser ? "" : "w-full"}`}>
+        {/* Role label */}
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className={`text-xs font-mono uppercase tracking-wider ${
+            isUser ? "text-[var(--primary-text)]" : "text-[var(--steel)]"
+          }`}>
+            {isUser ? "You" : "DataNova"}
           </span>
           {message.isStreaming && (
-            <span className="inline-block w-2 h-2 rounded-full bg-coral animate-pulse" />
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--primary)] animate-pulse" />
           )}
         </div>
 
-        {/* Steps */}
-        {message.steps && message.steps.length > 0 && (
-          <div className="mb-3 space-y-1">
-            {message.steps.map((step) => (
-              <StepIndicator key={step.id} step={step} />
-            ))}
+        {/* User bubble */}
+        {isUser && text && (
+          <div className="bubble-user inline-block max-w-[85%]">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">{text}</p>
           </div>
         )}
 
-        {/* SQL Block */}
-        {sql && <SqlBlock sql={sql} />}
+        {/* Assistant content */}
+        {!isUser && (
+          <>
+            {message.steps && message.steps.length > 0 && (
+              <div className="mb-3 space-y-1">
+                {message.steps.map((step) => (
+                  <StepIndicator key={step.id} step={step} />
+                ))}
+              </div>
+            )}
 
-        {/* Table Data */}
-        {message.tableData && <TableResult data={message.tableData} />}
+            {sql && <SqlBlock sql={sql} />}
+            {message.tableData && <TableResult data={message.tableData} />}
 
-        {/* Text content */}
-        {text && (
-          <div
-            className={`text-body-base leading-relaxed whitespace-pre-wrap ${
-              isUser ? "text-ink" : "text-white/90"
-            }`}
-          >
-            {text}
-          </div>
+            {text && (
+              <div className="bubble-assistant">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap text-[var(--ink)]">
+                  {text}
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

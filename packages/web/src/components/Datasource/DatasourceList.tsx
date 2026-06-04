@@ -1,111 +1,69 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { Datasource } from "../../api/client";
-import { datasourcesApi } from "../../api/client";
-import { useAppStore } from "../../stores/app";
 
-export default function DatasourceList() {
-  const [datasources, setDatasources] = useState<Datasource[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { setSelectedDatasourceId, setView } = useAppStore();
+interface DatasourceListProps {
+  datasources: Datasource[];
+  onEdit: (ds: Datasource) => void;
+  onDelete: (id: string) => void;
+  onTest: (id: string) => Promise<{ success: boolean; message?: string }>;
+}
 
-  const loadDatasources = async () => {
-    setLoading(true);
-    setError(null);
+export default function DatasourceList({ datasources, onEdit, onDelete, onTest }: DatasourceListProps) {
+  const [testingId, setTestingId] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<Record<string, { success: boolean; message?: string }>>({});
+
+  const handleTest = async (id: string) => {
+    setTestingId(id);
     try {
-      const data = await datasourcesApi.list();
-      setDatasources(data);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
+      const result = await onTest(id);
+      setTestResult((prev) => ({ ...prev, [id]: result }));
+    } catch {
+      setTestResult((prev) => ({ ...prev, [id]: { success: false, message: "Connection failed" } }));
     }
+    setTestingId(null);
   };
-
-  useEffect(() => {
-    loadDatasources();
-  }, []);
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this datasource?")) return;
-    try {
-      await datasourcesApi.delete(id);
-      loadDatasources();
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  };
-
-  const handleSelect = (id: string) => {
-    setSelectedDatasourceId(id);
-    setView("schemas");
-  };
-
-  if (loading) {
-    return (
-      <div className="p-8">
-        <p className="text-muted-slate">Loading datasources...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-8">
-        <div className="p-3 bg-error-red/10 border border-error-red/20 rounded-xs text-error-red text-caption">
-          {error}
-        </div>
-      </div>
-    );
-  }
 
   if (datasources.length === 0) {
     return (
-      <div className="p-8 text-center">
-        <p className="text-muted-slate text-body-large">No datasources configured.</p>
-        <p className="text-muted-slate text-caption mt-2">Add a datasource to get started.</p>
+      <div className="card-base text-center py-16">
+        <p className="text-[var(--steel)] text-sm">No datasources configured yet</p>
+        <p className="text-[var(--stone)] text-xs mt-1">Click "+ Add Datasource" to get started</p>
       </div>
     );
   }
 
   return (
-    <div className="divide-y divide-hairline">
-      {datasources.map((ds) => (
-        <div
-          key={ds.id}
-          className="flex items-center justify-between px-8 py-4 hover:bg-soft-stone/30 transition-colors cursor-pointer"
-          onClick={() => handleSelect(ds.id)}
-        >
-          <div className="flex-1">
-            <h3 className="font-display text-feature-heading text-ink">{ds.name}</h3>
-            <p className="font-mono text-mono-label text-muted-slate mt-1">
-              {ds.host}:{ds.port}/{ds.database}
-            </p>
+    <div className="space-y-3">
+      {datasources.map((ds) => {
+        const result = testResult[ds.id];
+        return (
+          <div key={ds.id} className="card-base flex items-center justify-between group hover:shadow-2 transition-shadow">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3">
+                <h3 className="text-sm font-medium text-[var(--ink)] truncate">{ds.name}</h3>
+                <span className="text-xs font-mono text-[var(--steel)] bg-[var(--surface)] px-2 py-0.5 rounded-md">
+                  mysql
+                </span>
+              </div>
+              <p className="text-xs text-[var(--slate)] mt-1 font-mono">
+                {ds.host}:{ds.port}/{ds.database}
+              </p>
+              {result && (
+                <p className={`text-xs mt-1 ${result.success ? "text-[var(--success)]" : "text-[var(--error)]"}`}>
+                  {result.success ? "✓ Connected" : `✗ ${result.message ?? "Failed"}`}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onClick={() => handleTest(ds.id)} disabled={testingId === ds.id} className="btn-ghost text-xs">
+                {testingId === ds.id ? "Testing…" : "Test"}
+              </button>
+              <button onClick={() => onEdit(ds)} className="btn-ghost text-xs">Edit</button>
+              <button onClick={() => onDelete(ds.id)} className="btn-danger text-xs">Delete</button>
+            </div>
           </div>
-
-          <div className="flex items-center gap-4">
-            <span
-              className={`inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium ${
-                ds.enabled
-                  ? "bg-pale-green-wash text-deep-green"
-                  : "bg-soft-stone text-muted-slate"
-              }`}
-            >
-              {ds.enabled ? "Enabled" : "Disabled"}
-            </span>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete(ds.id);
-              }}
-              className="text-muted-slate hover:text-error-red transition-colors text-caption"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

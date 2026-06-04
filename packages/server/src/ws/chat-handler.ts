@@ -1,6 +1,7 @@
 import type { WSContext } from "hono/ws";
 import { createHarness, getHarness, type CreateHarnessOptions } from "../agent/harness-factory.js";
 import type { AgentHarnessEvent, Skill, PromptTemplate } from "@earendil-works/pi-agent-core";
+import { saveMessage, listMessages } from "../store.js";
 
 interface WsMessage {
   type: "init" | "message";
@@ -14,6 +15,16 @@ function sendEvent(ws: WSContext, event: Record<string, unknown>): void {
   } catch {
     // Connection may have been closed
   }
+}
+
+/**
+ * Tracked state for an in-flight assistant message being streamed.
+ * Accumulates content and steps so we can persist the full message
+ * when the agent loop finishes.
+ */
+interface StreamingAssistantState {
+  content: string;
+  steps: Array<Record<string, unknown>>;
 }
 
 export function createChatHandler() {
@@ -71,11 +82,33 @@ async function handleInit(ws: WSContext, data: WsMessage): Promise<void> {
   try {
     const harness = await createHarness(options);
 
+    // Streaming assistant state — accumulates content/steps for DB persistence
+    const streamingState: StreamingAssistantState = { content: "", steps: [] };
+
     // Subscribe to harness events — this is the ONLY way to forward
     // streaming events (text deltas, thinking, tool calls, etc.)
     harness.subscribe((event: AgentHarnessEvent<Skill, PromptTemplate>) => {
+      // Accumulate streaming state for persistence
+      accumulateStreamingState(streamingState, event);
+
+      // Forward to frontend
       forwardEvent(ws, event);
     });
+
+    // Load and send persisted message history
+    const history = listMessages(options.conversationId);
+    if (history.length > 0) {
+      sendEvent(ws, {
+        type: "message_history",
+        messages: history.map((m) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          steps: m.steps ? JSON.parse(m.steps) : undefined,
+          timestamp: new Date(m.created_at).getTime(),
+        })),
+      });
+    }
 
     sendEvent(ws, { type: "init_success", conversationId: options.conversationId });
   } catch (err) {
@@ -105,23 +138,125 @@ async function handleMessage(ws: WSContext, data: WsMessage): Promise<void> {
   }
 
   try {
+    // Persist user message
+    saveMessage({
+      conversationId,
+      role: "user",
+      content: text,
+    });
+
+    // Streaming assistant state for this turn
+    const streamingState: StreamingAssistantState = { content: "", steps: [] };
+
+    // We need to capture the streaming state from the harness events.
+    // Re-subscribe with an accumulator that also forwards.
+    // Since handleInit already subscribed, we track via a wrapper.
+    // Actually, we'll use a simpler approach: accumulate from the
+    // response object after prompt() resolves.
+
     // prompt() triggers the agent loop. All streaming events
-    // (agent_start, message_update, tool_execution, etc.)
     // are forwarded via the subscribe() handler in handleInit.
     // We just await the final result here.
     const response = await harness.prompt(text);
+
+    // Extract full response content
+    const fullContent = typeof response.content === "string"
+      ? response.content
+      : response.content.map((c: any) => c.text ?? "").join("");
+
+    // Persist assistant message
+    saveMessage({
+      conversationId,
+      role: "assistant",
+      content: fullContent,
+    });
 
     // Send a final "response" event with the complete message content
     // so the frontend can use it if it missed streaming deltas.
     sendEvent(ws, {
       type: "response_complete",
-      content: typeof response.content === "string"
-        ? response.content
-        : response.content.map((c: any) => c.text ?? "").join(""),
+      content: fullContent,
     });
   } catch (err) {
     const error = err as Error;
     sendEvent(ws, { type: "error", error: error.message });
+  }
+}
+
+/**
+ * Accumulate streaming state from harness events so we can persist
+ * the final assistant message (with steps) to the database.
+ */
+function accumulateStreamingState(
+  state: StreamingAssistantState,
+  event: AgentHarnessEvent<Skill, PromptTemplate>
+): void {
+  switch (event.type) {
+    case "message_update": {
+      if ("assistantMessageEvent" in event && event.assistantMessageEvent) {
+        const ame = event.assistantMessageEvent as Record<string, unknown>;
+        const subType = ame.type as string;
+
+        if (subType === "text_delta" && ame.delta) {
+          state.content += ame.delta as string;
+        } else if (subType === "text_start") {
+          const partial = ame.partial as Record<string, unknown> | undefined;
+          if (partial) {
+            const content = partial.content as Array<Record<string, unknown>> | undefined;
+            if (content && content.length > 0 && content[0].text) {
+              state.content += content[0].text as string;
+            }
+          }
+        }
+      }
+      break;
+    }
+
+    case "tool_execution_start": {
+      state.steps.push({
+        type: "tool_call",
+        toolName: (event as any).toolName,
+        args: (event as any).args,
+      });
+      break;
+    }
+
+    case "tool_execution_end": {
+      // Update the last matching tool_call step to tool_result
+      const toolName = (event as any).toolName;
+      for (let i = state.steps.length - 1; i >= 0; i--) {
+        if (state.steps[i].type === "tool_call" && state.steps[i].toolName === toolName) {
+          state.steps[i] = {
+            ...state.steps[i],
+            type: "tool_result",
+            result: (event as any).result,
+            isError: (event as any).isError,
+          };
+          break;
+        }
+      }
+      break;
+    }
+
+    case "tool_result": {
+      const tr = event as any;
+      const toolName = tr.toolName;
+      for (let i = state.steps.length - 1; i >= 0; i--) {
+        if (state.steps[i].type === "tool_call" && state.steps[i].toolName === toolName) {
+          state.steps[i] = {
+            ...state.steps[i],
+            type: "tool_result",
+            result: tr.details ?? tr.result,
+            isError: tr.isError,
+          };
+          break;
+        }
+      }
+      break;
+    }
+
+    default:
+      break;
   }
 }
 

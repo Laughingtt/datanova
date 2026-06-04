@@ -1,7 +1,7 @@
 import * as crypto from "node:crypto";
 import Database from "better-sqlite3";
 import { DB_PATH } from "./config.js";
-import type { Datasource, SchemaAnnotation, Conversation } from "./types.js";
+import type { Datasource, SchemaAnnotation, Conversation, StoredMessage } from "./types.js";
 
 let db: Database.Database | null = null;
 
@@ -56,6 +56,23 @@ function initTables(database: Database.Database): void {
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (datasource_id) REFERENCES datasources(id) ON DELETE SET NULL
     )
+  `);
+
+  // Messages table
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS messages (
+      id TEXT PRIMARY KEY,
+      conversation_id TEXT NOT NULL,
+      role TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
+      content TEXT NOT NULL DEFAULT '',
+      steps TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
+    )
+  `);
+  database.exec(`
+    CREATE INDEX IF NOT EXISTS idx_messages_conversation
+    ON messages(conversation_id, created_at ASC)
   `);
 
   // App config table
@@ -265,6 +282,8 @@ export function createConversation(input: { title?: string; datasourceId?: strin
 }
 
 export function deleteConversation(id: string): boolean {
+  // Messages are deleted by CASCADE, but delete explicitly for safety
+  getDb().prepare("DELETE FROM messages WHERE conversation_id = ?").run(id);
   const stmt = getDb().prepare("DELETE FROM conversations WHERE id = ?");
   const result = stmt.run(id);
   return result.changes > 0;
@@ -283,6 +302,48 @@ export function updateConversationTitle(id: string, title: string): Conversation
     FROM conversations
     WHERE id = ?
   `).get(id) as Conversation | undefined;
+}
+
+// ==================== Messages CRUD ====================
+
+export interface SaveMessageInput {
+  id?: string;
+  conversationId: string;
+  role: "user" | "assistant";
+  content: string;
+  steps?: unknown[];  // AgentStep[] serialized to JSON
+}
+
+export function saveMessage(input: SaveMessageInput): StoredMessage {
+  const id = input.id ?? generateId();
+  const stepsJson = input.steps ? JSON.stringify(input.steps) : null;
+
+  const stmt = getDb().prepare(`
+    INSERT INTO messages (id, conversation_id, role, content, steps)
+    VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET content = excluded.content, steps = excluded.steps
+  `);
+  stmt.run(id, input.conversationId, input.role, input.content, stepsJson);
+
+  // Touch conversation updated_at
+  getDb().prepare(`
+    UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?
+  `).run(input.conversationId);
+
+  return getDb().prepare(`
+    SELECT id, conversation_id, role, content, steps, created_at
+    FROM messages WHERE id = ?
+  `).get(id) as StoredMessage;
+}
+
+export function listMessages(conversationId: string): StoredMessage[] {
+  const stmt = getDb().prepare(`
+    SELECT id, conversation_id, role, content, steps, created_at
+    FROM messages
+    WHERE conversation_id = ?
+    ORDER BY created_at ASC
+  `);
+  return stmt.all(conversationId) as StoredMessage[];
 }
 
 // ==================== App Config ====================

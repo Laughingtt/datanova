@@ -1,64 +1,258 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   DataNova Design System — Mistral-inspired editorial warmth
+   Cream surfaces · Saturated orange CTA · Editorial geometry
+   ============================================================ */
+
+:root {
+  /* --- Brand & Accent --- */
+  --primary:        #ff7a33;   /* Saturated orange — primary CTA */
+  --primary-deep:   #e86820;   /* Pressed state */
+  --primary-soft:   #fff3eb;   /* Orange tint surface */
+  --primary-text:   #c45100;   /* Orange text on light */
+
+  /* --- Sunshine spectrum (sunset gradient stops) --- */
+  --sunshine-300:   #ffcf70;
+  --sunshine-500:   #ffa733;
+  --sunshine-700:   #ff8a1a;
+  --sunshine-800:   #e87410;
+  --sunshine-900:   #cc5f08;
+  --yellow-sat:     #ffd633;
+
+  /* --- Cream / Neutral Warm --- */
+  --cream:          #fdf5e6;   /* Warm yellow-cream surface */
+  --cream-soft:     #fef9f0;   /* Lighter cream */
+  --cream-deeper:   #f5e6c8;   /* Badge/tag chip */
+  --beige-deep:     #e8d5b0;   /* Cream border */
+
+  /* --- Surface --- */
+  --canvas:         #ffffff;   /* Page background, cards */
+  --surface:        #faf9f6;   /* Subtle quieter bg */
+  --surface-cream:  #fef9f0;   /* Cream-tinted surface */
+  --surface-code:   #1a1a2e;   /* Dark code block */
+  --hairline:       #e8e4dc;   /* 1px borders */
+  --hairline-soft:  #f0ede6;   /* Quieter dividers */
+  --hairline-strong:#d4cfc5;   /* Input borders */
+
+  /* --- Text --- */
+  --ink:            #1a1917;   /* Primary text */
+  --ink-tint:       #2d2b27;   /* Hero overlay text */
+  --charcoal:       #3d3b37;   /* Body emphasis */
+  --slate:          #5c5a55;   /* Secondary text */
+  --steel:          #8c8a84;   /* Tertiary, captions */
+  --stone:          #a8a59e;   /* Muted labels */
+  --muted:          #c4c1ba;   /* Disabled, placeholders */
+  --on-dark:        #ffffff;   /* White on dark */
+  --on-dark-muted:  rgba(255,255,255,0.55);
+  --on-cream:       #1a1917;   /* Ink on cream */
+
+  /* --- Semantic --- */
+  --success:        #16a34a;
+  --success-soft:   #f0fdf4;
+  --warning:        #d97706;
+  --warning-soft:   #fffbeb;
+  --error:          #dc2626;
+  --error-soft:     #fef2f2;
+  --link:           #ff7a33;
+
+  /* --- Sidebar --- */
+  --sidebar-bg:     #1a1917;
+  --sidebar-hover:  #2d2b27;
+  --sidebar-active: #3d3b37;
+
+  /* --- Chat --- */
+  --user-bubble:    #ff7a33;
+  --user-text:      #ffffff;
+  --assistant-bg:   #ffffff;
+  --assistant-border:#e8e4dc;
+
+  /* --- Shadows (editorial — mostly flat) --- */
+  --shadow-1:       0 1px 2px rgba(0,0,0,0.04);
+  --shadow-2:       0 4px 12px rgba(0,0,0,0.04);
+  --shadow-3:       0 12px 24px -4px rgba(0,0,0,0.08);
+}
+
+/* ==================== Base ==================== */
 @layer base {
+  * { box-sizing: border-box; }
   body {
-    @apply bg-canvas-white text-ink font-body antialiased;
+    @apply antialiased;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
   }
-
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display;
-  }
-
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-hairline rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-slate;
+    font-family: 'PP Editorial Old', 'Times New Roman', Georgia, serif;
+    font-weight: 400;
   }
 }
 
+/* ==================== Components ==================== */
 @layer components {
-  .btn-primary {
-    @apply bg-near-black text-white font-body text-button font-medium
-           px-6 py-3 rounded-pill
-           hover:bg-cohere-black transition-colors duration-150
-           focus:outline-none focus:ring-2 focus:ring-focus-blue focus:ring-offset-2;
+  /* Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--hairline-strong);
+    border-radius: 3px;
   }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--steel);
+  }
+
+  /* ---- Buttons (8px radius, NOT pills) ---- */
+  .btn-primary {
+    @apply inline-flex items-center justify-center
+           px-5 py-2.5 rounded-md text-sm font-medium
+           transition-all duration-150;
+    background: var(--primary);
+    color: var(--on-dark);
+  }
+  .btn-primary:hover {
+    background: var(--primary-deep);
+    box-shadow: var(--shadow-1);
+  }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled {
+    background: var(--hairline);
+    color: var(--muted);
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-dark {
+    @apply inline-flex items-center justify-center
+           px-5 py-2.5 rounded-md text-sm font-medium
+           transition-all duration-150;
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+  .btn-dark:hover { background: var(--charcoal); }
+
+  .btn-cream {
+    @apply inline-flex items-center justify-center
+           px-5 py-2.5 rounded-md text-sm font-medium
+           transition-all duration-150;
+    background: var(--cream);
+    color: var(--ink);
+    border: 1px solid var(--beige-deep);
+  }
+  .btn-cream:hover { background: var(--cream-deeper); }
 
   .btn-secondary {
-    @apply text-ink font-body text-button font-medium
-           underline underline-offset-4 decoration-hairline
-           hover:decoration-ink transition-colors duration-150;
+    @apply inline-flex items-center justify-center
+           px-5 py-2.5 rounded-md text-sm font-medium
+           transition-all duration-150;
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--hairline-strong);
   }
+  .btn-secondary:hover { background: var(--surface); }
 
-  .mono-label {
-    @apply font-mono text-mono-label uppercase tracking-wider text-muted-slate;
-  }
-
-  .card {
-    @apply bg-canvas-white border border-card-border rounded-sm p-6;
-  }
-
-  .input-field {
-    @apply w-full px-3 py-2 border border-border-light rounded-xs
-           text-body-base font-body text-ink
-           placeholder:text-muted-slate
-           focus:outline-none focus:border-form-focus-violet focus:ring-1 focus:ring-form-focus-violet
+  .btn-ghost {
+    @apply inline-flex items-center justify-center
+           px-3 py-1.5 rounded-md text-sm font-medium
            transition-colors duration-150;
+    color: var(--slate);
   }
+  .btn-ghost:hover {
+    color: var(--ink);
+    background: var(--surface);
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center
+           px-3 py-1.5 rounded-md text-sm font-medium
+           transition-colors duration-150;
+    color: var(--error);
+  }
+  .btn-danger:hover { background: var(--error-soft); }
+
+  /* ---- Cards (12px radius) ---- */
+  .card-base {
+    @apply rounded-lg p-6;
+    background: var(--canvas);
+    border: 1px solid var(--hairline-soft);
+  }
+
+  .card-cream {
+    @apply rounded-lg p-8;
+    background: var(--cream);
+    color: var(--on-cream);
+    border: 1px solid var(--beige-deep);
+  }
+
+  /* ---- Chat bubbles ---- */
+  .bubble-user {
+    @apply px-4 py-2.5 rounded-lg;
+    background: var(--user-bubble);
+    color: var(--user-text);
+    box-shadow: var(--shadow-1);
+    border-bottom-right-radius: 4px;
+  }
+
+  .bubble-assistant {
+    @apply px-4 py-3 rounded-lg;
+    background: var(--assistant-bg);
+    border: 1px solid var(--assistant-border);
+    box-shadow: var(--shadow-1);
+    border-bottom-left-radius: 4px;
+  }
+
+  /* ---- Input ---- */
+  .input-field {
+    @apply w-full px-3 py-2.5 rounded-md text-sm;
+    background: var(--canvas);
+    color: var(--ink);
+    border: 1px solid var(--hairline-strong);
+    transition: border-color 150ms, box-shadow 150ms;
+  }
+  .input-field::placeholder { color: var(--stone); }
+  .input-field:focus {
+    outline: none;
+    border: 2px solid var(--primary);
+    box-shadow: 0 0 0 3px rgba(255,122,51,0.12);
+  }
+
+  .input-well {
+    @apply rounded-lg;
+    background: var(--canvas);
+    border: 1px solid var(--hairline-strong);
+    box-shadow: var(--shadow-1);
+    transition: all 150ms;
+  }
+  .input-well:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(255,122,51,0.12);
+  }
+
+  /* ---- Labels ---- */
+  .label-mono {
+    @apply block mb-1.5 text-xs font-mono uppercase tracking-wider font-medium;
+    color: var(--steel);
+  }
+
+  /* ---- Sunset stripe (brand signature) ---- */
+  .sunset-stripe {
+    height: 4px;
+    background: linear-gradient(
+      to right,
+      var(--primary) 0%,
+      var(--sunshine-700) 25%,
+      var(--sunshine-500) 50%,
+      var(--yellow-sat) 75%,
+      var(--cream) 100%
+    );
+  }
+}
+
+/* ==================== Utilities ==================== */
+@layer utilities {
+  .text-caption { font-size: 0.8125rem; line-height: 1.4; }
+  .text-micro   { font-size: 0.6875rem; line-height: 1.4; }
 }

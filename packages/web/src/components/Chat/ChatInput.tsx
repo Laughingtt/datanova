@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, type KeyboardEvent } from "react";
 
 interface ChatInputProps {
   onSend: (text: string) => void;
@@ -7,44 +7,60 @@ interface ChatInputProps {
 
 export default function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [text, setText] = useState("");
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = () => {
     const trimmed = text.trim();
     if (!trimmed || disabled) return;
     onSend(trimmed);
     setText("");
-    inputRef.current?.focus();
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
     }
   };
 
+  const handleInput = () => {
+    const el = textareaRef.current;
+    if (el) {
+      el.style.height = "auto";
+      el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+    }
+  };
+
   return (
-    <div className="border-t border-hairline px-6 py-4">
-      <div className="max-w-3xl mx-auto flex items-end gap-3">
+    <div className="border-t border-[var(--hairline)] bg-[var(--canvas)] p-4">
+      <div className="max-w-3xl mx-auto input-well flex items-end gap-2 px-4 py-3">
         <textarea
-          ref={inputRef}
+          ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
+          onInput={handleInput}
+          placeholder="Ask about your data…"
           disabled={disabled}
-          placeholder="Ask a question about your database..."
           rows={1}
-          className="flex-1 resize-none input-field min-h-[42px] max-h-[120px]"
+          className="flex-1 resize-none bg-transparent text-sm text-[var(--ink)] placeholder-[var(--stone)]
+                     focus:outline-none min-h-[24px] max-h-[200px] leading-relaxed"
         />
         <button
           onClick={handleSubmit}
           disabled={disabled || !text.trim()}
-          className="btn-primary shrink-0"
+          className="shrink-0 w-8 h-8 flex items-center justify-center rounded-md
+                     bg-[var(--primary)] text-white text-sm font-medium
+                     hover:bg-[var(--primary-deep)] transition-colors
+                     disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Send
+          ↑
         </button>
       </div>
+      <p className="text-xs text-[var(--stone)] text-center mt-2">
+        Enter to send · Shift+Enter for new line
+      </p>
     </div>
   );
 }

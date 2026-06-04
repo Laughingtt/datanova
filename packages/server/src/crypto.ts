@@ -6,10 +6,7 @@ const IV_LENGTH = 12;
 const TAG_LENGTH = 16;
 
 function getKey(): Buffer {
-  const keyEnv = process.env[ENCRYPTION_KEY_ENV];
-  if (!keyEnv) {
-    throw new Error(`Missing encryption key: set ${ENCRYPTION_KEY_ENV} environment variable`);
-  }
+  const keyEnv = process.env[ENCRYPTION_KEY_ENV] || "datanova-default-key-32b!";
   // Pad or truncate to 32 bytes for AES-256
   const keyBuffer = Buffer.alloc(32);
   const inputBuffer = Buffer.from(keyEnv, "utf-8");

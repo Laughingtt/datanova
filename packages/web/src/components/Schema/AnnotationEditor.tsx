@@ -12,16 +12,12 @@ export default function AnnotationEditor({ value, onSave, placeholder = "添加�
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (editing && inputRef.current) {
-      inputRef.current.focus();
-    }
+    if (editing && inputRef.current) inputRef.current.focus();
   }, [editing]);
 
   const handleSave = () => {
     const trimmed = draft.trim();
-    if (trimmed) {
-      onSave(trimmed);
-    }
+    if (trimmed) onSave(trimmed);
     setEditing(false);
   };
 
@@ -31,12 +27,8 @@ export default function AnnotationEditor({ value, onSave, placeholder = "添加�
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSave();
-    } else if (e.key === "Escape") {
-      handleCancel();
-    }
+    if (e.key === "Enter") { e.preventDefault(); handleSave(); }
+    else if (e.key === "Escape") handleCancel();
   };
 
   if (editing) {
@@ -48,8 +40,7 @@ export default function AnnotationEditor({ value, onSave, placeholder = "添加�
         onChange={(e) => setDraft(e.target.value)}
         onBlur={handleSave}
         onKeyDown={handleKeyDown}
-        className="w-full px-2 py-1 text-caption border border-form-focus-violet rounded-xs
-                   focus:outline-none focus:ring-1 focus:ring-form-focus-violet bg-canvas-white"
+        className="input-field text-xs py-1 px-2"
       />
     );
   }
@@ -57,12 +48,11 @@ export default function AnnotationEditor({ value, onSave, placeholder = "添加�
   if (value) {
     return (
       <span
-        onClick={() => {
-          setDraft(value);
-          setEditing(true);
-        }}
-        className="inline-block px-2 py-0.5 bg-coral/10 border border-soft-coral/40 rounded-xs
-                   text-caption text-coral cursor-pointer hover:bg-coral/20 transition-colors"
+        onClick={() => { setDraft(value); setEditing(true); }}
+        className="inline-block px-2 py-0.5 rounded-md
+                   bg-[var(--primary-soft)] border border-[var(--primary)]/30
+                   text-xs text-[var(--primary-text)] cursor-pointer
+                   hover:bg-[var(--primary)]/20 transition-colors"
       >
         {value}
       </span>
@@ -71,12 +61,11 @@ export default function AnnotationEditor({ value, onSave, placeholder = "添加�
 
   return (
     <span
-      onClick={() => {
-        setDraft("");
-        setEditing(true);
-      }}
-      className="inline-block px-2 py-0.5 border border-dashed border-hairline rounded-xs
-                 text-caption text-muted-slate cursor-pointer hover:border-muted-slate transition-colors"
+      onClick={() => { setDraft(""); setEditing(true); }}
+      className="inline-block px-2 py-0.5 rounded-md
+                 border border-dashed border-[var(--hairline-strong)]
+                 text-xs text-[var(--stone)] cursor-pointer
+                 hover:border-[var(--steel)] hover:text-[var(--steel)] transition-colors"
     >
       {placeholder}
     </span>

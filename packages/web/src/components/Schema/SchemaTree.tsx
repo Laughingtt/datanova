@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import AnnotationEditor from "./AnnotationEditor";
-import type { SchemaResponse, TableSchema, SchemaAnnotation } from "../../api/client";
+import type { SchemaResponse, TableSchema } from "../../api/client";
 import { schemasApi } from "../../api/client";
 import { useAppStore } from "../../stores/app";
 
@@ -25,18 +25,12 @@ export default function SchemaTree() {
     }
   }, [selectedDatasourceId]);
 
-  useEffect(() => {
-    loadSchema();
-  }, [loadSchema]);
+  useEffect(() => { loadSchema(); }, [loadSchema]);
 
   const toggleTable = (tableName: string) => {
     setExpandedTables((prev) => {
       const next = new Set(prev);
-      if (next.has(tableName)) {
-        next.delete(tableName);
-      } else {
-        next.add(tableName);
-      }
+      next.has(tableName) ? next.delete(tableName) : next.add(tableName);
       return next;
     });
   };
@@ -44,9 +38,7 @@ export default function SchemaTree() {
   const getAnnotation = (tableName: string, fieldName?: string): string | null => {
     if (!data) return null;
     return data.annotations.find(
-      (a) =>
-        a.table_name === tableName &&
-        (fieldName ? a.field_name === fieldName : a.field_name === null)
+      (a) => a.table_name === tableName && (fieldName ? a.field_name === fieldName : a.field_name === null)
     )?.annotation ?? null;
   };
 
@@ -58,77 +50,48 @@ export default function SchemaTree() {
         field_name: fieldName,
         annotation: value,
       });
-      // Reload to get updated annotations
       loadSchema();
     } catch (err) {
       console.error("Failed to save annotation:", err);
     }
   };
 
-  if (!selectedDatasourceId) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-muted-slate text-body-large">Select a datasource to view schema</p>
-      </div>
-    );
-  }
+  if (loading) return <p className="text-[var(--steel)] text-sm">Loading schema…</p>;
 
-  if (loading) {
-    return (
-      <div className="p-8">
-        <p className="text-muted-slate">Loading schema...</p>
-      </div>
-    );
-  }
+  if (error) return (
+    <div className="p-3 rounded-md bg-[var(--error-soft)] text-[var(--error)] text-sm">{error}</div>
+  );
 
-  if (error) {
-    return (
-      <div className="p-8">
-        <div className="p-3 bg-error-red/10 border border-error-red/20 rounded-xs text-error-red text-caption">
-          {error}
-        </div>
-      </div>
-    );
-  }
-
-  if (!data || data.schema.tables.length === 0) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-muted-slate text-body-large">No tables found.</p>
-      </div>
-    );
-  }
+  if (!data || data.schema.tables.length === 0) return (
+    <div className="card-base text-center py-16">
+      <p className="text-[var(--steel)] text-sm">No tables found</p>
+    </div>
+  );
 
   return (
-    <div className="divide-y divide-hairline">
+    <div className="space-y-2">
       {data.schema.tables.map((tableSchema: TableSchema) => {
         const isExpanded = expandedTables.has(tableSchema.table.name);
         const tableAnnotation = getAnnotation(tableSchema.table.name);
 
         return (
-          <div key={tableSchema.table.name} className="px-8">
+          <div key={tableSchema.table.name} className="card-base">
             {/* Table header */}
             <button
               onClick={() => toggleTable(tableSchema.table.name)}
-              className="w-full flex items-center gap-3 py-4 text-left"
+              className="w-full flex items-center gap-3 text-left"
             >
-              <span className={`text-muted-slate transition-transform ${isExpanded ? "rotate-90" : ""}`}>
-                ▶
-              </span>
-              <span className="font-display text-feature-heading text-ink">
-                {tableSchema.table.name}
-              </span>
+              <span className={`text-[var(--steel)] transition-transform text-xs ${isExpanded ? "rotate-90" : ""}`}>▶</span>
+              <span className="text-sm font-medium text-[var(--ink)]">{tableSchema.table.name}</span>
               {tableSchema.table.comment && (
-                <span className="text-caption text-muted-slate">({tableSchema.table.comment})</span>
+                <span className="text-xs text-[var(--steel)]">({tableSchema.table.comment})</span>
               )}
-              <span className="text-micro text-muted-slate ml-2">
-                {tableSchema.columns.length} columns
-              </span>
+              <span className="text-xs text-[var(--stone)] ml-auto">{tableSchema.columns.length} cols</span>
             </button>
 
             {/* Table annotation */}
-            <div className="ml-8 mb-2">
-              <span className="mono-label mr-2">Table:</span>
+            <div className="ml-6 mt-2 flex items-center gap-2">
+              <span className="label-mono inline">Table:</span>
               <AnnotationEditor
                 value={tableAnnotation}
                 onSave={(val) => handleSaveAnnotation(tableSchema.table.name, undefined, val)}
@@ -137,30 +100,28 @@ export default function SchemaTree() {
 
             {/* Columns */}
             {isExpanded && (
-              <div className="ml-8 mb-4">
-                <table className="w-full text-caption">
+              <div className="ml-6 mt-3">
+                <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-hairline">
-                      <th className="text-left py-2 pr-4 mono-label">Column</th>
-                      <th className="text-left py-2 pr-4 mono-label">Type</th>
-                      <th className="text-left py-2 pr-4 mono-label">Nullable</th>
-                      <th className="text-left py-2 pr-4 mono-label">Key</th>
-                      <th className="text-left py-2 mono-label">Annotation</th>
+                    <tr className="border-b border-[var(--hairline)]">
+                      <th className="text-left py-2 pr-4 label-mono">Column</th>
+                      <th className="text-left py-2 pr-4 label-mono">Type</th>
+                      <th className="text-left py-2 pr-4 label-mono">Nullable</th>
+                      <th className="text-left py-2 pr-4 label-mono">Key</th>
+                      <th className="text-left py-2 label-mono">Annotation</th>
                     </tr>
                   </thead>
                   <tbody>
                     {tableSchema.columns.map((col) => {
                       const colAnnotation = getAnnotation(tableSchema.table.name, col.name);
                       return (
-                        <tr key={col.name} className="border-b border-card-border">
-                          <td className="py-2 pr-4 font-mono text-ink">{col.name}</td>
-                          <td className="py-2 pr-4 font-mono text-muted-slate">{col.type}</td>
-                          <td className="py-2 pr-4 text-muted-slate">
-                            {col.nullable ? "YES" : "NO"}
-                          </td>
+                        <tr key={col.name} className="border-b border-[var(--hairline-soft)]">
+                          <td className="py-2 pr-4 font-mono text-[var(--ink)]">{col.name}</td>
+                          <td className="py-2 pr-4 font-mono text-[var(--slate)]">{col.type}</td>
+                          <td className="py-2 pr-4 text-[var(--steel)]">{col.nullable ? "YES" : "NO"}</td>
                           <td className="py-2 pr-4">
                             {col.isPrimaryKey && (
-                              <span className="text-action-blue font-mono text-micro">PK</span>
+                              <span className="text-[var(--primary)] font-mono text-xs font-medium">PK</span>
                             )}
                           </td>
                           <td className="py-2">
@@ -175,12 +136,11 @@ export default function SchemaTree() {
                   </tbody>
                 </table>
 
-                {/* Foreign Keys */}
                 {tableSchema.foreignKeys.length > 0 && (
                   <div className="mt-3">
-                    <p className="mono-label mb-1">Foreign Keys</p>
+                    <p className="label-mono mb-1">Foreign Keys</p>
                     {tableSchema.foreignKeys.map((fk) => (
-                      <p key={fk.name} className="text-caption text-muted-slate font-mono">
+                      <p key={fk.name} className="text-xs text-[var(--slate)] font-mono">
                         {fk.columnName} → {fk.referencedTable}.{fk.referencedColumn}
                       </p>
                     ))}

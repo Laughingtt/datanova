@@ -1,17 +1,6 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 
 // ==================== Types ====================
-
-export interface ChatMessage {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: number;
-  steps?: AgentStep[];
-  sqlBlock?: string;
-  tableData?: TableData;
-  isStreaming?: boolean;
-}
 
 export interface AgentStep {
   id: string;
@@ -23,15 +12,24 @@ export interface AgentStep {
   content?: string;
 }
 
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: number;
+  isStreaming?: boolean;
+  steps?: AgentStep[];
+  sqlBlock?: string;
+  tableData?: TableData;
+}
+
 export interface TableData {
   columns: string[];
   rows: Record<string, unknown>[];
   executionTime?: number;
 }
 
-// ==================== Event Types ====================
-
-interface WsEvent {
+export interface WsEvent {
   type: string;
   [key: string]: unknown;
 }
@@ -39,50 +37,20 @@ interface WsEvent {
 // ==================== Hook ====================
 
 interface UseAgentStreamOptions {
-  send: (data: unknown) => void;
-  onEvent?: (event: WsEvent) => void;
+  send: (data: Record<string, unknown>) => void;
+  onEvent: (data: unknown) => void;
 }
 
-interface UseAgentStreamReturn {
-  initSession: (params: {
-    conversationId: string;
-    datasourceId?: string;
-    datasourceName?: string;
-    modelProvider?: string | null;
-    modelId?: string | null;
-  }) => void;
-  sendMessage: (text: string, conversationId: string) => void;
-}
-
-/** Generate a unique message ID to avoid React key collisions */
-let msgCounter = 0;
-function uniqueId(prefix: string): string {
-  return `${prefix}-${Date.now()}-${++msgCounter}`;
-}
-
-export function useAgentStream(options: UseAgentStreamOptions): UseAgentStreamReturn {
-  const { send, onEvent } = options;
-  const onEventRef = useRef(onEvent);
-  onEventRef.current = onEvent;
-
+export function useAgentStream({ send, onEvent }: UseAgentStreamOptions) {
   const initSession = useCallback(
-    (params: {
+    (payload: {
       conversationId: string;
       datasourceId?: string;
       datasourceName?: string;
-      modelProvider?: string | null;
-      modelId?: string | null;
+      modelProvider?: string;
+      modelId?: string;
     }) => {
-      send({
-        type: "init",
-        payload: {
-          conversationId: params.conversationId,
-          datasourceId: params.datasourceId,
-          datasourceName: params.datasourceName,
-          modelProvider: params.modelProvider ?? undefined,
-          modelId: params.modelId ?? undefined,
-        },
-      });
+      send({ type: "init", payload });
     },
     [send]
   );
@@ -101,162 +69,149 @@ export function useAgentStream(options: UseAgentStreamOptions): UseAgentStreamRe
   return { initSession, sendMessage };
 }
 
-// ==================== Event Helper ====================
+// ==================== Event Processing ====================
 
 /**
- * Process a WebSocket event and update a ChatMessage.
- * Returns the updated message or a new message.
+ * Process a WebSocket event and return the updated assistant ChatMessage,
+ * or null if the event doesn't update the current assistant message.
+ *
+ * Returns `"clear"` for message_history events (caller should replace all messages).
  */
 export function processWsEvent(
   event: WsEvent,
   currentAssistantMessage: ChatMessage | null
-): ChatMessage | null {
+): ChatMessage | null | "clear" {
   switch (event.type) {
-    case "agent_start":
-      return {
-        id: uniqueId("assistant"),
+    case "message_history": {
+      // Server sent persisted message history — signal to replace all messages.
+      return "clear";
+    }
+
+    case "agent_start": {
+      const msg: ChatMessage = {
+        id: `assistant-${Date.now()}`,
         role: "assistant",
         content: "",
         timestamp: Date.now(),
-        steps: [],
         isStreaming: true,
+        steps: [],
       };
+      return msg;
+    }
 
-    case "thinking":
+    case "thinking": {
       if (!currentAssistantMessage) return null;
+      const content = (event.content as string) ?? (event.delta as string) ?? "";
       return {
         ...currentAssistantMessage,
         steps: [
           ...(currentAssistantMessage.steps ?? []),
           {
-            id: uniqueId("step"),
+            id: `step-${Date.now()}`,
             type: "thinking" as const,
-            content: (event.content as string) ?? "Thinking...",
+            content,
           },
         ],
       };
+    }
 
-    case "message_start":
-      // A new assistant message stream is starting — create if not yet
+    case "message_start": {
       if (!currentAssistantMessage) {
         return {
-          id: uniqueId("assistant"),
+          id: `assistant-${Date.now()}`,
           role: "assistant",
           content: "",
           timestamp: Date.now(),
-          steps: [],
           isStreaming: true,
+          steps: [],
         };
       }
       return null;
+    }
 
     case "text_delta": {
       if (!currentAssistantMessage) return null;
+      const delta = (event.delta as string) ?? "";
       return {
         ...currentAssistantMessage,
-        content: currentAssistantMessage.content + ((event.delta as string) ?? ""),
+        content: currentAssistantMessage.content + delta,
       };
     }
 
-    case "tool_execution_start":
+    case "tool_execution_start": {
       if (!currentAssistantMessage) return null;
+      const step: AgentStep = {
+        id: `step-${Date.now()}`,
+        type: "tool_call",
+        toolName: (event.toolName as string) ?? "unknown",
+        args: (event.args as Record<string, unknown>) ?? {},
+      };
       return {
         ...currentAssistantMessage,
-        steps: [
-          ...(currentAssistantMessage.steps ?? []),
-          {
-            id: uniqueId("step"),
-            type: "tool_call" as const,
-            toolName: event.toolName as string,
-            args: event.args as Record<string, unknown>,
-          },
-        ],
+        steps: [...(currentAssistantMessage.steps ?? []), step],
       };
+    }
 
-    case "tool_execution_end":
+    case "tool_execution_end": {
       if (!currentAssistantMessage) return null;
-      return {
-        ...currentAssistantMessage,
-        steps: (currentAssistantMessage.steps ?? []).map((step) => {
-          if (
-            step.type === "tool_call" &&
-            step.toolName === event.toolName
-          ) {
-            return {
-              ...step,
-              type: "tool_result" as const,
-              isError: event.isError as boolean,
-              result: event.result,
-            };
-          }
-          return step;
-        }),
-      };
+      const toolName = (event.toolName as string) ?? "unknown";
+      const steps = [...(currentAssistantMessage.steps ?? [])];
+      // Find the last matching tool_call step and convert to tool_result
+      for (let i = steps.length - 1; i >= 0; i--) {
+        if (steps[i].type === "tool_call" && steps[i].toolName === toolName) {
+          steps[i] = {
+            ...steps[i],
+            type: "tool_result",
+            result: event.result,
+            isError: event.isError as boolean | undefined,
+          };
+          break;
+        }
+      }
+      return { ...currentAssistantMessage, steps };
+    }
 
     case "tool_result": {
-      // Rich tool result with details (from harness tool_result event)
       if (!currentAssistantMessage) return null;
+      const trToolName = (event.toolName as string) ?? "unknown";
+      const steps = [...(currentAssistantMessage.steps ?? [])];
+      for (let i = steps.length - 1; i >= 0; i--) {
+        if (steps[i].type === "tool_call" && steps[i].toolName === trToolName) {
+          steps[i] = {
+            ...steps[i],
+            type: "tool_result",
+            result: event.details ?? event.result,
+            isError: event.isError as boolean | undefined,
+          };
+          break;
+        }
+      }
+      return { ...currentAssistantMessage, steps };
+    }
+
+    case "agent_end":
+    case "settled":
+    case "response_complete": {
+      if (!currentAssistantMessage) return null;
+      const content = event.type === "response_complete"
+        ? (event.content as string) ?? currentAssistantMessage.content
+        : currentAssistantMessage.content;
       return {
         ...currentAssistantMessage,
-        steps: (currentAssistantMessage.steps ?? []).map((step) => {
-          if (
-            step.type === "tool_call" &&
-            step.toolName === event.toolName
-          ) {
-            return {
-              ...step,
-              type: "tool_result" as const,
-              isError: event.isError as boolean,
-              result: event.details ?? event.result,
-            };
-          }
-          return step;
-        }),
+        content,
+        isStreaming: false,
       };
     }
 
-    case "response_complete":
-      // Final complete response — update content if we have it
-      if (!currentAssistantMessage) return null;
-      return {
-        ...currentAssistantMessage,
-        content: (event.content as string) || currentAssistantMessage.content,
-        isStreaming: false,
-      };
-
-    case "agent_end":
+    case "error": {
       if (!currentAssistantMessage) return null;
       return {
         ...currentAssistantMessage,
         isStreaming: false,
       };
-
-    case "settled":
-      // Agent has fully settled — mark streaming complete
-      if (!currentAssistantMessage) return null;
-      return {
-        ...currentAssistantMessage,
-        isStreaming: false,
-      };
-
-    case "error":
-      if (!currentAssistantMessage) {
-        // Create an error message if no assistant message exists yet
-        return {
-          id: uniqueId("assistant"),
-          role: "assistant",
-          content: `❌ Error: ${event.error ?? "Unknown error"}`,
-          timestamp: Date.now(),
-          isStreaming: false,
-        };
-      }
-      return {
-        ...currentAssistantMessage,
-        content: currentAssistantMessage.content || `❌ Error: ${event.error}`,
-        isStreaming: false,
-      };
+    }
 
     default:
-      return currentAssistantMessage;
+      return null;
   }
 }

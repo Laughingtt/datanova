@@ -1,10 +1,11 @@
 import { Type, type Static } from "@sinclair/typebox";
 import type { AgentTool } from "@earendil-works/pi-agent-core";
-import { executeSql, isSelectQuery } from "../../mysql/executor.js";
+import { executeSql } from "../../mysql/executor.js";
+import { listDatasources } from "../../store.js";
 
 const ExecuteSqlParams = Type.Object({
-  datasource_id: Type.String({ description: "The ID of the datasource to execute the query against" }),
-  sql: Type.String({ description: "The SQL query to execute. Only SELECT queries are allowed." }),
+  datasource_id: Type.String({ description: "The ID of the datasource to execute the SQL query against. If you don't know the ID, use any string and the tool will return a list of available datasources." }),
+  sql: Type.String({ description: "The SELECT SQL query to execute. Only SELECT, SHOW, DESCRIBE, and EXPLAIN statements are allowed." }),
 });
 
 type ExecuteSqlParams = Static<typeof ExecuteSqlParams>;
@@ -12,67 +13,78 @@ type ExecuteSqlParams = Static<typeof ExecuteSqlParams>;
 export function createExecuteSqlTool(): AgentTool<typeof ExecuteSqlParams, { rowCount: number; executionTime: number }> {
   return {
     name: "execute_sql",
-    description: "Execute a SELECT SQL query against a datasource. Only read-only queries (SELECT, SHOW, DESCRIBE, EXPLAIN) are permitted. Results are limited to 1000 rows with a 30-second timeout.",
+    description: "Execute a SELECT SQL query against a datasource. Use this to query data after discovering the schema. Only SELECT, SHOW, DESCRIBE, and EXPLAIN statements are permitted. If the datasource_id is unknown or invalid, the tool will return a list of all available datasources with their IDs.",
     label: "Execute SQL",
     parameters: ExecuteSqlParams,
     execute: async (_toolCallId: string, params: any) => {
       const typedParams = params as ExecuteSqlParams;
       try {
-        // Guard: only allow SELECT queries
-        if (!isSelectQuery(typedParams.sql)) {
+        // Check if the datasource_id is valid
+        const allDatasources = listDatasources();
+        const enabledDatasources = allDatasources.filter(ds => ds.enabled);
+        const validDs = enabledDatasources.find(ds => ds.id === typedParams.datasource_id);
+
+        if (!validDs) {
+          if (enabledDatasources.length === 0) {
+            return {
+              content: [{ type: "text" as const, text: "No datasources are currently configured. Please configure a MySQL datasource first in the Datasources page, then try again." }],
+              details: { rowCount: 0, executionTime: 0 },
+            };
+          }
+
+          const dsList = enabledDatasources.map(ds =>
+            `  - Name: "${ds.name}" | ID: ${ds.id} | Host: ${ds.host}:${ds.port}/${ds.database}`
+          ).join("\n");
+
           return {
-            content: [{
-              type: "text" as const,
-              text: "Error: Only SELECT queries are allowed. INSERT, UPDATE, DELETE, and DDL statements are not permitted.",
-            }],
+            content: [{ type: "text" as const, text: `The datasource_id "${typedParams.datasource_id}" is not valid. Please use one of the following available datasources:\n\n${dsList}\n\nCall execute_sql again with a valid datasource_id from the list above.` }],
             details: { rowCount: 0, executionTime: 0 },
-            isError: true,
           };
         }
 
-        const result = await executeSql(typedParams.datasource_id, typedParams.sql);
+        const result = await executeSql(
+          typedParams.datasource_id,
+          typedParams.sql
+        );
 
-        // Format result as text
-        let text = `Query executed in ${result.executionTime}ms. ${result.rowCount} rows returned.\n\n`;
+        // Format results for the agent
+        const columns = result.columns ?? [];
+        const rows = result.rows ?? [];
+        const maxRows = 20; // Limit rows shown to agent to avoid token overflow
 
-        if (result.columns.length > 0 && result.rows.length > 0) {
-          // Format as a simple table
-          const colWidths = result.columns.map((col) => {
-            const maxDataWidth = Math.max(
-              ...result.rows.slice(0, 10).map((row) =>
-                String(row[col] ?? "NULL").length
-              )
-            );
-            return Math.max(col.length, maxDataWidth, 4);
+        let output = `Query returned ${rows.length} rows in ${result.executionTime}ms\n\n`;
+
+        if (columns.length > 0 && rows.length > 0) {
+          // Table format
+          const colWidths = columns.map((col: string) => {
+            const maxDataLen = rows.slice(0, maxRows).reduce((max: number, row: Record<string, unknown>) => {
+              const val = String(row[col] ?? "NULL");
+              return Math.max(max, val.length);
+            }, col.length);
+            return Math.min(maxDataLen, 50);
           });
 
           // Header
-          const header = result.columns
-            .map((col, i) => col.padEnd(colWidths[i]))
-            .join(" | ");
-          const separator = colWidths.map((w) => "-".repeat(w)).join("-+-");
+          output += "| " + columns.map((col: string, i: number) => col.padEnd(colWidths[i])).join(" | ") + " |\n";
+          output += "| " + colWidths.map((w: number) => "-".repeat(w)).join(" | ") + " |\n";
 
-          text += header + "\n";
-          text += separator + "\n";
-
-          // Rows (show up to 20 in text)
-          const displayRows = result.rows.slice(0, 20);
-          for (const row of displayRows) {
-            const line = result.columns
-              .map((col, i) => String(row[col] ?? "NULL").padEnd(colWidths[i]))
-              .join(" | ");
-            text += line + "\n";
+          // Rows
+          for (const row of rows.slice(0, maxRows)) {
+            output += "| " + columns.map((col: string, i: number) => {
+              const val = row[col] === null ? "NULL" : String(row[col]);
+              return val.slice(0, 50).padEnd(colWidths[i]);
+            }).join(" | ") + " |\n";
           }
 
-          if (result.rows.length > 20) {
-            text += `... and ${result.rows.length - 20} more rows\n`;
+          if (rows.length > maxRows) {
+            output += `\n... and ${rows.length - maxRows} more rows`;
           }
         }
 
         return {
-          content: [{ type: "text" as const, text }],
+          content: [{ type: "text" as const, text: output }],
           details: {
-            rowCount: result.rowCount,
+            rowCount: rows.length,
             executionTime: result.executionTime,
           },
         };

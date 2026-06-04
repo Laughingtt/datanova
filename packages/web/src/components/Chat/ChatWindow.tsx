@@ -6,14 +6,35 @@ import { useAppStore } from "../../stores/app";
 import MessageList from "./MessageList";
 import ChatInput from "./ChatInput";
 import ModelSelector from "./ModelSelector";
+import DatasourceSelector from "./DatasourceSelector";
 
 const WS_URL = import.meta.env.VITE_WS_URL || `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/ws/chat`;
+
+/** Convert a persisted message from the server into a ChatMessage for the UI */
+function toChatMessage(m: { id: string; role: string; content: string; steps?: unknown[]; timestamp?: number }): ChatMessage {
+  return {
+    id: m.id,
+    role: m.role as "user" | "assistant",
+    content: m.content,
+    timestamp: m.timestamp ?? Date.now(),
+    steps: Array.isArray(m.steps)
+      ? (m.steps as Array<{ id?: string; type?: string; toolName?: string; args?: Record<string, unknown>; result?: unknown; isError?: boolean; content?: string }>).map((s, i) => ({
+          id: s.id ?? `step-${i}`,
+          type: (s.type as "thinking" | "tool_call" | "tool_result") ?? "thinking",
+          toolName: s.toolName,
+          args: s.args,
+          result: s.result,
+          isError: s.isError,
+          content: s.content,
+        }))
+      : undefined,
+  };
+}
 
 export default function ChatWindow() {
   const {
     selectedDatasourceId,
-    selectedConversationId,
-    setSelectedConversationId,
+    selectedDatasourceName,
     modelProvider,
     modelId,
   } = useAppStore();
@@ -26,19 +47,24 @@ export default function ChatWindow() {
   const handleWsEvent = useCallback((data: unknown) => {
     const event = data as { type: string; [key: string]: unknown };
 
-    if (event.type === "connected") {
-      return;
-    }
+    if (event.type === "connected") return;
 
     if (event.type === "init_success") {
       initializedRef.current = event.conversationId as string;
       return;
     }
 
-    // Process agent events
+    if (event.type === "message_history") {
+      const historyMsgs = (event.messages as Array<{ id: string; role: string; content: string; steps?: unknown[]; timestamp?: number }>) ?? [];
+      setMessages(historyMsgs.map(toChatMessage));
+      return;
+    }
+
     const processed = processWsEvent(event, currentAssistantRef.current);
 
     if (processed) {
+      if (processed === "clear") return;
+
       currentAssistantRef.current = processed;
 
       if (event.type === "agent_start") {
@@ -62,7 +88,6 @@ export default function ChatWindow() {
     url: WS_URL,
     onMessage: handleWsEvent,
     onOpen: () => {
-      // Load conversations
       conversationsApi.list(selectedDatasourceId ?? undefined).then(setConversations).catch(() => {});
     },
   });
@@ -79,16 +104,18 @@ export default function ChatWindow() {
         datasourceId: selectedDatasourceId ?? undefined,
       });
       setConversations((prev) => [conv, ...prev]);
+
+      // Update Zustand store with the selected conversation
+      const { setSelectedConversationId } = useAppStore.getState();
       setSelectedConversationId(conv.id);
       setMessages([]);
 
-      // Initialize agent session with selected model
       initSession({
         conversationId: conv.id,
         datasourceId: selectedDatasourceId ?? undefined,
-        datasourceName: undefined,
-        modelProvider,
-        modelId,
+        datasourceName: selectedDatasourceName ?? undefined,
+        modelProvider: modelProvider ?? undefined,
+        modelId: modelId ?? undefined,
       });
     } catch (err) {
       console.error("Failed to create conversation:", err);
@@ -96,16 +123,17 @@ export default function ChatWindow() {
   };
 
   const handleSelectConversation = (id: string) => {
+    const { setSelectedConversationId } = useAppStore.getState();
     setSelectedConversationId(id);
     setMessages([]);
     initializedRef.current = null;
 
-    // Re-initialize agent session with selected model
     initSession({
       conversationId: id,
       datasourceId: selectedDatasourceId ?? undefined,
-      modelProvider,
-      modelId,
+      datasourceName: selectedDatasourceName ?? undefined,
+      modelProvider: modelProvider ?? undefined,
+      modelId: modelId ?? undefined,
     });
   };
 
@@ -113,6 +141,7 @@ export default function ChatWindow() {
     try {
       await conversationsApi.delete(id);
       setConversations((prev) => prev.filter((c) => c.id !== id));
+      const { selectedConversationId, setSelectedConversationId } = useAppStore.getState();
       if (selectedConversationId === id) {
         setSelectedConversationId(null);
         setMessages([]);
@@ -123,8 +152,9 @@ export default function ChatWindow() {
   };
 
   const handleSend = (text: string) => {
+    const { selectedConversationId, setSelectedConversationId } = useAppStore.getState();
+
     if (!selectedConversationId) {
-      // Auto-create conversation
       conversationsApi
         .create({
           title: text.slice(0, 50),
@@ -134,7 +164,6 @@ export default function ChatWindow() {
           setSelectedConversationId(conv.id);
           setConversations((prev) => [conv, ...prev]);
 
-          // Add user message
           const userMsg: ChatMessage = {
             id: `msg-${Date.now()}`,
             role: "user",
@@ -143,15 +172,14 @@ export default function ChatWindow() {
           };
           setMessages([userMsg]);
 
-          // Init and send with selected model
           initSession({
             conversationId: conv.id,
             datasourceId: selectedDatasourceId ?? undefined,
-            modelProvider,
-            modelId,
+            datasourceName: selectedDatasourceName ?? undefined,
+            modelProvider: modelProvider ?? undefined,
+            modelId: modelId ?? undefined,
           });
 
-          // Small delay to allow init to complete
           setTimeout(() => {
             sendMessage(text, conv.id);
           }, 500);
@@ -159,7 +187,6 @@ export default function ChatWindow() {
       return;
     }
 
-    // Add user message
     const userMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
       role: "user",
@@ -167,62 +194,57 @@ export default function ChatWindow() {
       timestamp: Date.now(),
     };
     setMessages((prev) => [...prev, userMsg]);
-
-    // Send to agent
     sendMessage(text, selectedConversationId);
   };
 
   return (
-    <div className="flex h-screen">
-      {/* Conversation list sidebar */}
-      <div className="w-[220px] border-r border-hairline bg-soft-stone/30 flex flex-col">
-        <div className="p-4 border-b border-hairline">
-          <button
-            onClick={handleNewConversation}
-            className="w-full btn-primary text-center"
-          >
-            New Chat
+    <div className="flex h-full">
+      {/* Conversation list panel */}
+      <div className="w-[240px] border-r border-[var(--hairline)] bg-[var(--surface)] flex flex-col">
+        <div className="p-4 border-b border-[var(--hairline)]">
+          <button onClick={handleNewConversation} className="w-full btn-primary text-center">
+            + New Chat
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {conversations.map((conv) => (
-            <div
-              key={conv.id}
-              onClick={() => handleSelectConversation(conv.id)}
-              className={`px-4 py-3 cursor-pointer border-b border-card-border transition-colors ${
-                selectedConversationId === conv.id
-                  ? "bg-canvas-white border-l-2 border-l-coral"
-                  : "hover:bg-soft-stone/50"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-caption text-ink truncate flex-1">
-                  {conv.title ?? "Untitled"}
-                </p>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteConversation(conv.id);
-                  }}
-                  className="text-muted-slate hover:text-error-red text-micro ml-2"
-                >
-                  x
-                </button>
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          {conversations.map((conv) => {
+            const { selectedConversationId } = useAppStore.getState();
+            const isActive = selectedConversationId === conv.id;
+            return (
+              <div
+                key={conv.id}
+                onClick={() => handleSelectConversation(conv.id)}
+                className={`px-4 py-3 cursor-pointer border-b border-[var(--hairline-soft)] transition-colors ${
+                  isActive
+                    ? "bg-[var(--primary-soft)] border-l-2 border-l-[var(--primary)]"
+                    : "hover:bg-[var(--canvas)]"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-[var(--ink)] truncate flex-1">
+                    {conv.title ?? "Untitled"}
+                  </p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteConversation(conv.id);
+                    }}
+                    className="btn-danger text-xs ml-2 px-1.5 py-0.5"
+                  >
+                    ×
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Connection status */}
-        <div className="p-4 border-t border-hairline">
+        <div className="p-4 border-t border-[var(--hairline)]">
           <div className="flex items-center gap-2">
-            <span
-              className={`w-2 h-2 rounded-full ${
-                isConnected ? "bg-deep-green" : "bg-error-red"
-              }`}
-            />
-            <span className="text-micro text-muted-slate">
+            <span className={`w-2 h-2 rounded-full ${isConnected ? "bg-[var(--success)]" : "bg-[var(--error)]"}`} />
+            <span className="text-xs text-[var(--steel)]">
               {isConnected ? "Connected" : "Disconnected"}
             </span>
           </div>
@@ -230,13 +252,22 @@ export default function ChatWindow() {
       </div>
 
       {/* Chat area */}
-      <div className="flex-1 flex flex-col">
-        {/* Header with model selector */}
-        <div className="h-12 border-b border-hairline bg-canvas-white flex items-center px-4 justify-between">
-          <div className="text-caption text-muted-slate">
-            {selectedConversationId ? "Conversation" : "Start a new conversation"}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header with selectors */}
+        <div className="h-12 border-b border-[var(--hairline)] bg-[var(--canvas)] flex items-center px-4 justify-between">
+          <div className="text-sm text-[var(--steel)]">
+            {selectedDatasourceName ? (
+              <span>
+                Connected to <span className="text-[var(--ink)] font-medium">{selectedDatasourceName}</span>
+              </span>
+            ) : (
+              "No datasource selected"
+            )}
           </div>
-          <ModelSelector />
+          <div className="flex items-center gap-3">
+            <DatasourceSelector />
+            <ModelSelector />
+          </div>
         </div>
 
         <MessageList messages={messages} />

@@ -4,6 +4,7 @@ import {
   createConversation,
   deleteConversation,
   updateConversationTitle,
+  listMessages,
 } from "../store.js";
 import { removeHarness } from "../agent/harness-factory.js";
 
@@ -26,6 +27,13 @@ app.post("/", async (c) => {
   });
 
   return c.json(conversation, 201);
+});
+
+// Get conversation messages
+app.get("/:id/messages", (c) => {
+  const id = c.req.param("id");
+  const messages = listMessages(id);
+  return c.json(messages);
 });
 
 // Update conversation title

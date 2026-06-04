@@ -29,6 +29,15 @@ export interface Conversation {
   updated_at: string;
 }
 
+export interface StoredMessage {
+  id: string;
+  conversation_id: string;
+  role: "user" | "assistant";
+  content: string;
+  steps: string | null;       // JSON-serialized AgentStep[]
+  created_at: string;
+}
+
 export interface TableInfo {
   name: string;
   comment?: string;

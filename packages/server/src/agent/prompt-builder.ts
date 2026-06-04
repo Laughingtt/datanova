@@ -1,6 +1,7 @@
 import { formatSkillsForSystemPrompt } from "@earendil-works/pi-agent-core";
 import type { Skill } from "@earendil-works/pi-agent-core";
 import { getAnnotations } from "../store.js";
+import { listDatasources } from "../store.js";
 import { discoverSchema } from "../mysql/discovery.js";
 import { formatSchemaForPrompt } from "../mysql/discovery.js";
 
@@ -33,9 +34,27 @@ Guidelines:
 - Use business-friendly language when explaining technical concepts
 - Reference table and column annotations when available to understand business context`);
 
-  // Datasource info
-  if (options.datasourceId && options.datasourceName) {
-    parts.push(`\n## Current Datasource\nYou are connected to datasource "${options.datasourceName}" (ID: ${options.datasourceId}).\nUse this datasource_id when calling tools.`);
+  // Datasource info — always list available datasources so the agent knows what's available
+  const allDatasources = listDatasources();
+  const enabledDatasources = allDatasources.filter(ds => ds.enabled);
+
+  if (enabledDatasources.length > 0) {
+    const dsList = enabledDatasources.map(ds =>
+      `- "${ds.name}" (ID: ${ds.id}, host: ${ds.host}:${ds.port}/${ds.database})`
+    ).join("\n");
+
+    if (options.datasourceId) {
+      const selectedDs = enabledDatasources.find(ds => ds.id === options.datasourceId);
+      if (selectedDs) {
+        parts.push(`\n## Datasources\nThe user is currently connected to datasource "${selectedDs.name}" (ID: ${selectedDs.id}). Always use this datasource_id when calling tools.\n\nAll available datasources:\n${dsList}`);
+      } else {
+        parts.push(`\n## Datasources\nNo datasource is currently selected. Ask the user which datasource they want to use, or pick the most relevant one from the list below.\n\nAvailable datasources:\n${dsList}`);
+      }
+    } else {
+      parts.push(`\n## Datasources\nNo datasource is currently selected. When the user asks about data, use discover_schema or execute_sql with one of the following datasource IDs. If unsure which one to use, ask the user.\n\nAvailable datasources:\n${dsList}`);
+    }
+  } else {
+    parts.push(`\n## Datasources\nNo datasources are currently configured. If the user asks about data, tell them they need to configure a datasource first in the Datasources page.`);
   }
 
   // Skills
