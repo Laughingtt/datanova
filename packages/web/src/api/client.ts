@@ -112,6 +112,20 @@ export interface SchemaAnnotation {
   table_name: string;
   field_name: string | null;
   annotation: string;
+  status: "draft" | "confirmed";
+  domain_type: "enum" | "range" | null;
+  domain_values: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TableQueryExample {
+  id: string;
+  datasource_id: string;
+  table_name: string;
+  question: string;
+  sql: string;
+  is_verified: number;
   created_at: string;
   updated_at: string;
 }
@@ -137,6 +151,15 @@ export const schemasApi = {
     request<{ success: boolean }>(`/api/schemas/${datasourceId}/annotations/${annotationId}`, {
       method: "DELETE",
     }),
+  aiAnnotate: (dsId: string, tableNames: string[]) =>
+    request<{ tables: unknown[] }>(`/api/schemas/${dsId}/ai-annotate`, {
+      method: "POST",
+      body: JSON.stringify({ table_names: tableNames }),
+    }),
+  confirmAnnotation: (dsId: string, annotationId: string) =>
+    request<SchemaAnnotation>(`/api/schemas/${dsId}/annotations/${annotationId}/confirm`, { method: "PUT" }),
+  schemaPromptPreview: (dsId: string) =>
+    request<{ preview: string }>(`/api/schemas/${dsId}/schema-prompt-preview`),
 };
 
 // ==================== Skills ====================
@@ -189,10 +212,116 @@ export const conversationsApi = {
     request<{ success: boolean }>(`/api/conversations/${id}`, { method: "DELETE" }),
 };
 
+// ==================== Query Examples ====================
+
+export const queryExamplesApi = {
+  list: (dsId: string, tableName?: string) => {
+    const params = tableName ? `?tableName=${encodeURIComponent(tableName)}` : "";
+    return request<TableQueryExample[]>(`/api/schemas/${dsId}/table-query-examples${params}`);
+  },
+  create: (dsId: string, data: { table_name: string; question: string; sql: string }) =>
+    request<TableQueryExample>(`/api/schemas/${dsId}/table-query-examples`, { method: "POST", body: JSON.stringify(data) }),
+  update: (dsId: string, id: string, data: Partial<Pick<TableQueryExample, "question" | "sql" | "is_verified" | "table_name">>) =>
+    request<TableQueryExample>(`/api/schemas/${dsId}/table-query-examples/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  delete: (dsId: string, id: string) =>
+    request<{ success: boolean }>(`/api/schemas/${dsId}/table-query-examples/${id}`, { method: "DELETE" }),
+};
+
+// ==================== Feedback ====================
+
+export const feedbackApi = {
+  submit: (convId: string, msgId: string, data: { rating: string; issue_type?: string; issue_detail?: string }) =>
+    request<any>(`/api/conversations/${convId}/messages/${msgId}/feedback`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+};
+
 // ==================== Health ====================
 
 export const healthApi = {
   check: () => request<{ status: string; version: string }>("/api/health"),
+};
+
+// ==================== Semantic Layer ====================
+
+export interface SemanticMetric {
+  id: string;
+  datasource_id: string;
+  name: string;
+  display_name: string;
+  description: string;
+  sql_expression: string;
+  filters: string;
+  dimensions: string;
+  default_granularity: string | null;
+  unit: string | null;
+  category: string | null;
+  aliases: string;
+  status: "draft" | "published" | "deprecated";
+  version: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SemanticDimension {
+  id: string;
+  datasource_id: string;
+  name: string;
+  display_name: string;
+  sql_expression: string;
+  data_type: "string" | "number" | "date";
+  hierarchy: string | null;
+  values: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SemanticModel {
+  id: string;
+  datasource_id: string;
+  name: string;
+  description: string | null;
+  base_table: string;
+  joins: string;
+  metrics: string;
+  dimensions: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const semanticApi = {
+  listMetrics: (dsId: string) =>
+    request<SemanticMetric[]>(`/api/datasources/${dsId}/metrics`),
+  createMetric: (dsId: string, data: any) =>
+    request<SemanticMetric>(`/api/datasources/${dsId}/metrics`, { method: "POST", body: JSON.stringify(data) }),
+  updateMetric: (dsId: string, id: string, data: any) =>
+    request<SemanticMetric>(`/api/datasources/${dsId}/metrics/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteMetric: (dsId: string, id: string) =>
+    request<{ success: boolean }>(`/api/datasources/${dsId}/metrics/${id}`, { method: "DELETE" }),
+  testMetric: (dsId: string, id: string) =>
+    request<any>(`/api/datasources/${dsId}/metrics/${id}/test`, { method: "POST" }),
+
+  listDimensions: (dsId: string) =>
+    request<SemanticDimension[]>(`/api/datasources/${dsId}/dimensions`),
+  createDimension: (dsId: string, data: any) =>
+    request<SemanticDimension>(`/api/datasources/${dsId}/dimensions`, { method: "POST", body: JSON.stringify(data) }),
+  updateDimension: (dsId: string, id: string, data: any) =>
+    request<SemanticDimension>(`/api/datasources/${dsId}/dimensions/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteDimension: (dsId: string, id: string) =>
+    request<{ success: boolean }>(`/api/datasources/${dsId}/dimensions/${id}`, { method: "DELETE" }),
+
+  listModels: (dsId: string) =>
+    request<SemanticModel[]>(`/api/datasources/${dsId}/models`),
+  createModel: (dsId: string, data: any) =>
+    request<SemanticModel>(`/api/datasources/${dsId}/models`, { method: "POST", body: JSON.stringify(data) }),
+  updateModel: (dsId: string, id: string, data: any) =>
+    request<SemanticModel>(`/api/datasources/${dsId}/models/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteModel: (dsId: string, id: string) =>
+    request<{ success: boolean }>(`/api/datasources/${dsId}/models/${id}`, { method: "DELETE" }),
+
+  aiSuggestSemantic: (dsId: string) =>
+    request<{ tables: any[] }>(`/api/datasources/${dsId}/ai-suggest-semantic`, { method: "POST" }),
 };
 
 // ==================== Models ====================
@@ -210,4 +339,81 @@ export interface ProviderModels {
 
 export const modelsApi = {
   list: () => request<ProviderModels[]>("/api/models"),
+};
+
+// ==================== Scheduled Queries ====================
+
+export interface ScheduledQuery {
+  id: string;
+  datasource_id: string;
+  name: string;
+  description: string | null;
+  sql: string;
+  cron_expression: string;
+  timezone: string;
+  enabled: number;
+  alert_conditions: string | null;
+  last_run_at: string | null;
+  last_run_status: "success" | "error" | null;
+  last_run_result: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface QueryAlert {
+  id: string;
+  scheduled_query_id: string;
+  severity: "warning" | "critical";
+  condition_triggered: string;
+  actual_value: string;
+  threshold: string;
+  created_at: string;
+}
+
+export const scheduledApi = {
+  list: (dsId: string) => request<ScheduledQuery[]>(`/api/datasources/${dsId}/scheduled-queries`),
+  create: (dsId: string, data: Partial<Omit<ScheduledQuery, "id" | "created_at" | "updated_at" | "last_run_at" | "last_run_status" | "last_run_result">>) =>
+    request<ScheduledQuery>(`/api/datasources/${dsId}/scheduled-queries`, { method: "POST", body: JSON.stringify(data) }),
+  update: (dsId: string, id: string, data: Partial<ScheduledQuery>) =>
+    request<ScheduledQuery>(`/api/datasources/${dsId}/scheduled-queries/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  delete: (dsId: string, id: string) =>
+    request<{ success: boolean }>(`/api/datasources/${dsId}/scheduled-queries/${id}`, { method: "DELETE" }),
+  execute: (dsId: string, id: string) =>
+    request<ScheduledQuery>(`/api/datasources/${dsId}/scheduled-queries/${id}/execute`, { method: "POST" }),
+  history: (dsId: string, id: string) =>
+    request<any[]>(`/api/datasources/${dsId}/scheduled-queries/${id}/history`),
+  listAlerts: (dsId: string, since?: string) => {
+    const params = since ? `?since=${encodeURIComponent(since)}` : "";
+    return request<QueryAlert[]>(`/api/datasources/${dsId}/query-alerts${params}`);
+  },
+};
+
+// ==================== Data Dictionary ====================
+
+export interface DictionarySearchResult {
+  metrics: any[];
+  dimensions: any[];
+  tables: any[];
+  columns: any[];
+}
+
+export interface TableDetail {
+  table: any;
+  annotations: any[];
+  relatedMetrics: any[];
+}
+
+export interface RecentChanges {
+  annotations: any[];
+  metrics: any[];
+  dimensions: any[];
+}
+
+export const dictionaryApi = {
+  search: (dsId: string, query: string) =>
+    request<DictionarySearchResult>(`/api/datasources/${dsId}/dictionary/search?q=${encodeURIComponent(query)}`),
+  tableDetail: (dsId: string, tableName: string) =>
+    request<TableDetail>(`/api/datasources/${dsId}/dictionary/tables/${tableName}`),
+  recentChanges: (dsId: string) =>
+    request<RecentChanges>(`/api/datasources/${dsId}/dictionary/recent-changes`),
 };

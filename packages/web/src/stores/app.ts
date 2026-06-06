@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type AppView = "chat" | "datasources" | "schemas";
+export type AppView = "chat" | "datasources" | "schemas" | "metrics" | "scheduled" | "dictionary";
 
 interface AppState {
   // Navigation
@@ -15,6 +15,10 @@ interface AppState {
   // Selected conversation
   selectedConversationId: string | null;
   setSelectedConversationId: (id: string | null) => void;
+
+  // Selected metric (for metrics page)
+  selectedMetricId: string | null;
+  setSelectedMetricId: (id: string | null) => void;
 
   // Model selection
   modelProvider: string | null;
@@ -38,6 +42,10 @@ export const useAppStore = create<AppState>((set) => ({
   // Selected conversation
   selectedConversationId: null,
   setSelectedConversationId: (id) => set({ selectedConversationId: id }),
+
+  // Selected metric
+  selectedMetricId: null,
+  setSelectedMetricId: (id) => set({ selectedMetricId: id }),
 
   // Model selection
   modelProvider: null,

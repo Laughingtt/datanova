@@ -2,15 +2,17 @@ import { Type, type Static } from "@sinclair/typebox";
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import { executeSql } from "../../mysql/executor.js";
 import { listDatasources } from "../../store.js";
+import { validateSqlAgainstSchema, checkLargeTableWithoutWhere } from "../../mysql/validator.js";
 
 const ExecuteSqlParams = Type.Object({
   datasource_id: Type.String({ description: "The ID of the datasource to execute the SQL query against. If you don't know the ID, use any string and the tool will return a list of available datasources." }),
   sql: Type.String({ description: "The SELECT SQL query to execute. Only SELECT, SHOW, DESCRIBE, and EXPLAIN statements are allowed." }),
+  skip_probe: Type.Optional(Type.Boolean({ description: "If true, skip probe execution. Set to true for semantic layer queries marked with /* source: semantic_layer */." })),
 });
 
 type ExecuteSqlParams = Static<typeof ExecuteSqlParams>;
 
-export function createExecuteSqlTool(): AgentTool<typeof ExecuteSqlParams, { rowCount: number; executionTime: number }> {
+export function createExecuteSqlTool(): AgentTool<typeof ExecuteSqlParams, { rowCount: number; executionTime: number; validationWarnings?: string[] }> {
   return {
     name: "execute_sql",
     description: "Execute a SELECT SQL query against a datasource. Use this to query data after discovering the schema. Only SELECT, SHOW, DESCRIBE, and EXPLAIN statements are permitted. If the datasource_id is unknown or invalid, the tool will return a list of all available datasources with their IDs.",
@@ -42,6 +44,22 @@ export function createExecuteSqlTool(): AgentTool<typeof ExecuteSqlParams, { row
           };
         }
 
+        // P1-C7: Validate SQL against schema before execution
+        const validation = validateSqlAgainstSchema(typedParams.sql, typedParams.datasource_id);
+        if (!validation.passed) {
+          return {
+            content: [{ type: "text" as const, text: `SQL validation failed:\n${validation.errors.join("\n")}\n\nPlease correct the SQL and try again.` }],
+            details: { rowCount: 0, executionTime: 0, validationWarnings: validation.errors },
+            isError: true,
+          };
+        }
+
+        // P1-C6: Check for large table without WHERE (async warning)
+        let largeTableWarning: string | null = null;
+        if (!typedParams.skip_probe) {
+          largeTableWarning = await checkLargeTableWithoutWhere(typedParams.datasource_id, typedParams.sql);
+        }
+
         const result = await executeSql(
           typedParams.datasource_id,
           typedParams.sql
@@ -53,6 +71,10 @@ export function createExecuteSqlTool(): AgentTool<typeof ExecuteSqlParams, { row
         const maxRows = 20; // Limit rows shown to agent to avoid token overflow
 
         let output = `Query returned ${rows.length} rows in ${result.executionTime}ms\n\n`;
+
+        if (largeTableWarning) {
+          output += `⚠️ Warning: ${largeTableWarning}\n\n`;
+        }
 
         if (columns.length > 0 && rows.length > 0) {
           // Table format
@@ -86,6 +108,7 @@ export function createExecuteSqlTool(): AgentTool<typeof ExecuteSqlParams, { row
           details: {
             rowCount: rows.length,
             executionTime: result.executionTime,
+            validationWarnings: largeTableWarning ? [largeTableWarning] : [],
           },
         };
       } catch (err) {

@@ -4,9 +4,10 @@ import MessageItem from "./MessageItem";
 
 interface MessageListProps {
   messages: ChatMessage[];
+  conversationId?: string;
 }
 
-export default function MessageList({ messages }: MessageListProps) {
+export default function MessageList({ messages, conversationId }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function MessageList({ messages }: MessageListProps) {
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar bg-[var(--surface)]">
       {messages.map((message) => (
-        <MessageItem key={message.id} message={message} />
+        <MessageItem key={message.id} message={message} conversationId={conversationId} />
       ))}
       <div ref={bottomRef} />
     </div>

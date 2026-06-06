@@ -2,10 +2,11 @@ import { useState, useRef, type KeyboardEvent } from "react";
 
 interface ChatInputProps {
   onSend: (text: string) => void;
+  onNewTopic?: () => void;
   disabled?: boolean;
 }
 
-export default function ChatInput({ onSend, disabled }: ChatInputProps) {
+export default function ChatInput({ onSend, onNewTopic, disabled }: ChatInputProps) {
   const [text, setText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -47,6 +48,18 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
           className="flex-1 resize-none bg-transparent text-sm text-[var(--ink)] placeholder-[var(--stone)]
                      focus:outline-none min-h-[24px] max-h-[200px] leading-relaxed"
         />
+        {onNewTopic && (
+          <button
+            onClick={onNewTopic}
+            disabled={disabled}
+            className="shrink-0 h-8 px-3 flex items-center justify-center rounded-md
+                       bg-[var(--surface)] border border-[var(--hairline-strong)] text-xs font-medium
+                       text-[var(--steel)] hover:text-[var(--ink)] hover:border-[var(--steel)] transition-colors
+                       disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            🔄 新话题
+          </button>
+        )}
         <button
           onClick={handleSubmit}
           disabled={disabled || !text.trim()}

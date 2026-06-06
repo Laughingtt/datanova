@@ -35,6 +35,7 @@ export default function ChatWindow() {
   const {
     selectedDatasourceId,
     selectedDatasourceName,
+    selectedConversationId,
     modelProvider,
     modelId,
   } = useAppStore();
@@ -149,6 +150,24 @@ export default function ChatWindow() {
     } catch (err) {
       console.error("Failed to delete conversation:", err);
     }
+  };
+
+  const handleNewTopic = () => {
+    const { selectedConversationId: convId } = useAppStore.getState();
+    if (!convId) return;
+
+    send({
+      type: "reset_context",
+      payload: {
+        conversationId: convId,
+        datasourceId: selectedDatasourceId,
+        datasourceName: selectedDatasourceName,
+        modelProvider,
+        modelId,
+      },
+    });
+
+    currentAssistantRef.current = null;
   };
 
   const handleSend = (text: string) => {
@@ -270,8 +289,8 @@ export default function ChatWindow() {
           </div>
         </div>
 
-        <MessageList messages={messages} />
-        <ChatInput onSend={handleSend} disabled={isStreaming} />
+        <MessageList messages={messages} conversationId={selectedConversationId ?? undefined} />
+        <ChatInput onSend={handleSend} onNewTopic={handleNewTopic} disabled={isStreaming} />
       </div>
     </div>
   );

@@ -2,6 +2,10 @@ import { AgentHarness, InMemorySessionRepo, type Skill, type AgentTool, type Exe
 import { getModel, getEnvApiKey } from "@earendil-works/pi-ai";
 import { createDiscoverSchemaTool } from "./tools/discover-schema.js";
 import { createExecuteSqlTool } from "./tools/execute-sql.js";
+import { createAiAnnotateSchemaTool } from "./tools/ai-annotate-schema.js";
+import { createLookupSemanticLayerTool } from "./tools/lookup-semantic-layer.js";
+import { createLookupExamplesTool } from "./tools/lookup-examples.js";
+import { createAiSuggestSemanticTool } from "./tools/ai-suggest-semantic.js";
 import { buildDataNovaSystemPrompt, type DataNovaSystemPromptOptions } from "./prompt-builder.js";
 import { loadAllSkills } from "./skill-manager.js";
 
@@ -27,6 +31,10 @@ export async function createHarness(options: CreateHarnessOptions): Promise<Agen
   const tools: AgentTool[] = [
     createDiscoverSchemaTool(),
     createExecuteSqlTool(),
+    createAiAnnotateSchemaTool(),
+    createLookupSemanticLayerTool(),
+    createLookupExamplesTool(),
+    createAiSuggestSemanticTool(),
   ];
 
   // Load skills
@@ -89,6 +97,20 @@ export async function refreshHarnessSkills(conversationId: string): Promise<void
   await harness.setResources({
     skills,
   });
+}
+
+/**
+ * Refresh skills for all harnesses using a specific datasource.
+ * Called after annotation changes to keep Agent prompts up-to-date.
+ */
+export function refreshHarnessesForDatasource(_datasourceId: string): void {
+  // Refresh all harnesses — we don't track which harness uses which datasource
+  // so we refresh all. This is fine since there are typically few active sessions.
+  for (const [conversationId] of harnessMap) {
+    refreshHarnessSkills(conversationId).catch(() => {
+      // Ignore errors during background refresh
+    });
+  }
 }
 
 export async function removeHarness(conversationId: string): Promise<void> {
