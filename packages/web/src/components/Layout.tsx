@@ -4,6 +4,9 @@ const navItems: { key: AppView; label: string; icon: string }[] = [
   { key: "chat", label: "对话", icon: "💬" },
   { key: "datasources", label: "数据源", icon: "🔌" },
   { key: "schemas", label: "Schema", icon: "🏷️" },
+  { key: "metrics", label: "指标管理", icon: "📊" },
+  { key: "scheduled", label: "定时查询", icon: "⏰" },
+  { key: "dictionary", label: "数据字典", icon: "📖" },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {

@@ -12,6 +12,11 @@ import skillsRoutes from "./routes/skills.js";
 import conversationsRoutes from "./routes/conversations.js";
 import modelsRoutes from "./routes/models.js";
 import { createChatHandler } from "./ws/chat-handler.js";
+import { saveFeedback } from "./store.js";
+import { createSemanticRoutes } from "./routes/semantic.js";
+import { createScheduledRoutes } from "./routes/scheduled.js";
+import { createDictionaryRoutes } from "./routes/dictionary.js";
+import { startScheduler, stopScheduler } from "./scheduler.js";
 
 // Ensure data directories exist
 ensureDataDirs();
@@ -41,6 +46,26 @@ app.route("/api/skills", skillsRoutes);
 app.route("/api/conversations", conversationsRoutes);
 app.route("/api/models", modelsRoutes);
 
+// Feedback API
+app.post("/api/conversations/:convId/messages/:msgId/feedback", async (c) => {
+  const convId = c.req.param("convId");
+  const msgId = c.req.param("msgId");
+  const body = await c.req.json();
+  const feedback = saveFeedback({
+    message_id: msgId,
+    conversation_id: convId,
+    rating: body.rating,
+    issue_type: body.issue_type ?? null,
+    issue_detail: body.issue_detail ?? null,
+  });
+  return c.json(feedback, 201);
+});
+
+// Semantic layer, scheduled queries, data dictionary routes
+app.route("/", createSemanticRoutes());
+app.route("/", createScheduledRoutes());
+app.route("/", createDictionaryRoutes());
+
 // WebSocket setup
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
 
@@ -69,6 +94,7 @@ const server = serve(
   },
   () => {
     console.log(`DataNova server running on http://localhost:${port}`);
+    startScheduler();
   }
 );
 
@@ -78,6 +104,7 @@ injectWebSocket(server);
 // Graceful shutdown
 process.on("SIGTERM", async () => {
   console.log("Shutting down...");
+  stopScheduler();
   await closeAllPools();
   server.close();
   process.exit(0);
@@ -85,6 +112,7 @@ process.on("SIGTERM", async () => {
 
 process.on("SIGINT", async () => {
   console.log("Shutting down...");
+  stopScheduler();
   await closeAllPools();
   server.close();
   process.exit(0);

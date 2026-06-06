@@ -1,10 +1,10 @@
 import type { WSContext } from "hono/ws";
-import { createHarness, getHarness, type CreateHarnessOptions } from "../agent/harness-factory.js";
+import { createHarness, getHarness, removeHarness, type CreateHarnessOptions } from "../agent/harness-factory.js";
 import type { AgentHarnessEvent, Skill, PromptTemplate } from "@earendil-works/pi-agent-core";
 import { saveMessage, listMessages } from "../store.js";
 
 interface WsMessage {
-  type: "init" | "message";
+  type: "init" | "message" | "reset_context";
   payload?: Record<string, unknown>;
   text?: string;
 }
@@ -47,6 +47,8 @@ export function createChatHandler() {
           await handleInit(ws, data);
         } else if (data.type === "message") {
           await handleMessage(ws, data);
+        } else if (data.type === "reset_context") {
+          await handleResetContext(ws, data);
         } else {
           sendEvent(ws, { type: "error", error: `Unknown message type: ${data.type}` });
         }
@@ -180,6 +182,45 @@ async function handleMessage(ws: WSContext, data: WsMessage): Promise<void> {
   } catch (err) {
     const error = err as Error;
     sendEvent(ws, { type: "error", error: error.message });
+  }
+}
+
+/**
+ * Handle reset_context — re-create the harness to clear conversation context.
+ */
+async function handleResetContext(ws: WSContext, data: WsMessage): Promise<void> {
+  const conversationId = (data.payload?.conversationId as string) ?? "";
+  if (!conversationId) {
+    sendEvent(ws, { type: "error", error: "Missing conversationId" });
+    return;
+  }
+
+  try {
+    // Remove existing harness (clears agent context)
+    await removeHarness(conversationId);
+
+    // Re-create with the same options (datasource info from payload)
+    const options: CreateHarnessOptions = {
+      conversationId,
+      datasourceId: data.payload?.datasourceId as string | undefined,
+      datasourceName: data.payload?.datasourceName as string | undefined,
+      modelProvider: data.payload?.modelProvider as string | undefined,
+      modelId: data.payload?.modelId as string | undefined,
+    };
+
+    const harness = await createHarness(options);
+
+    // Re-subscribe to events
+    const streamingState: StreamingAssistantState = { content: "", steps: [] };
+    harness.subscribe((event: AgentHarnessEvent<Skill, PromptTemplate>) => {
+      accumulateStreamingState(streamingState, event);
+      forwardEvent(ws, event);
+    });
+
+    sendEvent(ws, { type: "init_success", conversationId });
+  } catch (err) {
+    const error = err as Error;
+    sendEvent(ws, { type: "error", error: `Failed to reset context: ${error.message}` });
   }
 }
 

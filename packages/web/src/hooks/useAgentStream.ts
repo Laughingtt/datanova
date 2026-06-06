@@ -2,6 +2,36 @@ import { useCallback } from "react";
 
 // ==================== Types ====================
 
+export interface ReportSection {
+  title: string;
+  content: string;
+  hasTable: boolean;
+}
+
+export function parseReportSections(content: string): ReportSection[] {
+  const sections: ReportSection[] = [];
+  const headerRegex = /^##\s+(.+)/gm;
+  const headers: { title: string; index: number }[] = [];
+  let match;
+  while ((match = headerRegex.exec(content)) !== null) {
+    headers.push({ title: match[1].trim(), index: match.index });
+  }
+  if (headers.length < 3) return [];
+  for (let i = 0; i < headers.length; i++) {
+    const start = headers[i].index + content.slice(headers[i].index).indexOf("\n") + 1;
+    const end = i + 1 < headers.length ? headers[i + 1].index : content.length;
+    const sectionContent = content.slice(start, end).trim();
+    if (sectionContent) {
+      sections.push({
+        title: headers[i].title,
+        content: sectionContent,
+        hasTable: sectionContent.includes("|") || sectionContent.includes("```"),
+      });
+    }
+  }
+  return sections.length >= 3 ? sections : [];
+}
+
 export interface AgentStep {
   id: string;
   type: "thinking" | "tool_call" | "tool_result";
@@ -10,6 +40,11 @@ export interface AgentStep {
   result?: unknown;
   isError?: boolean;
   content?: string;
+}
+
+export interface ValidationStatus {
+  level: "error" | "warning" | "info";
+  message: string;
 }
 
 export interface ChatMessage {
@@ -21,6 +56,9 @@ export interface ChatMessage {
   steps?: AgentStep[];
   sqlBlock?: string;
   tableData?: TableData;
+  validationStatus?: ValidationStatus;
+  followUpContext?: string;
+  reportSections?: ReportSection[];
 }
 
 export interface TableData {
@@ -200,6 +238,22 @@ export function processWsEvent(
         ...currentAssistantMessage,
         content,
         isStreaming: false,
+      };
+    }
+
+    case "validation_warning": {
+      if (!currentAssistantMessage) return null;
+      return {
+        ...currentAssistantMessage,
+        validationStatus: { level: "warning" as const, message: (event.message as string) ?? "" },
+      };
+    }
+
+    case "validation_error": {
+      if (!currentAssistantMessage) return null;
+      return {
+        ...currentAssistantMessage,
+        validationStatus: { level: "error" as const, message: (event.message as string) ?? "" },
       };
     }
 

@@ -26,12 +26,13 @@ export async function executeSql(
     // Set timeout
     await conn.query(`SET SESSION max_execution_time = ${timeout}`);
 
-    // Execute query with limit
-    const limitedSql = sql.trim().endsWith(";")
-      ? sql.slice(0, -1) + ` LIMIT ${rowLimit}`
-      : sql + ` LIMIT ${rowLimit}`;
+    // P1-C2: Smart LIMIT injection — strip trailing comments/semicolons first
+    let cleanSql = sql.trim().replace(/;?\s*(--.*)?$/, '');
+    if (!/\bLIMIT\s+\d+/i.test(cleanSql)) {
+      cleanSql += ` LIMIT ${rowLimit}`;
+    }
 
-    const [rows] = await conn.query<RowDataPacket[] | ResultSetHeader>(limitedSql);
+    const [rows] = await conn.query<RowDataPacket[] | ResultSetHeader>(cleanSql);
 
     const executionTime = Date.now() - startTime;
 
