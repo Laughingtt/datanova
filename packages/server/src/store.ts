@@ -145,7 +145,7 @@ function initTables(database: Database.Database): void {
       sql_expression TEXT NOT NULL,
       data_type TEXT NOT NULL DEFAULT 'string' CHECK(data_type IN ('string', 'number', 'date')),
       hierarchy TEXT,
-      values TEXT,
+      "values" TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (datasource_id) REFERENCES datasources(id) ON DELETE CASCADE,
