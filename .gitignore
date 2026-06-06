@@ -37,3 +37,4 @@ data/
 *.db
 .env
 .pids/
+.claude
