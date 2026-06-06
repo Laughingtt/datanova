@@ -237,6 +237,29 @@ MessageList → MessageItem 渲染每条消息:
 | PUT | `/api/conversations/:id/title` | 更新标题 |
 | DELETE | `/api/conversations/:id` | 删除对话 |
 | GET | `/api/models` | 列出可用模型/Provider |
+| GET | `/api/datasources/:dsId/metrics` | 列出语义指标 |
+| POST | `/api/datasources/:dsId/metrics` | 创建语义指标 |
+| PUT | `/api/datasources/:dsId/metrics/:id` | 更新语义指标 |
+| DELETE | `/api/datasources/:dsId/metrics/:id` | 删除语义指标 |
+| POST | `/api/datasources/:dsId/metrics/:id/test` | 测试指标 SQL |
+| GET | `/api/datasources/:dsId/dimensions` | 列出语义维度 |
+| POST | `/api/datasources/:dsId/dimensions` | 创建语义维度 |
+| PUT | `/api/datasources/:dsId/dimensions/:id` | 更新语义维度 |
+| DELETE | `/api/datasources/:dsId/dimensions/:id` | 删除语义维度 |
+| GET | `/api/datasources/:dsId/models` | 列出语义模型 |
+| POST | `/api/datasources/:dsId/models` | 创建语义模型 |
+| PUT | `/api/datasources/:dsId/models/:id` | 更新语义模型 |
+| DELETE | `/api/datasources/:dsId/models/:id` | 删除语义模型 |
+| GET | `/api/datasources/:dsId/scheduled-queries` | 列出定时查询 |
+| POST | `/api/datasources/:dsId/scheduled-queries` | 创建定时查询 |
+| PUT | `/api/datasources/:dsId/scheduled-queries/:id` | 更新定时查询 |
+| DELETE | `/api/datasources/:dsId/scheduled-queries/:id` | 删除定时查询 |
+| POST | `/api/datasources/:dsId/scheduled-queries/:id/execute` | 立即执行定时查询 |
+| GET | `/api/datasources/:dsId/scheduled-queries/:id/history` | 执行历史 |
+| GET | `/api/datasources/:dsId/query-alerts` | 查询告警 |
+| GET | `/api/datasources/:dsId/dictionary/search` | 数据字典搜索 |
+| GET | `/api/datasources/:dsId/dictionary/tables/:tableName` | 表详情 |
+| GET | `/api/datasources/:dsId/dictionary/recent-changes` | 最近变更 |
 
 ## WebSocket 协议
 
@@ -267,6 +290,17 @@ MessageList → MessageItem 渲染每条消息:
 { "type": "settled" }                      // Agent 完全结束
 { "type": "response_complete", "content" } // 完整响应
 ```
+
+## Agent 工具
+
+| 工具 | 说明 |
+|---|---|
+| `discover_schema` | 发现数据库 Schema（表、列、外键） |
+| `execute_sql` | 执行 SELECT 查询（30s 超时，1000 行限制） |
+| `ai_annotate_schema` | AI 自动生成业务注解 |
+| `lookup_semantic_layer` | 搜索语义层指标/维度，返回确定性 SQL |
+| `lookup_examples` | 搜索历史成功查询作为 Few-Shot 示例 |
+| `ai_suggest_semantic_layer` | AI 推荐语义层指标/维度/模型定义 |
 
 ## 项目结构
 
@@ -338,3 +372,7 @@ pi_datanova/
 3. **乐观 UI 更新**: 用户消息立即显示，不等服务端确认。
 4. **SQL 安全限制**: `execute_sql` 仅允许 SELECT/SHOW/DESCRIBE/EXPLAIN，30 秒超时，最多 1000 行。
 5. **多 Provider 支持**: 通过 `@earendil-works/pi-ai` 支持 Anthropic、OpenAI、DeepSeek 等，前端可动态切换。
+6. **语义层 (Semantic Layer)**: 定义指标、维度、模型，实现确定性 SQL 生成
+7. **定时查询 (Scheduled Queries)**: 基于 cron 的自动查询执行，支持告警条件
+8. **数据字典 (Data Dictionary)**: 全局搜索指标、维度、表、字段
+9. **智能报告 (Smart Reports)**: 自动生成多维度分析报告，支持 Markdown/HTML 导出
