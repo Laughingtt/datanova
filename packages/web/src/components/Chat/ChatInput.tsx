@@ -42,7 +42,7 @@ export default function ChatInput({ onSend, onNewTopic, disabled }: ChatInputPro
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           onInput={handleInput}
-          placeholder="Ask about your data…"
+          placeholder="输入你的问题，查询数据库…"
           disabled={disabled}
           rows={1}
           className="flex-1 resize-none bg-transparent text-sm text-[var(--ink)] placeholder-[var(--stone)]

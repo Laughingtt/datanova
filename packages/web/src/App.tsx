@@ -7,6 +7,7 @@ import MetricsPage from "./components/Metrics/MetricsPage";
 import ScheduledPage from "./components/Scheduled/ScheduledPage";
 import DictionaryPage from "./components/Dictionary/DictionaryPage";
 import OnboardingWizard from "./components/Onboarding/OnboardingWizard";
+import QueryHistoryPage from "./components/History/QueryHistoryPage";
 
 export default function App() {
   const { view, selectedDatasourceId, onboardingCompleted } = useAppStore();
@@ -32,6 +33,7 @@ export default function App() {
       )}
       {view === "scheduled" && <ScheduledPage />}
       {view === "dictionary" && <DictionaryPage />}
+      {view === "queryHistory" && <QueryHistoryPage />}
     </Layout>
   );
 }

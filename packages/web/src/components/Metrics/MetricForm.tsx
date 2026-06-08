@@ -154,7 +154,7 @@ export default function MetricForm({
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               required
-              placeholder="Revenue"
+              placeholder="营收"
             />
           </div>
         </div>
@@ -166,7 +166,7 @@ export default function MetricForm({
             className="input-field min-h-[80px] resize-y"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe what this metric measures..."
+            placeholder="描述这个指标衡量什么..."
           />
         </div>
 
@@ -178,7 +178,7 @@ export default function MetricForm({
             value={sqlExpression}
             onChange={setSqlExpression}
             mode="aggregate"
-            placeholder="SUM(table.column)"
+            placeholder="SUM(表.列)"
           />
         </div>
 
@@ -240,7 +240,7 @@ export default function MetricForm({
               className="input-field"
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
-              placeholder="CNY, %, count"
+              placeholder="元, %, 个"
             />
           </div>
           <div>
@@ -249,7 +249,7 @@ export default function MetricForm({
               className="input-field"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              placeholder="Finance, Operations"
+              placeholder="财务, 运营"
             />
           </div>
         </div>
@@ -271,9 +271,9 @@ export default function MetricForm({
           <div className="flex gap-3">
             {(["draft", "published", "deprecated"] as const).map((s) => {
               const badge = {
-                draft: { dot: "bg-[var(--warning)]", label: "Draft" },
-                published: { dot: "bg-[var(--success)]", label: "Published" },
-                deprecated: { dot: "bg-[var(--error)]", label: "Deprecated" },
+                draft: { dot: "bg-[var(--warning)]", label: "草稿" },
+                published: { dot: "bg-[var(--success)]", label: "已发布" },
+                deprecated: { dot: "bg-[var(--error)]", label: "已弃用" },
               }[s];
               return (
                 <button

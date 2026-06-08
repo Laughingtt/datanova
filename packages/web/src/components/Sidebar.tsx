@@ -7,6 +7,7 @@ const navItems: { key: AppView; label: string; icon: string }[] = [
   { key: "metrics", label: "指标管理", icon: "📊" },
   { key: "scheduled", label: "定时查询", icon: "⏰" },
   { key: "dictionary", label: "数据字典", icon: "📖" },
+  { key: "queryHistory", label: "SQL 历史", icon: "📋" },
 ];
 
 export default function Sidebar() {
@@ -19,7 +20,7 @@ export default function Sidebar() {
         <h1 className="font-display text-2xl tracking-tight text-white">
           DataNova
         </h1>
-        <p className="text-micro text-muted-slate mt-1">Text2SQL Assistant</p>
+        <p className="text-micro text-muted-slate mt-1">AI 数据查询助手</p>
       </div>
 
       {/* Navigation */}

@@ -13,9 +13,9 @@ import ModelForm from "./ModelForm";
 type TabKey = "metrics" | "dimensions" | "models";
 
 const STATUS_BADGE: Record<string, { dot: string; label: string; cls: string }> = {
-  published:  { dot: "bg-[var(--success)]",  label: "Published",  cls: "text-[var(--success)]" },
-  draft:      { dot: "bg-[var(--warning)]",   label: "Draft",      cls: "text-[var(--warning)]" },
-  deprecated: { dot: "bg-[var(--error)]",     label: "Deprecated", cls: "text-[var(--error)]" },
+  published:  { dot: "bg-[var(--success)]",  label: "已发布",  cls: "text-[var(--success)]" },
+  draft:      { dot: "bg-[var(--warning)]",   label: "草稿",      cls: "text-[var(--warning)]" },
+  deprecated: { dot: "bg-[var(--error)]",     label: "已弃用", cls: "text-[var(--error)]" },
 };
 
 export default function MetricsPage() {
@@ -136,9 +136,9 @@ export default function MetricsPage() {
     : models; // models don't have status, show all
 
   const tabs: { key: TabKey; label: string }[] = [
-    { key: "metrics", label: "Metrics" },
-    { key: "dimensions", label: "Dimensions" },
-    { key: "models", label: "Models" },
+    { key: "metrics", label: "指标" },
+    { key: "dimensions", label: "维度" },
+    { key: "models", label: "模型" },
   ];
 
   return (
@@ -223,9 +223,9 @@ export default function MetricsPage() {
               {tab === "metrics" && (
                 <>
                   {metricsLoading ? (
-                    <p className="text-sm text-[var(--steel)] py-4">Loading...</p>
+                    <p className="text-sm text-[var(--steel)] py-4">加载中...</p>
                   ) : filteredMetrics.length === 0 ? (
-                    <p className="text-sm text-[var(--steel)] py-4">No metrics defined yet</p>
+                    <p className="text-sm text-[var(--steel)] py-4">暂无指标定义</p>
                   ) : (
                     filteredMetrics.map((m) => {
                       const badge = STATUS_BADGE[m.status] || STATUS_BADGE.draft;
@@ -264,9 +264,9 @@ export default function MetricsPage() {
               {tab === "dimensions" && (
                 <>
                   {dimensionsLoading ? (
-                    <p className="text-sm text-[var(--steel)] py-4">Loading...</p>
+                    <p className="text-sm text-[var(--steel)] py-4">加载中...</p>
                   ) : filteredDimensions.length === 0 ? (
-                    <p className="text-sm text-[var(--steel)] py-4">No dimensions defined yet</p>
+                    <p className="text-sm text-[var(--steel)] py-4">暂无维度定义</p>
                   ) : (
                     filteredDimensions.map((d) => {
                       const isSelected = selectedDimension?.id === d.id;
@@ -301,9 +301,9 @@ export default function MetricsPage() {
               {tab === "models" && (
                 <>
                   {modelsLoading ? (
-                    <p className="text-sm text-[var(--steel)] py-4">Loading...</p>
+                    <p className="text-sm text-[var(--steel)] py-4">加载中...</p>
                   ) : filteredModels.length === 0 ? (
-                    <p className="text-sm text-[var(--steel)] py-4">No models defined yet</p>
+                    <p className="text-sm text-[var(--steel)] py-4">暂无模型定义</p>
                   ) : (
                     filteredModels.map((m) => {
                       const isSelected = selectedModel?.id === m.id;

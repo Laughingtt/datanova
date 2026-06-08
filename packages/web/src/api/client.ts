@@ -439,3 +439,31 @@ export const schemaBrowseApi = {
   tables: (dsId: string) =>
     request<SchemaBrowseResponse>(`/api/schemas/${dsId}/browse`),
 };
+
+// ==================== SQL Query History ====================
+
+export interface SqlQueryHistoryItem {
+  id: string;
+  datasource_id: string;
+  datasource_name: string;
+  conversation_id: string | null;
+  question: string | null;
+  sql: string;
+  executed_at: string;
+  execution_time_ms: number | null;
+  row_count: number | null;
+  status: "success" | "error";
+  error_message: string | null;
+  created_at: string;
+}
+
+export const queryHistoryApi = {
+  list: (dsId: string, limit?: number) => {
+    const params = limit ? `?limit=${limit}` : "";
+    return request<SqlQueryHistoryItem[]>(`/api/datasources/${dsId}/query-history${params}`);
+  },
+  listAll: (limit?: number) => {
+    const params = limit ? `?limit=${limit}` : "";
+    return request<SqlQueryHistoryItem[]>(`/api/query-history${params}`);
+  },
+};

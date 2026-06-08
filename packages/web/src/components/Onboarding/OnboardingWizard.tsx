@@ -9,20 +9,20 @@ type WizardStepKey = "connect" | "discover" | "annotate" | "metrics";
 
 const STEP_CONFIG: Record<WizardStepKey, { title: string; description: string }> = {
   connect: {
-    title: "Step 1: Connect Your Database",
-    description: "First, add a MySQL datasource so DataNova can discover your data.",
+    title: "步骤 1：连接数据库",
+    description: "首先，添加一个 MySQL 数据源，让 DataNova 发现您的数据。",
   },
   discover: {
-    title: "Step 2: Discover Schema",
-    description: "DataNova will scan your database to find tables, columns, and relationships.",
+    title: "步骤 2：发现 Schema",
+    description: "DataNova 将扫描您的数据库，发现表、列和关系。",
   },
   annotate: {
-    title: "Step 3: Add Business Context",
-    description: "Add business-friendly descriptions to help AI understand your data better.",
+    title: "步骤 3：添加业务上下文",
+    description: "添加业务友好的描述，帮助 AI 更好地理解您的数据。",
   },
   metrics: {
-    title: "Step 4: Define Business Metrics",
-    description: "Create reusable metrics and dimensions to make querying more accurate.",
+    title: "步骤 4：定义业务指标",
+    description: "创建可复用的指标和维度，使查询更加准确。",
   },
 };
 
@@ -79,7 +79,7 @@ export default function OnboardingWizard() {
     <div className="p-6 bg-gradient-to-b from-[var(--cream-soft)] to-[var(--canvas)] border-b border-[var(--hairline)]">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-display text-heading-4 text-[var(--ink)]">🚀 Setup Wizard</h3>
+          <h3 className="font-display text-heading-4 text-[var(--ink)]">🚀 设置向导</h3>
           <button
             onClick={() => { setShowWizard(false); setOnboardingCompleted(true); }}
             className="text-xs text-[var(--steel)] hover:text-[var(--ink)]"
@@ -142,9 +142,9 @@ export default function OnboardingWizard() {
               DataNova will scan your database to:
             </p>
             <ul className="text-sm text-[var(--slate)] space-y-1 list-disc list-inside mb-3">
-              <li>Find all tables and columns</li>
-              <li>Map foreign key relationships</li>
-              <li>Detect value domains (enum values, numeric ranges)</li>
+              <li>找到所有表和列</li>
+              <li>映射外键关系</li>
+              <li>检测值域（枚举值、数值范围）</li>
             </ul>
             <p className="text-xs text-[var(--steel)]">
               Go to Schema Annotations → the schema is discovered automatically when you visit the page.
@@ -170,14 +170,14 @@ export default function OnboardingWizard() {
               <div className="flex items-start gap-2 text-sm">
                 <span className="text-[var(--primary-text)] mt-0.5">🤖</span>
                 <div>
-                  <p className="text-[var(--ink)] font-medium">AI Auto-Annotate</p>
+                  <p className="text-[var(--ink)] font-medium">AI 自动标注</p>
                   <p className="text-xs text-[var(--steel)]">Let AI analyze your schema and generate annotations automatically</p>
                 </div>
               </div>
               <div className="flex items-start gap-2 text-sm">
                 <span className="text-[var(--primary-text)] mt-0.5">✏️</span>
                 <div>
-                  <p className="text-[var(--ink)] font-medium">Manual Annotate</p>
+                  <p className="text-[var(--ink)] font-medium">手动标注</p>
                   <p className="text-xs text-[var(--steel)]">Add descriptions yourself in the Schema Annotations page</p>
                 </div>
               </div>

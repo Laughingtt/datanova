@@ -210,7 +210,7 @@ export default function ModelForm({
             className="input-field min-h-[60px] resize-y"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe this semantic model..."
+            placeholder="描述这个语义模型..."
           />
         </div>
 

@@ -29,12 +29,12 @@ const COMMON_TIMEZONES = [
 ];
 
 const CRON_PRESETS = [
-  { label: "Every hour", value: "0 * * * *" },
-  { label: "Every 6 hours", value: "0 */6 * * *" },
-  { label: "Every day at midnight", value: "0 0 * * *" },
-  { label: "Every day at 9am", value: "0 9 * * *" },
-  { label: "Every Monday at 9am", value: "0 9 * * 1" },
-  { label: "First of month at midnight", value: "0 0 1 * *" },
+  { label: "每小时", value: "0 * * * *" },
+  { label: "每6小时", value: "0 */6 * * *" },
+  { label: "每天凌晨", value: "0 0 * * *" },
+  { label: "每天早上9点", value: "0 9 * * *" },
+  { label: "每周一早上9点", value: "0 9 * * 1" },
+  { label: "每月1号凌晨", value: "0 0 1 * *" },
 ];
 
 function describeCron(expr: string): string {
@@ -170,7 +170,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Optional description"
+          placeholder="可选描述"
           className="w-full px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
         />
       </div>

@@ -106,7 +106,7 @@ export default function DimensionForm({
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               required
-              placeholder="Region"
+              placeholder="地区"
             />
           </div>
         </div>

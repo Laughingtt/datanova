@@ -58,14 +58,14 @@ export default function SchemaEnhancement({ datasourceId, tables }: SchemaEnhanc
     try {
       setAnnotateProgress({
         status: "discovering",
-        message: "Discovering schema and sample data for selected tables...",
+        message: "正在发现所选表的结构和样本数据...",
         tableCount: tableList.length,
         completedCount: 0,
       });
 
       setAnnotateProgress({
         status: "generating",
-        message: "AI is analyzing table structures and generating business annotations...",
+        message: "AI 正在分析表结构并生成业务标注...",
         tableCount: tableList.length,
         completedCount: 0,
       });
@@ -74,7 +74,7 @@ export default function SchemaEnhancement({ datasourceId, tables }: SchemaEnhanc
 
       setAnnotateProgress({
         status: "done",
-        message: `Annotation complete. Review ${tableList.length} table(s) below.`,
+        message: `标注完成。请检查 ${tableList.length} table(s) below.`,
         tableCount: tableList.length,
         completedCount: tableList.length,
       });
@@ -175,9 +175,9 @@ export default function SchemaEnhancement({ datasourceId, tables }: SchemaEnhanc
   };
 
   const tabs: { id: TabId; label: string }[] = [
-    { id: "ai-annotate", label: "AI Annotate" },
-    { id: "query-examples", label: "Query Examples" },
-    { id: "prompt-preview", label: "Prompt Preview" },
+    { id: "ai-annotate", label: "AI 标注" },
+    { id: "query-examples", label: "查询示例" },
+    { id: "prompt-preview", label: "提示词预览" },
   ];
 
   return (
@@ -218,7 +218,7 @@ export default function SchemaEnhancement({ datasourceId, tables }: SchemaEnhanc
               type="text"
               value={tableSearch}
               onChange={(e) => setTableSearch(e.target.value)}
-              placeholder="Search tables..."
+              placeholder="搜索表名..."
               className="w-full px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)] mb-3"
             />
             <div className="flex flex-wrap gap-2">
@@ -254,7 +254,7 @@ export default function SchemaEnhancement({ datasourceId, tables }: SchemaEnhanc
             disabled={annotating || selectedTables.size === 0}
             className="btn-primary text-sm disabled:opacity-40"
           >
-            {annotating ? "Annotating..." : `Annotate ${selectedTables.size} Table(s)`}
+            {annotating ? "Annotating..." : `标注 ${selectedTables.size} 个表`}
           </button>
 
           {annotateError && (
@@ -358,7 +358,7 @@ export default function SchemaEnhancement({ datasourceId, tables }: SchemaEnhanc
                               ? "text-[var(--success)]"
                               : "text-[var(--stone)]"
                           }`}
-                          title={ex.is_verified ? "Verified — click to unverify" : "Unverified — click to verify"}
+                          title={ex.is_verified ? "已验证 — 点击取消" : "未验证 — 点击确认"}
                         >
                           {ex.is_verified ? "Verified" : "Verify"}
                         </button>

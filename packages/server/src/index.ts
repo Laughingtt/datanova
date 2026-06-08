@@ -12,7 +12,7 @@ import skillsRoutes from "./routes/skills.js";
 import conversationsRoutes from "./routes/conversations.js";
 import modelsRoutes from "./routes/models.js";
 import { createChatHandler } from "./ws/chat-handler.js";
-import { saveFeedback } from "./store.js";
+import { saveFeedback, listSqlQueryHistory, listAllSqlQueryHistory } from "./store.js";
 import { createSemanticRoutes } from "./routes/semantic.js";
 import { createScheduledRoutes } from "./routes/scheduled.js";
 import { createDictionaryRoutes } from "./routes/dictionary.js";
@@ -65,6 +65,18 @@ app.post("/api/conversations/:convId/messages/:msgId/feedback", async (c) => {
 app.route("/", createSemanticRoutes());
 app.route("/", createScheduledRoutes());
 app.route("/", createDictionaryRoutes());
+
+// Query history API
+app.get("/api/datasources/:dsId/query-history", (c) => {
+  const dsId = c.req.param("dsId");
+  const limit = parseInt(c.req.query("limit") || "100", 10);
+  return c.json(listSqlQueryHistory(dsId, limit));
+});
+
+app.get("/api/query-history", (c) => {
+  const limit = parseInt(c.req.query("limit") || "200", 10);
+  return c.json(listAllSqlQueryHistory(limit));
+});
 
 // WebSocket setup
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });

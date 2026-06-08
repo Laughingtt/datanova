@@ -101,7 +101,7 @@ export default function ChatWindow() {
   const handleNewConversation = async () => {
     try {
       const conv = await conversationsApi.create({
-        title: "New Conversation",
+        title: "新建对话",
         datasourceId: selectedDatasourceId ?? undefined,
       });
       setConversations((prev) => [conv, ...prev]);

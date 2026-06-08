@@ -1,7 +1,7 @@
 import * as crypto from "node:crypto";
 import Database from "better-sqlite3";
 import { DB_PATH } from "./config.js";
-import type { Datasource, SchemaAnnotation, Conversation, StoredMessage, TableQueryExample, QueryFeedback, QueryExample, SemanticMetric, SemanticDimension, SemanticModel, ScheduledQuery, QueryAlert, QueryExecutionHistory } from "./types.js";
+import type { Datasource, SchemaAnnotation, Conversation, StoredMessage, TableQueryExample, QueryFeedback, QueryExample, SemanticMetric, SemanticDimension, SemanticModel, ScheduledQuery, QueryAlert, QueryExecutionHistory, SqlQueryHistory } from "./types.js";
 
 let db: Database.Database | null = null;
 
@@ -225,6 +225,25 @@ function initTables(database: Database.Database): void {
       row_count INTEGER,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (scheduled_query_id) REFERENCES scheduled_queries(id) ON DELETE CASCADE
+    )
+  `);
+
+  // SQL query history — records ALL executed SQL queries across conversations
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS sql_query_history (
+      id TEXT PRIMARY KEY,
+      datasource_id TEXT NOT NULL,
+      datasource_name TEXT NOT NULL DEFAULT '',
+      conversation_id TEXT,
+      question TEXT,
+      sql TEXT NOT NULL,
+      executed_at TEXT NOT NULL,
+      execution_time_ms INTEGER,
+      row_count INTEGER,
+      status TEXT NOT NULL DEFAULT 'success' CHECK(status IN ('success', 'error')),
+      error_message TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (datasource_id) REFERENCES datasources(id) ON DELETE CASCADE
     )
   `);
 
@@ -841,6 +860,29 @@ export function setConfig(key: string, value: string): void {
     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
   `);
   stmt.run(key, value);
+}
+
+// ==================== SQL Query History CRUD ====================
+
+export function listSqlQueryHistory(datasourceId: string, limit = 100): SqlQueryHistory[] {
+  return getDb().prepare(`
+    SELECT * FROM sql_query_history WHERE datasource_id = ? ORDER BY executed_at DESC LIMIT ?
+  `).all(datasourceId, limit) as SqlQueryHistory[];
+}
+
+export function listAllSqlQueryHistory(limit = 200): SqlQueryHistory[] {
+  return getDb().prepare(`
+    SELECT * FROM sql_query_history ORDER BY executed_at DESC LIMIT ?
+  `).all(limit) as SqlQueryHistory[];
+}
+
+export function createSqlQueryHistory(input: Omit<SqlQueryHistory, "id" | "created_at">): SqlQueryHistory {
+  const id = generateId();
+  getDb().prepare(`
+    INSERT INTO sql_query_history (id, datasource_id, datasource_name, conversation_id, question, sql, executed_at, execution_time_ms, row_count, status, error_message)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, input.datasource_id, input.datasource_name, input.conversation_id ?? null, input.question ?? null, input.sql, input.executed_at, input.execution_time_ms ?? null, input.row_count ?? null, input.status, input.error_message ?? null);
+  return getDb().prepare(`SELECT * FROM sql_query_history WHERE id = ?`).get(id) as SqlQueryHistory;
 }
 
 // Close database connection

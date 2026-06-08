@@ -50,7 +50,7 @@ export default function WizardStep({
       {!isCompleted && (
         <div className="flex items-center justify-between pt-4 border-t border-[var(--hairline)]">
           {onSkip ? (
-            <button onClick={onSkip} className="btn-ghost text-xs">Skip</button>
+            <button onClick={onSkip} className="btn-ghost text-xs">跳过</button>
           ) : (
             <div />
           )}

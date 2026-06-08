@@ -3,10 +3,11 @@ import { useAppStore, type AppView } from "../stores/app";
 const navItems: { key: AppView; label: string; icon: string }[] = [
   { key: "chat", label: "对话", icon: "💬" },
   { key: "datasources", label: "数据源", icon: "🔌" },
-  { key: "schemas", label: "Schema", icon: "🏷️" },
+  { key: "schemas", label: "Schema 标注", icon: "🏷️" },
   { key: "metrics", label: "指标管理", icon: "📊" },
   { key: "scheduled", label: "定时查询", icon: "⏰" },
   { key: "dictionary", label: "数据字典", icon: "📖" },
+  { key: "queryHistory", label: "SQL 历史", icon: "📋" },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -21,7 +22,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <h1 className="font-display text-xl tracking-tight text-[var(--on-dark)]">
             DataNova
           </h1>
-          <p className="text-xs text-[var(--on-dark-muted)] mt-0.5">Text2SQL Assistant</p>
+          <p className="text-xs text-[var(--on-dark-muted)] mt-0.5">AI 数据查询助手</p>
         </div>
 
         {/* Navigation */}

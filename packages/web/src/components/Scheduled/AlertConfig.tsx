@@ -50,7 +50,7 @@ export default function AlertConfig({ conditions, onChange }: AlertConfigProps) 
             type="text"
             value={cond.metric_column}
             onChange={(e) => updateCondition(index, "metric_column", e.target.value)}
-            placeholder="Column name"
+            placeholder="列名"
             className="flex-1 px-3 py-1.5 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
           />
           <select
@@ -60,14 +60,14 @@ export default function AlertConfig({ conditions, onChange }: AlertConfigProps) 
           >
             <option value="above">Above</option>
             <option value="below">Below</option>
-            <option value="change_above">Change Above %</option>
-            <option value="change_below">Change Below %</option>
+            <option value="change_above">环比上升 %</option>
+            <option value="change_below">环比下降 %</option>
           </select>
           <input
             type="text"
             value={cond.threshold}
             onChange={(e) => updateCondition(index, "threshold", e.target.value)}
-            placeholder="Threshold"
+            placeholder="阈值"
             className="w-24 px-3 py-1.5 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
           />
           <button

@@ -199,7 +199,7 @@ export default function DictionaryPage() {
                 />
               ) : (
                 <div className="card-base text-center py-16">
-                  <p className="text-sm text-[var(--steel)]">Select an item to view details</p>
+                  <p className="text-sm text-[var(--steel)]">选择条目查看详情</p>
                 </div>
               )}
             </div>
@@ -223,7 +223,7 @@ export default function DictionaryPage() {
             disabled={searching || !query.trim()}
             className="btn-primary"
           >
-            {searching ? "搜索中..." : "Search"}
+            {searching ? "搜索中..." : "搜索"}
           </button>
         </div>
 
@@ -234,7 +234,7 @@ export default function DictionaryPage() {
             {results ? (
               totalCount === 0 ? (
                 <div className="card-base text-center py-12">
-                  <p className="text-sm text-[var(--steel)]">No results found for "{query}"</p>
+                  <p className="text-sm text-[var(--steel)]">未找到结果："{query}"</p>
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -304,7 +304,7 @@ export default function DictionaryPage() {
             ) : (
               /* Recent Changes (shown when no search) */
               <div>
-                <h3 className="text-sm font-medium text-[var(--ink)] mb-3">Recent Changes</h3>
+                <h3 className="text-sm font-medium text-[var(--ink)] mb-3">最近更新</h3>
                 {loadingRecent ? (
                   <p className="text-sm text-[var(--steel)]">Loading recent changes...</p>
                 ) : recentChanges ? (
@@ -380,7 +380,7 @@ export default function DictionaryPage() {
               />
             ) : (
               <div className="card-base text-center py-16">
-                <p className="text-sm text-[var(--steel)]">Select an entry to view details</p>
+                <p className="text-sm text-[var(--steel)]">选择条目查看详情</p>
               </div>
             )}
           </div>

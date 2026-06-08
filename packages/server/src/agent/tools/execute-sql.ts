@@ -1,12 +1,13 @@
 import { Type, type Static } from "@sinclair/typebox";
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import { executeSql } from "../../mysql/executor.js";
-import { listDatasources } from "../../store.js";
+import { listDatasources, createSqlQueryHistory } from "../../store.js";
 import { validateSqlAgainstSchema, checkLargeTableWithoutWhere } from "../../mysql/validator.js";
 
 const ExecuteSqlParams = Type.Object({
   datasource_id: Type.String({ description: "The ID of the datasource to execute the SQL query against. If you don't know the ID, use any string and the tool will return a list of available datasources." }),
   sql: Type.String({ description: "The SELECT SQL query to execute. Only SELECT, SHOW, DESCRIBE, and EXPLAIN statements are allowed." }),
+  question: Type.Optional(Type.String({ description: "The user's original question that prompted this SQL query. Used for recording query history." })),
   skip_probe: Type.Optional(Type.Boolean({ description: "If true, skip probe execution. Set to true for semantic layer queries marked with /* source: semantic_layer */." })),
 });
 
@@ -20,10 +21,10 @@ export function createExecuteSqlTool(): AgentTool<typeof ExecuteSqlParams, { row
     parameters: ExecuteSqlParams,
     execute: async (_toolCallId: string, params: any) => {
       const typedParams = params as ExecuteSqlParams;
+      const allDatasources = listDatasources();
+      const enabledDatasources = allDatasources.filter(ds => ds.enabled);
       try {
         // Check if the datasource_id is valid
-        const allDatasources = listDatasources();
-        const enabledDatasources = allDatasources.filter(ds => ds.enabled);
         const validDs = enabledDatasources.find(ds => ds.id === typedParams.datasource_id);
 
         if (!validDs) {
@@ -103,6 +104,22 @@ export function createExecuteSqlTool(): AgentTool<typeof ExecuteSqlParams, { row
           }
         }
 
+        // Record successful query in history
+        try {
+          createSqlQueryHistory({
+            datasource_id: typedParams.datasource_id,
+            datasource_name: validDs.name,
+            conversation_id: null,
+            question: typedParams.question ?? null,
+            sql: typedParams.sql,
+            executed_at: new Date().toISOString(),
+            execution_time_ms: result.executionTime,
+            row_count: rows.length,
+            status: "success",
+            error_message: null,
+          });
+        } catch (_) { /* Don't fail if history recording fails */ }
+
         return {
           content: [{ type: "text" as const, text: output }],
           details: {
@@ -113,6 +130,24 @@ export function createExecuteSqlTool(): AgentTool<typeof ExecuteSqlParams, { row
         };
       } catch (err) {
         const error = err as Error;
+
+        // Record failed query in history
+        try {
+          const ds = enabledDatasources.find(d => d.id === typedParams.datasource_id);
+          createSqlQueryHistory({
+            datasource_id: typedParams.datasource_id,
+            datasource_name: ds?.name ?? typedParams.datasource_id,
+            conversation_id: null,
+            question: typedParams.question ?? null,
+            sql: typedParams.sql,
+            executed_at: new Date().toISOString(),
+            execution_time_ms: 0,
+            row_count: 0,
+            status: "error",
+            error_message: error.message,
+          });
+        } catch (_) { /* Don't fail if history recording fails */ }
+
         return {
           content: [{ type: "text" as const, text: `Error executing SQL: ${error.message}` }],
           details: { rowCount: 0, executionTime: 0 },

@@ -209,3 +209,20 @@ export interface QueryExecutionHistory {
   row_count: number | null;
   created_at: string;
 }
+
+// ==================== SQL Query History ====================
+
+export interface SqlQueryHistory {
+  id: string;
+  datasource_id: string;
+  datasource_name: string;
+  conversation_id: string | null;
+  question: string | null;
+  sql: string;
+  executed_at: string;
+  execution_time_ms: number | null;
+  row_count: number | null;
+  status: "success" | "error";
+  error_message: string | null;
+  created_at: string;
+}

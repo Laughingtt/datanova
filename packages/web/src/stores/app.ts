@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type AppView = "chat" | "datasources" | "schemas" | "metrics" | "scheduled" | "dictionary";
+export type AppView = "chat" | "datasources" | "schemas" | "metrics" | "scheduled" | "dictionary" | "queryHistory";
 
 interface AppState {
   // Navigation
