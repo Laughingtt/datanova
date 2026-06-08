@@ -380,6 +380,8 @@ export const scheduledApi = {
     request<{ success: boolean }>(`/api/datasources/${dsId}/scheduled-queries/${id}`, { method: "DELETE" }),
   execute: (dsId: string, id: string) =>
     request<ScheduledQuery>(`/api/datasources/${dsId}/scheduled-queries/${id}/execute`, { method: "POST" }),
+  generateSql: (dsId: string, prompt: string) =>
+    request<{ sql: string }>(`/api/datasources/${dsId}/scheduled-queries/generate-sql`, { method: "POST", body: JSON.stringify({ prompt }) }),
   history: (dsId: string, id: string) =>
     request<any[]>(`/api/datasources/${dsId}/scheduled-queries/${id}/history`),
   listAlerts: (dsId: string, since?: string) => {
@@ -416,4 +418,24 @@ export const dictionaryApi = {
     request<TableDetail>(`/api/datasources/${dsId}/dictionary/tables/${tableName}`),
   recentChanges: (dsId: string) =>
     request<RecentChanges>(`/api/datasources/${dsId}/dictionary/recent-changes`),
+};
+
+// ==================== Schema Browse ====================
+
+export interface BrowseTable {
+  name: string;
+  comment?: string;
+  columns: Array<{ name: string; type: string; comment?: string; isPrimaryKey: boolean }>;
+  foreignKeys: Array<{ name: string; columnName: string; referencedTable: string; referencedColumn: string }>;
+}
+
+export interface SchemaBrowseResponse {
+  tables: BrowseTable[];
+  relationships: Array<{ fromTable: string; fromColumn: string; toTable: string; toColumn: string }>;
+  modelNames: string[];
+}
+
+export const schemaBrowseApi = {
+  tables: (dsId: string) =>
+    request<SchemaBrowseResponse>(`/api/schemas/${dsId}/browse`),
 };

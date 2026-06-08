@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { discoverSchema, formatSchemaForPrompt } from "../mysql/discovery.js";
-import { getAnnotations, upsertAnnotation, deleteAnnotation, confirmAnnotation, listQueryExamples, createQueryExample, updateQueryExample, deleteQueryExample, getDatasource } from "../store.js";
+import { getAnnotations, upsertAnnotation, deleteAnnotation, confirmAnnotation, listQueryExamples, createQueryExample, updateQueryExample, deleteQueryExample, getDatasource, listModels } from "../store.js";
 import { generateAnnotationSkill } from "../agent/skill-manager.js";
 import { refreshHarnessesForDatasource } from "../agent/harness-factory.js";
 
@@ -139,6 +139,41 @@ app.get("/:datasourceId/schema-prompt-preview", async (c) => {
     const examples = listQueryExamples(dsId);
     const preview = formatSchemaForPrompt(schemaInfo, annotations, examples);
     return c.json({ preview });
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 500);
+  }
+});
+
+// ==================== Schema Browse (for pickers) ====================
+
+app.get("/:datasourceId/browse", async (c) => {
+  const dsId = c.req.param("datasourceId");
+  try {
+    const schema = await discoverSchema(dsId);
+    const models = listModels(dsId);
+
+    const tables = schema.tables.map(t => ({
+      name: t.table.name,
+      comment: t.table.comment,
+      columns: t.columns.map(col => ({
+        name: col.name,
+        type: col.type,
+        comment: col.comment,
+        isPrimaryKey: col.isPrimaryKey,
+      })),
+      foreignKeys: t.foreignKeys,
+    }));
+
+    const relationships = schema.tables.flatMap(t =>
+      t.foreignKeys.map(fk => ({
+        fromTable: t.table.name,
+        fromColumn: fk.columnName,
+        toTable: fk.referencedTable,
+        toColumn: fk.referencedColumn,
+      }))
+    );
+
+    return c.json({ tables, relationships, modelNames: models.map(m => m.name) });
   } catch (err) {
     return c.json({ error: (err as Error).message }, 500);
   }
