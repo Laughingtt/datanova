@@ -4,6 +4,8 @@ import {
   updateScheduledQuery, deleteScheduledQuery, listAlerts, listExecutionHistory,
 } from "../store.js";
 import { registerScheduledQuery, unregisterScheduledQuery, executeScheduledQuery } from "../scheduler.js";
+import { discoverSchema, formatSchemaForPrompt } from "../mysql/discovery.js";
+import { getAnnotations, listQueryExamples } from "../store.js";
 
 export function createScheduledRoutes(): Hono {
   const app = new Hono();
@@ -55,6 +57,81 @@ export function createScheduledRoutes(): Hono {
       return c.json(updated);
     } catch (err) {
       return c.json({ error: (err as Error).message }, 500);
+    }
+  });
+
+  // AI-assisted SQL generation endpoint
+  app.post("/api/datasources/:dsId/scheduled-queries/generate-sql", async (c) => {
+    try {
+      const body = await c.req.json();
+      const { prompt } = body;
+      const dsId = c.req.param("dsId");
+
+      if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
+        return c.json({ error: "A prompt describing the query is required" }, 400);
+      }
+
+      // Discover schema for context
+      const schema = await discoverSchema(dsId);
+      const annotations = getAnnotations(dsId);
+      const queryExamples = listQueryExamples(dsId);
+      const schemaContext = formatSchemaForPrompt(schema, annotations, queryExamples);
+
+      // Build the LLM prompt
+      const llmPrompt = `You are a SQL expert. Generate a valid MySQL SELECT query based on the user's request.
+
+${schemaContext}
+
+User request: ${prompt.trim()}
+
+Return ONLY the SQL query, no explanation, no markdown formatting. End with a semicolon.`;
+
+      // Call LLM API using fetch
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      const baseUrl = process.env.ANTHROPIC_BASE_URL || "https://api.anthropic.com";
+      const modelId = process.env.DATANOVA_MODEL || "claude-sonnet-4-6";
+
+      if (!apiKey) {
+        return c.json({ error: "ANTHROPIC_API_KEY is not configured" }, 500);
+      }
+
+      const response = await fetch(`${baseUrl}/v1/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: modelId,
+          max_tokens: 4096,
+          messages: [{ role: "user", content: llmPrompt }],
+        }),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        return c.json({ error: `LLM API error: ${response.status} - ${errText}` }, 500);
+      }
+
+      const result = await response.json() as any;
+      let sql = "";
+      if (result.content) {
+        sql = result.content
+          .filter((block: any) => block.type === "text")
+          .map((block: any) => block.text)
+          .join("\n")
+          .trim();
+      }
+
+      // Clean up: remove markdown code blocks if present
+      sql = sql.replace(/^```sql\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "").trim();
+      // Remove trailing semicolons for style, the executor handles both
+      sql = sql.replace(/;\s*$/, "");
+
+      return c.json({ sql });
+    } catch (err) {
+      return c.json({ error: `Failed to generate SQL: ${(err as Error).message}` }, 500);
     }
   });
 

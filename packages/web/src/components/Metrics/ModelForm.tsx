@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { SemanticModel, SemanticMetric, SemanticDimension } from "../../api/client";
-import { semanticApi } from "../../api/client";
+import { semanticApi, schemaBrowseApi } from "../../api/client";
 
 interface JoinEntry {
   table: string;
@@ -63,6 +63,19 @@ export default function ModelForm({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [schemaTables, setSchemaTables] = useState<string[]>([]);
+  const [schemaColumns, setSchemaColumns] = useState<Record<string, string[]>>({});
+
+  useEffect(() => {
+    if (!datasourceId) return;
+    schemaBrowseApi.tables(datasourceId).then(res => {
+      setSchemaTables(res.tables.map(t => t.name));
+      const colMap: Record<string, string[]> = {};
+      res.tables.forEach(t => { colMap[t.name] = t.columns.map(c => c.name); });
+      setSchemaColumns(colMap);
+    }).catch(() => {});
+  }, [datasourceId]);
 
   // Join management
   const addJoin = () => {
@@ -166,13 +179,27 @@ export default function ModelForm({
           </div>
           <div>
             <label className="label-mono">Base Table</label>
-            <input
-              className="input-field font-mono text-xs"
-              value={baseTable}
-              onChange={(e) => setBaseTable(e.target.value)}
-              required
-              placeholder="orders"
-            />
+            {schemaTables.length > 0 ? (
+              <select
+                className="input-field font-mono text-xs"
+                value={baseTable}
+                onChange={(e) => setBaseTable(e.target.value)}
+                required
+              >
+                <option value="">Select table...</option>
+                {schemaTables.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                className="input-field font-mono text-xs"
+                value={baseTable}
+                onChange={(e) => setBaseTable(e.target.value)}
+                required
+                placeholder="orders"
+              />
+            )}
           </div>
         </div>
 
@@ -219,12 +246,25 @@ export default function ModelForm({
                     <option value="LEFT">LEFT</option>
                     <option value="RIGHT">RIGHT</option>
                   </select>
-                  <input
-                    className="input-field flex-1 py-1.5 text-xs font-mono"
-                    value={join.table}
-                    onChange={(e) => updateJoin(i, "table", e.target.value)}
-                    placeholder="table_name"
-                  />
+                  {schemaTables.length > 0 ? (
+                    <select
+                      className="input-field flex-1 py-1.5 text-xs font-mono"
+                      value={join.table}
+                      onChange={(e) => updateJoin(i, "table", e.target.value)}
+                    >
+                      <option value="">table</option>
+                      {schemaTables.filter(t => t !== baseTable).map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      className="input-field flex-1 py-1.5 text-xs font-mono"
+                      value={join.table}
+                      onChange={(e) => updateJoin(i, "table", e.target.value)}
+                      placeholder="table_name"
+                    />
+                  )}
                   <span className="text-xs text-[var(--steel)]">ON</span>
                   <input
                     className="input-field flex-1 py-1.5 text-xs font-mono"

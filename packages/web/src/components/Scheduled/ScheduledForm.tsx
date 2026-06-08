@@ -4,7 +4,7 @@ import { scheduledApi, type ScheduledQuery } from "../../api/client";
 
 interface AlertCondition {
   metric_column: string;
-  condition: "above" | "below";
+  condition: "above" | "below" | "change_above" | "change_below";
   threshold: string;
 }
 
@@ -86,6 +86,25 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // AI SQL generation state
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [generatingSql, setGeneratingSql] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  const handleGenerateSql = async () => {
+    if (!aiPrompt.trim()) return;
+    setGeneratingSql(true);
+    setAiError(null);
+    try {
+      const result = await scheduledApi.generateSql(datasourceId, aiPrompt.trim());
+      setSql(result.sql);
+    } catch (err) {
+      setAiError((err as Error).message ?? "Failed to generate SQL");
+    } finally {
+      setGeneratingSql(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!name.trim() || !sql.trim() || !cronExpression.trim()) {
       setError("Name, SQL, and cron expression are required");
@@ -154,6 +173,38 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
           placeholder="Optional description"
           className="w-full px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
         />
+      </div>
+
+      {/* AI SQL Generation */}
+      <div className="p-4 rounded-lg border border-dashed border-[var(--primary)]/40 bg-[var(--primary-soft)]/50">
+        <label className="block text-sm font-medium text-[var(--ink)] mb-2 flex items-center gap-2">
+          <span>🤖</span> AI SQL Generation
+        </label>
+        <p className="text-xs text-[var(--steel)] mb-2">
+          Describe the query in natural language and AI will generate SQL for you
+        </p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleGenerateSql(); } }}
+            placeholder="e.g., Show daily revenue for the last 30 days grouped by region"
+            className="flex-1 px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
+            disabled={generatingSql}
+          />
+          <button
+            type="button"
+            onClick={handleGenerateSql}
+            disabled={generatingSql || !aiPrompt.trim()}
+            className="btn-primary text-sm whitespace-nowrap disabled:opacity-40"
+          >
+            {generatingSql ? "Generating..." : "Generate SQL"}
+          </button>
+        </div>
+        {aiError && (
+          <p className="text-xs text-[var(--error)] mt-2">{aiError}</p>
+        )}
       </div>
 
       {/* SQL */}

@@ -1,6 +1,6 @@
 import nodeCron from "node-cron";
 import type { ScheduledTask } from "node-cron";
-import { listScheduledQueries, listDatasources, updateScheduledQuery, createAlert, createExecutionHistory } from "./store.js";
+import { listScheduledQueries, listDatasources, updateScheduledQuery, createAlert, createExecutionHistory, listExecutionHistory } from "./store.js";
 import { executeSql } from "./mysql/executor.js";
 
 const scheduledTasks = new Map<string, ScheduledTask>();
@@ -13,13 +13,15 @@ export function registerScheduledQuery(sq: {
   datasource_id: string;
   enabled: number;
   alert_conditions: string | null;
+  timezone?: string;
 }): void {
   if (!sq.enabled) return;
   if (scheduledTasks.has(sq.id)) return;
 
+  const timezone = sq.timezone || "UTC";
   const task = nodeCron.schedule(sq.cron_expression, async () => {
     await executeScheduledQuery(sq.id, sq.datasource_id, sq.sql, sq.alert_conditions);
-  }, { timezone: "UTC" });
+  }, { timezone });
 
   scheduledTasks.set(sq.id, task);
 }
@@ -140,6 +142,60 @@ function checkAlertConditions(
             });
           }
           break;
+        case "change_above": {
+          // Compare with previous successful execution
+          const prevHistory = listExecutionHistory(queryId, 2);
+          const prevSuccess = prevHistory.find(h => h.status === "success");
+          if (prevSuccess && prevSuccess.result_summary) {
+            try {
+              const prevSummary = JSON.parse(prevSuccess.result_summary);
+              const prevRows = prevSummary.sampleRows as Record<string, unknown>[] | undefined;
+              if (prevRows && prevRows.length > 0) {
+                const prevValue = Number(prevRows[0][cond.metric_column]);
+                if (!isNaN(prevValue) && prevValue !== 0) {
+                  const pctChange = ((value - prevValue) / Math.abs(prevValue)) * 100;
+                  if (pctChange > cond.threshold) {
+                    createAlert({
+                      scheduled_query_id: queryId,
+                      severity: pctChange > cond.threshold * 2 ? "critical" : "warning",
+                      condition_triggered: `${cond.metric_column} increased by ${pctChange.toFixed(1)}% (threshold: ${cond.threshold}%)`,
+                      actual_value: String(Math.round(pctChange * 10) / 10) + "%",
+                      threshold: String(cond.threshold) + "%",
+                    });
+                  }
+                }
+              }
+            } catch { /* skip if previous result can't be parsed */ }
+          }
+          break;
+        }
+        case "change_below": {
+          // Compare with previous successful execution
+          const prevHistory = listExecutionHistory(queryId, 2);
+          const prevSuccess = prevHistory.find(h => h.status === "success");
+          if (prevSuccess && prevSuccess.result_summary) {
+            try {
+              const prevSummary = JSON.parse(prevSuccess.result_summary);
+              const prevRows = prevSummary.sampleRows as Record<string, unknown>[] | undefined;
+              if (prevRows && prevRows.length > 0) {
+                const prevValue = Number(prevRows[0][cond.metric_column]);
+                if (!isNaN(prevValue) && prevValue !== 0) {
+                  const pctChange = ((value - prevValue) / Math.abs(prevValue)) * 100;
+                  if (pctChange < -cond.threshold) {
+                    createAlert({
+                      scheduled_query_id: queryId,
+                      severity: Math.abs(pctChange) > cond.threshold * 2 ? "critical" : "warning",
+                      condition_triggered: `${cond.metric_column} decreased by ${Math.abs(pctChange).toFixed(1)}% (threshold: ${cond.threshold}%)`,
+                      actual_value: String(Math.round(pctChange * 10) / 10) + "%",
+                      threshold: String(cond.threshold) + "%",
+                    });
+                  }
+                }
+              }
+            } catch { /* skip if previous result can't be parsed */ }
+          }
+          break;
+        }
       }
     }
   } catch { /* skip invalid alert conditions */ }

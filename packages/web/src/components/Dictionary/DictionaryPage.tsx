@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useAppStore } from "../../stores/app";
 import { dictionaryApi, type RecentChanges } from "../../api/client";
 import EntryDetail from "./EntryDetail";
+import BrowseTree from "./BrowseTree";
+import RelationshipDiagram from "./RelationshipDiagram";
 
 interface SearchResult {
   metrics: Array<{ id: string; name: string; display_name: string; description?: string; type: string }>;
@@ -23,6 +25,12 @@ export default function DictionaryPage() {
   const [selectedEntry, setSelectedEntry] = useState<SelectedEntry | null>(null);
   const [recentChanges, setRecentChanges] = useState<RecentChanges | null>(null);
   const [loadingRecent, setLoadingRecent] = useState(false);
+  const [mode, setMode] = useState<"search" | "browse">("search");
+  const [browseSelection, setBrowseSelection] = useState<{
+    type: "table" | "metric" | "dimension";
+    name: string;
+    item?: any;
+  } | null>(null);
 
   const loadRecentChanges = useCallback(async () => {
     if (!selectedDatasourceId) return;
@@ -138,6 +146,68 @@ export default function DictionaryPage() {
           </p>
         </div>
 
+        {/* Mode tabs */}
+        <div className="flex items-center gap-1 mb-6 border-b border-[var(--hairline)]">
+          <button
+            onClick={() => setMode("search")}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              mode === "search"
+                ? "border-[var(--primary)] text-[var(--primary-text)]"
+                : "border-transparent text-[var(--steel)] hover:text-[var(--ink)]"
+            }`}
+          >
+            🔍 Search
+          </button>
+          <button
+            onClick={() => setMode("browse")}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              mode === "browse"
+                ? "border-[var(--primary)] text-[var(--primary-text)]"
+                : "border-transparent text-[var(--steel)] hover:text-[var(--ink)]"
+            }`}
+          >
+            🌳 Browse
+          </button>
+        </div>
+
+        {mode === "browse" && (
+          <div className="flex gap-6 mb-8">
+            <div className="flex-1 min-w-0">
+              <BrowseTree
+                datasourceId={selectedDatasourceId}
+                onSelectTable={(name) => {
+                  setBrowseSelection({ type: "table", name });
+                  handleNavigate("table", name);
+                }}
+                onSelectMetric={(m) => {
+                  setBrowseSelection({ type: "metric", name: m.name, item: m });
+                  handleNavigate("metric", m.name);
+                }}
+                onSelectDimension={(d) => {
+                  setBrowseSelection({ type: "dimension", name: d.name, item: d });
+                  handleNavigate("dimension", d.name);
+                }}
+              />
+            </div>
+            <div className="w-[360px] flex-shrink-0 space-y-4">
+              <RelationshipDiagram datasourceId={selectedDatasourceId} />
+              {selectedEntry ? (
+                <EntryDetail
+                  entry={selectedEntry.item}
+                  entryType={selectedEntry.type}
+                  onNavigate={handleNavigate}
+                />
+              ) : (
+                <div className="card-base text-center py-16">
+                  <p className="text-sm text-[var(--steel)]">Select an item to view details</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {mode === "search" && (
+          <>
         {/* Search */}
         <div className="flex items-center gap-3 mb-8">
           <input
@@ -315,6 +385,8 @@ export default function DictionaryPage() {
             )}
           </div>
         </div>
+          </>
+        )}
       </div>
     </div>
   );

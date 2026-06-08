@@ -107,6 +107,15 @@ function initTables(database: Database.Database): void {
     )
   `);
 
+  // App config table — MUST be created first since getConfig() is called during init
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS app_config (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Schema version tracking
   const currentVersion = getConfig("schema_version");
   if (!currentVersion) setConfig("schema_version", "2");
@@ -250,14 +259,6 @@ function initTables(database: Database.Database): void {
     ON messages(conversation_id, created_at ASC)
   `);
 
-  // App config table
-  database.exec(`
-    CREATE TABLE IF NOT EXISTS app_config (
-      key TEXT PRIMARY KEY,
-      value TEXT NOT NULL,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
 }
 
 // Generate UUID

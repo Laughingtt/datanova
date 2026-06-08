@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { SemanticMetric, SemanticDimension } from "../../api/client";
 import { semanticApi } from "../../api/client";
+import TableColumnPicker from "./TableColumnPicker";
+import VisualFilterBuilder from "./VisualFilterBuilder";
 
 interface MetricFormProps {
   datasourceId: string;
@@ -171,25 +173,21 @@ export default function MetricForm({
         {/* SQL Expression */}
         <div>
           <label className="label-mono">SQL Expression</label>
-          <textarea
-            className="input-field min-h-[80px] resize-y font-mono text-xs"
+          <TableColumnPicker
+            datasourceId={datasourceId}
             value={sqlExpression}
-            onChange={(e) => setSqlExpression(e.target.value)}
-            required
-            placeholder="SUM(order_amount)"
+            onChange={setSqlExpression}
+            mode="aggregate"
+            placeholder="SUM(table.column)"
           />
         </div>
 
-        {/* Filters (JSON) */}
-        <div>
-          <label className="label-mono">Filters (JSON)</label>
-          <textarea
-            className="input-field min-h-[60px] resize-y font-mono text-xs"
-            value={filters}
-            onChange={(e) => setFilters(e.target.value)}
-            placeholder='[{"column": "status", "operator": "=", "value": "completed"}]'
-          />
-        </div>
+        {/* Filters */}
+        <VisualFilterBuilder
+          datasourceId={datasourceId}
+          filters={filters}
+          onChange={setFilters}
+        />
 
         {/* Dimensions multi-select */}
         <div>

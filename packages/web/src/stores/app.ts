@@ -24,6 +24,10 @@ interface AppState {
   modelProvider: string | null;
   modelId: string | null;
   setModel: (provider: string, modelId: string) => void;
+
+  // Onboarding state
+  onboardingCompleted: boolean;
+  setOnboardingCompleted: (completed: boolean) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -51,4 +55,8 @@ export const useAppStore = create<AppState>((set) => ({
   modelProvider: null,
   modelId: null,
   setModel: (provider, modelId) => set({ modelProvider: provider, modelId }),
+
+  // Onboarding state
+  onboardingCompleted: false,
+  setOnboardingCompleted: (completed) => set({ onboardingCompleted: completed }),
 }));

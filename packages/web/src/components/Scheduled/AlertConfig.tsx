@@ -2,7 +2,7 @@ import { useState } from "react";
 
 interface AlertCondition {
   metric_column: string;
-  condition: "above" | "below";
+  condition: "above" | "below" | "change_above" | "change_below";
   threshold: string;
 }
 
@@ -60,6 +60,8 @@ export default function AlertConfig({ conditions, onChange }: AlertConfigProps) 
           >
             <option value="above">Above</option>
             <option value="below">Below</option>
+            <option value="change_above">Change Above %</option>
+            <option value="change_below">Change Below %</option>
           </select>
           <input
             type="text"

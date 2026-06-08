@@ -6,12 +6,16 @@ import SchemaPage from "./components/Schema/SchemaPage";
 import MetricsPage from "./components/Metrics/MetricsPage";
 import ScheduledPage from "./components/Scheduled/ScheduledPage";
 import DictionaryPage from "./components/Dictionary/DictionaryPage";
+import OnboardingWizard from "./components/Onboarding/OnboardingWizard";
 
 export default function App() {
-  const { view, selectedDatasourceId } = useAppStore();
+  const { view, selectedDatasourceId, onboardingCompleted } = useAppStore();
 
   return (
     <Layout>
+      {selectedDatasourceId && !onboardingCompleted && (
+        <OnboardingWizard />
+      )}
       {view === "chat" && <ChatWindow />}
       {view === "datasources" && <DatasourcePage />}
       {view === "schemas" && <SchemaPage />}

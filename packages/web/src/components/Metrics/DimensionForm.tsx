@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { SemanticDimension } from "../../api/client";
 import { semanticApi } from "../../api/client";
+import TableColumnPicker from "./TableColumnPicker";
 
 interface DimensionFormProps {
   datasourceId: string;
@@ -113,11 +114,11 @@ export default function DimensionForm({
         {/* SQL Expression */}
         <div>
           <label className="label-mono">SQL Expression</label>
-          <textarea
-            className="input-field min-h-[80px] resize-y font-mono text-xs"
+          <TableColumnPicker
+            datasourceId={datasourceId}
             value={sqlExpression}
-            onChange={(e) => setSqlExpression(e.target.value)}
-            required
+            onChange={setSqlExpression}
+            mode="column"
             placeholder="orders.region_code"
           />
         </div>

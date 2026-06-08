@@ -4,6 +4,7 @@ import { schemasApi, queryExamplesApi } from "../../api/client";
 import AIAnnotationReview from "./AIAnnotationReview";
 import QueryExampleForm from "./QueryExampleForm";
 import SchemaPromptPreview from "./SchemaPromptPreview";
+import AIAnnotationProgress from "./AIAnnotationProgress";
 
 interface SchemaEnhancementProps {
   datasourceId: string;
@@ -20,6 +21,13 @@ export default function SchemaEnhancement({ datasourceId, tables }: SchemaEnhanc
   const [annotating, setAnnotating] = useState(false);
   const [draftAnnotations, setDraftAnnotations] = useState<SchemaAnnotation[]>([]);
   const [annotateError, setAnnotateError] = useState<string | null>(null);
+  const [annotateProgress, setAnnotateProgress] = useState<{
+    status: "discovering" | "analyzing" | "generating" | "done" | "error";
+    message: string;
+    tableCount: number;
+    completedCount: number;
+  } | null>(null);
+  const [tableSearch, setTableSearch] = useState("");
 
   // Query Examples state
   const [selectedTable, setSelectedTable] = useState<string>(tables[0] ?? "");
@@ -43,17 +51,55 @@ export default function SchemaEnhancement({ datasourceId, tables }: SchemaEnhanc
     if (selectedTables.size === 0) return;
     setAnnotating(true);
     setAnnotateError(null);
+    setDraftAnnotations([]);
+
+    const tableList = Array.from(selectedTables);
+
     try {
-      await schemasApi.aiAnnotate(datasourceId, Array.from(selectedTables));
-      // After AI annotation, reload to get draft annotations
+      setAnnotateProgress({
+        status: "discovering",
+        message: "Discovering schema and sample data for selected tables...",
+        tableCount: tableList.length,
+        completedCount: 0,
+      });
+
+      setAnnotateProgress({
+        status: "generating",
+        message: "AI is analyzing table structures and generating business annotations...",
+        tableCount: tableList.length,
+        completedCount: 0,
+      });
+
+      await schemasApi.aiAnnotate(datasourceId, tableList);
+
+      setAnnotateProgress({
+        status: "done",
+        message: `Annotation complete. Review ${tableList.length} table(s) below.`,
+        tableCount: tableList.length,
+        completedCount: tableList.length,
+      });
+
       const schemaResp = await schemasApi.get(datasourceId);
       const drafts = schemaResp.annotations.filter((a) => a.status === "draft");
       setDraftAnnotations(drafts);
     } catch (err) {
       setAnnotateError((err as Error).message);
+      setAnnotateProgress({
+        status: "error",
+        message: (err as Error).message,
+        tableCount: tableList.length,
+        completedCount: 0,
+      });
     } finally {
       setAnnotating(false);
     }
+  };
+
+  const handleAcceptAll = async () => {
+    for (const a of draftAnnotations) {
+      await schemasApi.confirmAnnotation(datasourceId, a.id);
+    }
+    setDraftAnnotations([]);
   };
 
   const handleConfirmAnnotation = (id: string) => {
@@ -168,8 +214,17 @@ export default function SchemaEnhancement({ datasourceId, tables }: SchemaEnhanc
                 Select None
               </button>
             </div>
+            <input
+              type="text"
+              value={tableSearch}
+              onChange={(e) => setTableSearch(e.target.value)}
+              placeholder="Search tables..."
+              className="w-full px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)] mb-3"
+            />
             <div className="flex flex-wrap gap-2">
-              {tables.map((name) => (
+              {tables
+                .filter(t => !tableSearch || t.toLowerCase().includes(tableSearch.toLowerCase()))
+                .map((name) => (
                 <button
                   key={name}
                   onClick={() => toggleTable(name)}
@@ -184,6 +239,15 @@ export default function SchemaEnhancement({ datasourceId, tables }: SchemaEnhanc
               ))}
             </div>
           </div>
+
+          {annotateProgress && (
+            <AIAnnotationProgress
+              status={annotateProgress.status}
+              message={annotateProgress.message}
+              tableCount={annotateProgress.tableCount}
+              completedCount={annotateProgress.completedCount}
+            />
+          )}
 
           <button
             onClick={handleAiAnnotate}
@@ -201,9 +265,19 @@ export default function SchemaEnhancement({ datasourceId, tables }: SchemaEnhanc
 
           {draftAnnotations.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-[var(--ink)] mb-3">
-                Draft Annotations ({draftAnnotations.length})
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-[var(--ink)]">
+                  Draft Annotations ({draftAnnotations.length})
+                </h3>
+                <div className="flex items-center gap-2">
+                  <button onClick={handleAcceptAll} className="btn-primary text-xs">
+                    ✓ Accept All
+                  </button>
+                  <button onClick={() => setDraftAnnotations([])} className="btn-ghost text-xs">
+                    ✗ Reject All
+                  </button>
+                </div>
+              </div>
               <AIAnnotationReview
                 annotations={draftAnnotations}
                 datasourceId={datasourceId}

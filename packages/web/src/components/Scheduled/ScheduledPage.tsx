@@ -11,6 +11,9 @@ export default function ScheduledPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingQuery, setEditingQuery] = useState<ScheduledQuery | null>(null);
   const [executingId, setExecutingId] = useState<string | null>(null);
+  const [expandedHistory, setExpandedHistory] = useState<Set<string>>(new Set());
+  const [histories, setHistories] = useState<Record<string, any[]>>({});
+  const [historyLoading, setHistoryLoading] = useState<Set<string>>(new Set());
 
   const loadQueries = useCallback(async () => {
     if (!selectedDatasourceId) return;
@@ -82,6 +85,35 @@ export default function ScheduledPage() {
       await loadQueries();
     } catch (err) {
       console.error("Failed to delete query:", err);
+    }
+  };
+
+  const handleToggleHistory = async (q: ScheduledQuery) => {
+    setExpandedHistory((prev) => {
+      const next = new Set(prev);
+      if (next.has(q.id)) {
+        next.delete(q.id);
+        return next;
+      }
+      next.add(q.id);
+      return next;
+    });
+
+    // Load history if not already loaded
+    if (!histories[q.id] && selectedDatasourceId) {
+      setHistoryLoading((prev) => new Set(prev).add(q.id));
+      try {
+        const h = await scheduledApi.history(selectedDatasourceId, q.id);
+        setHistories((prev) => ({ ...prev, [q.id]: h }));
+      } catch (err) {
+        console.error("Failed to load history:", err);
+      } finally {
+        setHistoryLoading((prev) => {
+          const next = new Set(prev);
+          next.delete(q.id);
+          return next;
+        });
+      }
     }
   };
 
@@ -230,6 +262,12 @@ export default function ScheduledPage() {
                   {/* Actions */}
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity ml-4">
                     <button
+                      onClick={() => handleToggleHistory(q)}
+                      className="btn-ghost text-xs"
+                    >
+                      History
+                    </button>
+                    <button
                       onClick={() => handleToggleEnabled(q)}
                       className="btn-ghost text-xs"
                       title={q.enabled ? "Disable" : "Enable"}
@@ -257,6 +295,51 @@ export default function ScheduledPage() {
                     </button>
                   </div>
                 </div>
+
+                {/* Execution History (collapsible) */}
+                {expandedHistory.has(q.id) && (
+                  <div className="mt-3 pt-3 border-t border-[var(--hairline)]">
+                    {historyLoading.has(q.id) ? (
+                      <p className="text-xs text-[var(--steel)]">Loading history...</p>
+                    ) : histories[q.id] && histories[q.id].length > 0 ? (
+                      <div>
+                        <h4 className="text-xs font-medium text-[var(--ink)] mb-2">
+                          Execution History ({histories[q.id].length})
+                        </h4>
+                        <div className="space-y-1.5 max-h-[200px] overflow-y-auto custom-scrollbar">
+                          {histories[q.id].slice(0, 10).map((h: any, idx: number) => {
+                            const isSuccess = h.status === "success";
+                            const executedAt = new Date(h.executed_at);
+                            return (
+                              <div key={h.id ?? idx} className="flex items-center gap-3 text-xs">
+                                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isSuccess ? "bg-[var(--success)]" : "bg-[var(--error)]"}`} />
+                                <span className="text-[var(--steel)] font-mono w-[120px] flex-shrink-0">
+                                  {executedAt.toLocaleString()}
+                                </span>
+                                <span className={`font-mono ${isSuccess ? "text-[var(--success)]" : "text-[var(--error)]"}`}>
+                                  {isSuccess ? "✓" : "✗"}
+                                </span>
+                                {h.execution_time_ms && (
+                                  <span className="text-[var(--stone)]">{h.execution_time_ms}ms</span>
+                                )}
+                                {h.row_count != null && (
+                                  <span className="text-[var(--stone)]">{h.row_count} rows</span>
+                                )}
+                                {!isSuccess && h.result_summary && (
+                                  <span className="text-[var(--error)] truncate flex-1">
+                                    {(() => { try { return JSON.parse(h.result_summary).error; } catch { return ""; } })()}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-[var(--steel)]">No execution history yet</p>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
