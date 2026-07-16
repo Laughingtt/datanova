@@ -9,8 +9,14 @@ export default function DatasourceSelector() {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    datasourcesApi.list().then(setDatasources).catch(() => {});
-  }, []);
+   datasourcesApi.list().then(setDatasources).catch(() => {});
+ }, []);
+  // Auto-select if only one datasource and none selected
+  useEffect(() => {
+    if (datasources.length === 1 && !selectedDatasourceId) {
+      setSelectedDatasource(datasources[0].id, datasources[0].name);
+    }
+  }, [datasources, selectedDatasourceId, setSelectedDatasource]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -32,7 +38,7 @@ export default function DatasourceSelector() {
       >
         <span className="text-sm">🔌</span>
         <span className={`truncate max-w-[160px] ${currentDs ? "" : "text-[var(--stone)]"}`}>
-          {currentDs ? currentDs.name : "Select datasource"}
+          {currentDs ? currentDs.name : "选择数据源"}
         </span>
         <svg
           className={`w-3.5 h-3.5 text-[var(--steel)] transition-transform ${open ? "rotate-180" : ""}`}
@@ -48,9 +54,9 @@ export default function DatasourceSelector() {
                         rounded-lg shadow-4 z-50 custom-scrollbar">
           {datasources.length === 0 ? (
             <div className="p-4 text-center">
-              <p className="text-sm text-[var(--steel)]">No datasources configured</p>
+              <p className="text-sm text-[var(--steel)]">暂无数据源</p>
               <p className="text-xs text-[var(--stone)] mt-1">
-                Go to the Datasources page to add one
+                请前往数据源页面添加
               </p>
             </div>
           ) : (
@@ -65,8 +71,8 @@ export default function DatasourceSelector() {
                 }`}
               >
                 <div>
-                  <div className="text-sm">No datasource</div>
-                  <div className="text-xs text-[var(--stone)] mt-0.5">Agent will list available datasources</div>
+                <div className="text-sm">未选择数据源</div>
+                <div className="text-xs text-[var(--stone)] mt-0.5">AI 助手将列出可用数据源</div>
                 </div>
                 {!selectedDatasourceId && (
                   <svg className="w-4 h-4 text-[var(--primary)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

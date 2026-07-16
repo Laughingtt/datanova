@@ -68,8 +68,8 @@ export function createDictionaryRoutes(): Hono {
       const schemaInfo = await discoverSchema(dsId, [tableName]);
       const annotations = getAnnotations(dsId).filter(a => a.table_name === tableName);
       const relatedMetrics = listMetrics(dsId).filter(m => {
-        return m.sql_expression.toLowerCase().includes(tableName.toLowerCase()) || m.status === "published";
-      }).filter(m => m.sql_expression.toLowerCase().includes(tableName.toLowerCase()));
+        return m.sql.toLowerCase().includes(tableName.toLowerCase()) || m.status === "published";
+      }).filter(m => m.sql.toLowerCase().includes(tableName.toLowerCase()));
 
       return c.json({
         table: schemaInfo.tables[0] ?? null,

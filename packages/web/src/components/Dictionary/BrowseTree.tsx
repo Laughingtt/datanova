@@ -55,7 +55,7 @@ export default function BrowseTree({
     });
   };
 
-  if (loading) return <p className="text-xs text-[var(--steel)] py-4">Loading...</p>;
+  if (loading) return <p className="text-xs text-[var(--steel)] py-4">加载中...</p>;
 
   return (
     <div className="space-y-1">
@@ -66,7 +66,7 @@ export default function BrowseTree({
           className="w-full flex items-center gap-2 px-2 py-2 text-left text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface)] rounded"
         >
           <span className="text-xs">{expandedSections.has("tables") ? "▼" : "▶"}</span>
-          <span>📄</span> Tables ({tables.length})
+          <span>📄</span> 数据表 ({tables.length})
         </button>
         {expandedSections.has("tables") && (
           <div className="ml-6 space-y-0.5">
@@ -78,7 +78,7 @@ export default function BrowseTree({
                 >
                   <span className="text-[10px]">{expandedTables.has(table.name) ? "▼" : "▶"}</span>
                   <span className="font-mono text-[var(--ink)]">{table.name}</span>
-                  <span className="text-[var(--stone)] ml-auto">{table.columns.length} cols</span>
+                  <span className="text-[var(--stone)] ml-auto">{table.columns.length} 列</span>
                 </button>
                 {expandedTables.has(table.name) && (
                   <div className="ml-6 space-y-0.5">
@@ -104,12 +104,12 @@ export default function BrowseTree({
           className="w-full flex items-center gap-2 px-2 py-2 text-left text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface)] rounded"
         >
           <span className="text-xs">{expandedSections.has("metrics") ? "▼" : "▶"}</span>
-          <span>📊</span> Metrics ({metrics.length})
+          <span>📊</span> 指标 ({metrics.length})
         </button>
         {expandedSections.has("metrics") && (
           <div className="ml-6 space-y-0.5">
             {metrics.length === 0 ? (
-              <p className="text-xs text-[var(--stone)] px-2 py-1">No metrics defined</p>
+              <p className="text-xs text-[var(--stone)] px-2 py-1">暂无指标定义</p>
             ) : (
               metrics.map(m => (
                 <button
@@ -118,7 +118,7 @@ export default function BrowseTree({
                   className="w-full text-left px-2 py-1.5 text-xs hover:bg-[var(--surface)] rounded"
                 >
                   <span className="text-[var(--ink)]">{m.display_name || m.name}</span>
-                  <span className="text-[var(--stone)] ml-2 font-mono">{m.sql_expression}</span>
+                  <span className="text-[var(--stone)] ml-2 font-mono">{m.sql}</span>
                 </button>
               ))
             )}
@@ -133,12 +133,12 @@ export default function BrowseTree({
           className="w-full flex items-center gap-2 px-2 py-2 text-left text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface)] rounded"
         >
           <span className="text-xs">{expandedSections.has("dimensions") ? "▼" : "▶"}</span>
-          <span>📐</span> Dimensions ({dimensions.length})
+          <span>📐</span> 维度 ({dimensions.length})
         </button>
         {expandedSections.has("dimensions") && (
           <div className="ml-6 space-y-0.5">
             {dimensions.length === 0 ? (
-              <p className="text-xs text-[var(--stone)] px-2 py-1">No dimensions defined</p>
+              <p className="text-xs text-[var(--stone)] px-2 py-1">暂无维度定义</p>
             ) : (
               dimensions.map(d => (
                 <button

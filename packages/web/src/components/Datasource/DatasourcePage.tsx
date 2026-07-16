@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { datasourcesApi, type Datasource } from "../../api/client";
 import DatasourceList from "./DatasourceList";
 import DatasourceForm from "./DatasourceForm";
@@ -46,26 +46,26 @@ export default function DatasourcePage() {
 
   return (
     <div className="h-full overflow-auto bg-[var(--canvas)]">
-      {/* Sunset stripe top accent */}
       <div className="sunset-stripe" />
 
-      <div className="max-w-4xl mx-auto px-8 py-10">
-        {/* Header */}
+      <div className="max-w-[960px] mx-auto px-8 py-10">
         <div className="flex items-end justify-between mb-8">
           <div>
-            <h2 className="font-display text-heading-2 text-[var(--ink)]">Datasources</h2>
-            <p className="text-body-sm text-[var(--slate)] mt-1">
-              Connect MySQL databases for AI-powered querying
+            <h2 className="font-display text-2xl text-[var(--ink)]">数据源管理</h2>
+            <p className="text-sm text-[var(--steel)] mt-1">
+              连接 MySQL 数据库，开启 AI 驱动的数据查询
             </p>
           </div>
           <button onClick={handleCreate} className="btn-primary">
-            + Add Datasource
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            添加数据源
           </button>
         </div>
 
-        {/* Form */}
         {showForm && (
-          <div className="card-cream mb-8">
+          <div className="card-base mb-8 border-[var(--accent-100)] bg-[var(--primary-soft)]">
             <DatasourceForm
               datasource={editingDs}
               onSave={handleSave}
@@ -74,7 +74,6 @@ export default function DatasourcePage() {
           </div>
         )}
 
-        {/* List */}
         <DatasourceList
           datasources={datasources}
           onEdit={handleEdit}

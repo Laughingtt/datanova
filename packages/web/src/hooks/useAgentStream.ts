@@ -1,5 +1,12 @@
 import { useCallback } from "react";
 
+// ==================== Unique ID Generation ====================
+
+let _idCounter = 0;
+export function uniqueId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${++_idCounter}`;
+}
+
 // ==================== Types ====================
 
 export interface ReportSection {
@@ -47,6 +54,16 @@ export interface ValidationStatus {
   message: string;
 }
 
+export interface ConfirmAction {
+  id: string;
+  title: string;
+  description?: string;
+  items?: string[];
+  actionType?: string;
+  confirmed?: boolean;
+  cancelled?: boolean;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
@@ -59,6 +76,8 @@ export interface ChatMessage {
   validationStatus?: ValidationStatus;
   followUpContext?: string;
   reportSections?: ReportSection[];
+  sqlQueryHistoryId?: string;
+  confirmAction?: ConfirmAction;
 }
 
 export interface TableData {
@@ -87,6 +106,7 @@ export function useAgentStream({ send, onEvent }: UseAgentStreamOptions) {
       datasourceName?: string;
       modelProvider?: string;
       modelId?: string;
+      agentType?: string;
     }) => {
       send({ type: "init", payload });
     },
@@ -127,7 +147,7 @@ export function processWsEvent(
 
     case "agent_start": {
       const msg: ChatMessage = {
-        id: `assistant-${Date.now()}`,
+        id: uniqueId("assistant"),
         role: "assistant",
         content: "",
         timestamp: Date.now(),
@@ -145,7 +165,7 @@ export function processWsEvent(
         steps: [
           ...(currentAssistantMessage.steps ?? []),
           {
-            id: `step-${Date.now()}`,
+            id: uniqueId("step"),
             type: "thinking" as const,
             content,
           },
@@ -156,7 +176,7 @@ export function processWsEvent(
     case "message_start": {
       if (!currentAssistantMessage) {
         return {
-          id: `assistant-${Date.now()}`,
+          id: uniqueId("assistant"),
           role: "assistant",
           content: "",
           timestamp: Date.now(),
@@ -206,7 +226,31 @@ export function processWsEvent(
           break;
         }
       }
-      return { ...currentAssistantMessage, steps };
+      const endUpdate: Partial<ChatMessage> = { steps };
+
+      // Also extract SQL and table data from tool_execution_end if details are present
+      if (toolName === "execute_sql") {
+        // details may be at event.details (if server sends it separately) or event.result.details (nested in result)
+        const rawResult = event.result as Record<string, unknown> | undefined;
+        const details = ((event as any).details ?? rawResult?.details) as Record<string, unknown> | undefined;
+        if (details) {
+          if (details.sql) {
+            endUpdate.sqlBlock = details.sql as string;
+          }
+          if (Array.isArray(details.columns) && Array.isArray(details.rows)) {
+            endUpdate.tableData = {
+              columns: details.columns as string[],
+              rows: details.rows as Record<string, unknown>[],
+              executionTime: typeof details.executionTime === "number" ? details.executionTime : undefined,
+            };
+          }
+          if (details.sqlQueryHistoryId) {
+            endUpdate.sqlQueryHistoryId = details.sqlQueryHistoryId as string;
+          }
+        }
+      }
+
+      return { ...currentAssistantMessage, ...endUpdate };
     }
 
     case "tool_result": {
@@ -224,7 +268,27 @@ export function processWsEvent(
           break;
         }
       }
-      return { ...currentAssistantMessage, steps };
+      const update: Partial<ChatMessage> = { steps };
+
+      // Extract SQL and table data from execute_sql tool results
+      if (trToolName === "execute_sql" && event.details) {
+        const details = event.details as Record<string, unknown>;
+        if (details.sql) {
+          update.sqlBlock = details.sql as string;
+        }
+        if (Array.isArray(details.columns) && Array.isArray(details.rows)) {
+          update.tableData = {
+            columns: details.columns as string[],
+            rows: details.rows as Record<string, unknown>[],
+            executionTime: typeof details.executionTime === "number" ? details.executionTime : undefined,
+          };
+        }
+        if (details.sqlQueryHistoryId) {
+          update.sqlQueryHistoryId = details.sqlQueryHistoryId as string;
+        }
+      }
+
+      return { ...currentAssistantMessage, ...update };
     }
 
     case "agent_end":
@@ -257,10 +321,38 @@ export function processWsEvent(
       };
     }
 
-    case "error": {
+    case "confirm_action": {
       if (!currentAssistantMessage) return null;
       return {
         ...currentAssistantMessage,
+        confirmAction: {
+          id: (event.confirmAction as any)?.id ?? uniqueId("confirm"),
+          title: (event.confirmAction as any)?.title ?? "确认操作",
+          description: (event.confirmAction as any)?.description,
+          items: (event.confirmAction as any)?.items,
+          actionType: (event.confirmAction as any)?.actionType,
+          confirmed: false,
+        },
+      };
+    }
+
+    case "error": {
+      if (!currentAssistantMessage) {
+        // No assistant message yet — create one to display the error
+        const errorMsg = (event.message as string) ?? (event.error as string) ?? "请求处理失败，请重试";
+        return {
+          id: uniqueId("assistant"),
+          role: "assistant",
+          content: `⚠️ ${errorMsg}`,
+          timestamp: Date.now(),
+          isStreaming: false,
+          steps: [],
+        };
+      }
+      const errorContent = (event.message as string) ?? (event.error as string) ?? "请求处理失败，请重试";
+      return {
+        ...currentAssistantMessage,
+        content: currentAssistantMessage.content || `⚠️ ${errorContent}`,
         isStreaming: false,
       };
     }

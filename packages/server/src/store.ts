@@ -1,7 +1,8 @@
 import * as crypto from "node:crypto";
 import Database from "better-sqlite3";
 import { DB_PATH } from "./config.js";
-import type { Datasource, SchemaAnnotation, Conversation, StoredMessage, TableQueryExample, QueryFeedback, QueryExample, SemanticMetric, SemanticDimension, SemanticModel, ScheduledQuery, QueryAlert, QueryExecutionHistory, SqlQueryHistory } from "./types.js";
+import { normalizeSql } from "./agent/tools/sql-normalize.js";
+import type { Datasource, SchemaAnnotation, Conversation, StoredMessage, TableQueryExample, QueryFeedback, QueryExample, SemanticMetric, SemanticDimension, SemanticModel, ScheduledQuery, QueryAlert, QueryExecutionHistory, SqlQueryHistory, QueryBookmark, QuerySkill } from "./types.js";
 
 let db: Database.Database | null = null;
 
@@ -60,6 +61,12 @@ function initTables(database: Database.Database): void {
   if (!annotationColumns.includes("domain_values")) {
     database.exec(`ALTER TABLE schema_annotations ADD COLUMN domain_values TEXT`);
   }
+  if (!annotationColumns.includes("column_type")) {
+    database.exec(`ALTER TABLE schema_annotations ADD COLUMN column_type TEXT`);
+  }
+  if (!annotationColumns.includes("sample_data")) {
+    database.exec(`ALTER TABLE schema_annotations ADD COLUMN sample_data TEXT`);
+  }
 
   // Table query examples
   database.exec(`
@@ -94,6 +101,13 @@ function initTables(database: Database.Database): void {
     )
   `);
 
+  // Migration: add unique index on query_examples for upsert support
+  const qeIndexes = (database.pragma("index_list(query_examples)") as Array<{ name: string }>).map(i => i.name);
+  if (!qeIndexes.includes("idx_qe_datasource_question_sql")) {
+    database.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_qe_datasource_question_sql ON query_examples(datasource_id, question, sql)`);
+  }
+
+
   // Query feedback
   database.exec(`
     CREATE TABLE IF NOT EXISTS query_feedback (
@@ -106,6 +120,14 @@ function initTables(database: Database.Database): void {
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Migration: Add feedback_category and sql_query_history_id to query_feedback
+  try {
+    database.exec(`ALTER TABLE query_feedback ADD COLUMN feedback_category TEXT`);
+  } catch { /* column already exists */ }
+  try {
+    database.exec(`ALTER TABLE query_feedback ADD COLUMN sql_query_history_id TEXT`);
+  } catch { /* column already exists */ }
 
   // App config table — MUST be created first since getConfig() is called during init
   database.exec(`
@@ -129,13 +151,18 @@ function initTables(database: Database.Database): void {
       name TEXT NOT NULL,
       display_name TEXT NOT NULL,
       description TEXT NOT NULL DEFAULT '',
-      sql_expression TEXT NOT NULL,
-      filters TEXT NOT NULL DEFAULT '[]',
+      sql TEXT NOT NULL,
       dimensions TEXT NOT NULL DEFAULT '[]',
       default_granularity TEXT,
       unit TEXT,
       category TEXT,
       aliases TEXT NOT NULL DEFAULT '[]',
+      metric_type TEXT NOT NULL DEFAULT 'atomic' CHECK(metric_type IN ('atomic', 'derived', 'compound')),
+      business_context TEXT NOT NULL DEFAULT '',
+      calculation_logic TEXT NOT NULL DEFAULT '',
+      applicable_scenarios TEXT NOT NULL DEFAULT '',
+      data_quality_notes TEXT NOT NULL DEFAULT '',
+      default_sort TEXT,
       status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'published', 'deprecated')),
       version INTEGER NOT NULL DEFAULT 1,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -155,6 +182,11 @@ function initTables(database: Database.Database): void {
       data_type TEXT NOT NULL DEFAULT 'string' CHECK(data_type IN ('string', 'number', 'date')),
       hierarchy TEXT,
       "values" TEXT,
+      status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'published', 'deprecated')),
+      grain TEXT CHECK(grain IN ('day', 'week', 'month', 'quarter', 'year')),
+      date_column TEXT,
+      description TEXT NOT NULL DEFAULT '',
+      is_enum_dict INTEGER NOT NULL DEFAULT 0,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (datasource_id) REFERENCES datasources(id) ON DELETE CASCADE,
@@ -172,6 +204,7 @@ function initTables(database: Database.Database): void {
       joins TEXT NOT NULL DEFAULT '[]',
       metrics TEXT NOT NULL DEFAULT '[]',
       dimensions TEXT NOT NULL DEFAULT '[]',
+      status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'published', 'deprecated')),
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (datasource_id) REFERENCES datasources(id) ON DELETE CASCADE,
@@ -247,6 +280,112 @@ function initTables(database: Database.Database): void {
     )
   `);
 
+  // Migration: Add status to semantic_models
+  try {
+    database.exec(`ALTER TABLE semantic_models ADD COLUMN status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'published', 'deprecated'))`);
+  } catch { /* column already exists */ }
+
+  // P2-2: Add new columns to semantic_metrics
+  const metricColumns = database.prepare("PRAGMA table_info(semantic_metrics)").all() as Array<{name: string}>;
+  const metricColNames = new Set(metricColumns.map(c => c.name));
+
+  if (!metricColNames.has('sql')) {
+    try { database.exec(`ALTER TABLE semantic_metrics ADD COLUMN sql TEXT`); } catch {}
+  }
+  if (!metricColNames.has('metric_type')) {
+    try { database.exec(`ALTER TABLE semantic_metrics ADD COLUMN metric_type TEXT NOT NULL DEFAULT 'atomic' CHECK(metric_type IN ('atomic', 'derived', 'compound'))`); } catch {}
+  }
+  if (!metricColNames.has('business_context')) {
+    try { database.exec(`ALTER TABLE semantic_metrics ADD COLUMN business_context TEXT NOT NULL DEFAULT ''`); } catch {}
+  }
+  if (!metricColNames.has('calculation_logic')) {
+    try { database.exec(`ALTER TABLE semantic_metrics ADD COLUMN calculation_logic TEXT NOT NULL DEFAULT ''`); } catch {}
+  }
+  if (!metricColNames.has('applicable_scenarios')) {
+    try { database.exec(`ALTER TABLE semantic_metrics ADD COLUMN applicable_scenarios TEXT NOT NULL DEFAULT ''`); } catch {}
+  }
+  if (!metricColNames.has('data_quality_notes')) {
+    try { database.exec(`ALTER TABLE semantic_metrics ADD COLUMN data_quality_notes TEXT NOT NULL DEFAULT ''`); } catch {}
+  }
+  if (!metricColNames.has('default_sort')) {
+    try { database.exec(`ALTER TABLE semantic_metrics ADD COLUMN default_sort TEXT`); } catch {}
+  }
+
+  // P2-2: Add new columns to semantic_dimensions
+  const dimColumns = database.prepare("PRAGMA table_info(semantic_dimensions)").all() as Array<{name: string}>;
+  const dimColNames = new Set(dimColumns.map(c => c.name));
+
+  if (!dimColNames.has('status')) {
+    try { database.exec(`ALTER TABLE semantic_dimensions ADD COLUMN status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'published', 'deprecated'))`); } catch {}
+  }
+  if (!dimColNames.has('grain')) {
+    try { database.exec(`ALTER TABLE semantic_dimensions ADD COLUMN grain TEXT CHECK(grain IN ('day', 'week', 'month', 'quarter', 'year'))`); } catch {}
+  }
+  if (!dimColNames.has('date_column')) {
+    try { database.exec(`ALTER TABLE semantic_dimensions ADD COLUMN date_column TEXT`); } catch {}
+  }
+  if (!dimColNames.has('description')) {
+    try { database.exec(`ALTER TABLE semantic_dimensions ADD COLUMN description TEXT NOT NULL DEFAULT ''`); } catch {}
+  }
+  if (!dimColNames.has('is_enum_dict')) {
+    try { database.exec(`ALTER TABLE semantic_dimensions ADD COLUMN is_enum_dict INTEGER NOT NULL DEFAULT 0`); } catch {}
+  }
+
+  // Metric dev agent fields migration
+  const metricDevCols = database.prepare("PRAGMA table_info(semantic_metrics)").all() as Array<{ name: string }>;
+  const metricDevColNames = new Set(metricDevCols.map(c => c.name));
+  if (!metricDevColNames.has("created_by")) {
+    database.exec(`ALTER TABLE semantic_metrics ADD COLUMN created_by TEXT NOT NULL DEFAULT 'manual' CHECK(created_by IN ('manual', 'agent', 'ai_suggest'))`);
+  }
+  if (!metricDevColNames.has("agent_session_id")) {
+    database.exec(`ALTER TABLE semantic_metrics ADD COLUMN agent_session_id TEXT`);
+  }
+  if (!metricDevColNames.has("validation_status")) {
+    database.exec(`ALTER TABLE semantic_metrics ADD COLUMN validation_status TEXT NOT NULL DEFAULT 'unvalidated' CHECK(validation_status IN ('unvalidated', 'passed', 'failed'))`);
+  }
+  if (!metricDevColNames.has("validation_result")) {
+    database.exec(`ALTER TABLE semantic_metrics ADD COLUMN validation_result TEXT`);
+  }
+
+  const dimDevCols = database.prepare("PRAGMA table_info(semantic_dimensions)").all() as Array<{ name: string }>;
+  const dimDevColNames = new Set(dimDevCols.map(c => c.name));
+  if (!dimDevColNames.has("created_by")) {
+    database.exec(`ALTER TABLE semantic_dimensions ADD COLUMN created_by TEXT NOT NULL DEFAULT 'manual' CHECK(created_by IN ('manual', 'agent', 'ai_suggest'))`);
+  }
+  if (!dimDevColNames.has("agent_session_id")) {
+    database.exec(`ALTER TABLE semantic_dimensions ADD COLUMN agent_session_id TEXT`);
+  }
+
+  // P2-2: Clear old test data (sql_expression-based metrics are incompatible with new sql field)
+  database.exec(`DELETE FROM semantic_metrics`);
+  database.exec(`DELETE FROM semantic_dimensions`);
+  database.exec(`DELETE FROM semantic_models`);
+
+  // Migration: Add parent_query_id, correction_round, intent_type to sql_query_history
+  try {
+    database.exec(`ALTER TABLE sql_query_history ADD COLUMN parent_query_id TEXT`);
+  } catch { /* column already exists */ }
+  try {
+    database.exec(`ALTER TABLE sql_query_history ADD COLUMN correction_round INTEGER DEFAULT 0`);
+  } catch { /* column already exists */ }
+  try {
+    database.exec(`ALTER TABLE sql_query_history ADD COLUMN intent_type TEXT`);
+  } catch { /* column already exists */ }
+
+
+	  // Query bookmarks — user-curated SQL for the insights page
+	  database.exec(`
+	    CREATE TABLE IF NOT EXISTS query_bookmarks (
+	      id TEXT PRIMARY KEY,
+	      datasource_id TEXT NOT NULL,
+	      title TEXT NOT NULL,
+	      sql TEXT NOT NULL,
+	      description TEXT,
+	      sort_order INTEGER DEFAULT 0,
+	      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+	      FOREIGN KEY (datasource_id) REFERENCES datasources(id) ON DELETE CASCADE
+	    )
+	  `);
   setConfig("schema_version", "3");
 
   // Conversations table
@@ -276,6 +415,37 @@ function initTables(database: Database.Database): void {
   database.exec(`
     CREATE INDEX IF NOT EXISTS idx_messages_conversation
     ON messages(conversation_id, created_at ASC)
+  `);
+
+  // Query Skills table (replaces business_knowledge)
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS query_skill (
+      id TEXT PRIMARY KEY,
+      datasource_id TEXT NOT NULL,
+      domain TEXT NOT NULL,
+      name TEXT NOT NULL,
+      trigger_keywords TEXT NOT NULL DEFAULT '[]',
+      business_context TEXT NOT NULL DEFAULT '',
+      core_tables TEXT NOT NULL DEFAULT '[]',
+      join_path TEXT NOT NULL DEFAULT '',
+      query_steps TEXT NOT NULL DEFAULT '',
+      example_sql TEXT NOT NULL DEFAULT '',
+      caveats TEXT NOT NULL DEFAULT '',
+      common_issues TEXT NOT NULL DEFAULT '',
+      enabled INTEGER NOT NULL DEFAULT 1,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (datasource_id) REFERENCES datasources(id) ON DELETE CASCADE
+    )
+  `);
+  database.exec(`
+    CREATE INDEX IF NOT EXISTS idx_query_skill_datasource
+    ON query_skill(datasource_id)
+  `);
+  database.exec(`
+    CREATE INDEX IF NOT EXISTS idx_query_skill_domain
+    ON query_skill(datasource_id, domain)
   `);
 
 }
@@ -326,6 +496,26 @@ export async function createDatasource(input: Omit<Datasource, "id" | "created_a
     input.enabled ? 1 : 0
   );
 
+  return getDatasource(id)!;
+}
+
+/** Create a datasource directly without encryption (for test helpers). */
+export function createDatasourceDirect(input: Omit<Datasource, "id" | "created_at" | "updated_at">): Datasource {
+  const id = generateId();
+  const stmt = getDb().prepare(`
+    INSERT INTO datasources (id, name, host, port, database, user, password, enabled)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  stmt.run(
+    id,
+    input.name,
+    input.host,
+    input.port,
+    input.database,
+    input.user,
+    input.password,
+    input.enabled ? 1 : 0
+  );
   return getDatasource(id)!;
 }
 
@@ -389,9 +579,9 @@ export function deleteDatasource(id: string): boolean {
 
 // ==================== Schema Annotations CRUD ====================
 
-export function getAnnotations(datasourceId: string): SchemaAnnotation[] {
+  export function getAnnotations(datasourceId: string): SchemaAnnotation[] {
   const stmt = getDb().prepare(`
-    SELECT id, datasource_id, table_name, field_name, annotation, status, domain_type, domain_values, created_at, updated_at
+    SELECT id, datasource_id, table_name, field_name, column_type, annotation, status, domain_type, domain_values, sample_data, created_at, updated_at
     FROM schema_annotations
     WHERE datasource_id = ?
     ORDER BY table_name, field_name
@@ -408,25 +598,25 @@ export function upsertAnnotation(input: Omit<SchemaAnnotation, "id" | "created_a
   if (existing) {
     const stmt = getDb().prepare(`
       UPDATE schema_annotations
-      SET annotation = ?, status = ?, domain_type = ?, domain_values = ?, updated_at = CURRENT_TIMESTAMP
+      SET annotation = ?, status = ?, domain_type = ?, domain_values = ?, column_type = ?, sample_data = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `);
-    stmt.run(input.annotation, input.status, input.domain_type ?? null, input.domain_values ?? null, (existing as { id: string }).id);
+    stmt.run(input.annotation, input.status, input.domain_type ?? null, input.domain_values ?? null, input.column_type ?? null, input.sample_data ?? null, (existing as { id: string }).id);
     return getDb().prepare(`
-      SELECT id, datasource_id, table_name, field_name, annotation, status, domain_type, domain_values, created_at, updated_at
+      SELECT id, datasource_id, table_name, field_name, column_type, annotation, status, domain_type, domain_values, sample_data, created_at, updated_at
       FROM schema_annotations WHERE id = ?
     `).get((existing as { id: string }).id) as SchemaAnnotation;
   }
 
   const id = generateId();
   const stmt = getDb().prepare(`
-    INSERT INTO schema_annotations (id, datasource_id, table_name, field_name, annotation, status, domain_type, domain_values)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO schema_annotations (id, datasource_id, table_name, field_name, column_type, annotation, status, domain_type, domain_values, sample_data)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
-  stmt.run(id, input.datasource_id, input.table_name, input.field_name ?? null, input.annotation, input.status, input.domain_type ?? null, input.domain_values ?? null);
+  stmt.run(id, input.datasource_id, input.table_name, input.field_name ?? null, input.column_type ?? null, input.annotation, input.status, input.domain_type ?? null, input.domain_values ?? null, input.sample_data ?? null);
 
   return getDb().prepare(`
-    SELECT id, datasource_id, table_name, field_name, annotation, status, domain_type, domain_values, created_at, updated_at
+    SELECT id, datasource_id, table_name, field_name, column_type, annotation, status, domain_type, domain_values, sample_data, created_at, updated_at
     FROM schema_annotations WHERE id = ?
   `).get(id) as SchemaAnnotation;
 }
@@ -445,7 +635,7 @@ export function confirmAnnotation(id: string): SchemaAnnotation | undefined {
     UPDATE schema_annotations SET status = 'confirmed', updated_at = CURRENT_TIMESTAMP WHERE id = ?
   `).run(id);
   return getDb().prepare(`
-    SELECT id, datasource_id, table_name, field_name, annotation, status, domain_type, domain_values, created_at, updated_at
+    SELECT id, datasource_id, table_name, field_name, column_type, annotation, status, domain_type, domain_values, sample_data, created_at, updated_at
     FROM schema_annotations WHERE id = ?
   `).get(id) as SchemaAnnotation | undefined;
 }
@@ -525,10 +715,89 @@ export function findQueryExampleByMessageId(messageId: string): QueryExample | u
 export function saveFeedback(input: Omit<QueryFeedback, "id" | "created_at">): QueryFeedback {
   const id = generateId();
   getDb().prepare(`
-    INSERT INTO query_feedback (id, message_id, conversation_id, rating, issue_type, issue_detail)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(id, input.message_id, input.conversation_id, input.rating, input.issue_type ?? null, input.issue_detail ?? null);
+    INSERT INTO query_feedback (id, message_id, conversation_id, rating, issue_type, issue_detail, feedback_category, sql_query_history_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, input.message_id, input.conversation_id, input.rating, input.issue_type ?? null, input.issue_detail ?? null, input.feedback_category ?? null, input.sql_query_history_id ?? null);
   return getDb().prepare(`SELECT * FROM query_feedback WHERE id = ?`).get(id) as QueryFeedback;
+}
+
+/**
+ * List feedback for a datasource, joining with sql_query_history to get SQL info.
+ * Used by lookup_examples to adjust example scores based on user feedback.
+ */
+export function listFeedbackByDatasource(datasourceId: string, limit = 100): Array<{
+  id: string;
+  rating: string;
+  issue_type: string | null;
+  feedback_category: string | null;
+  sql: string | null;
+  sql_query_history_id: string | null;
+}> {
+  return getDb().prepare(`
+    SELECT
+      qf.id,
+      qf.rating,
+      qf.issue_type,
+      qf.feedback_category,
+      sqh.sql,
+      qf.sql_query_history_id
+    FROM query_feedback qf
+    LEFT JOIN sql_query_history sqh ON qf.sql_query_history_id = sqh.id
+    WHERE (qf.sql_query_history_id IS NOT NULL AND sqh.datasource_id = ?)
+       OR (qf.sql_query_history_id IS NULL AND qf.conversation_id IN (
+         SELECT id FROM conversations WHERE datasource_id = ?
+       ))
+    ORDER BY qf.created_at DESC
+    LIMIT ?
+  `).all(datasourceId, datasourceId, limit) as Array<{
+    id: string;
+    rating: string;
+    issue_type: string | null;
+    feedback_category: string | null;
+    sql: string | null;
+    sql_query_history_id: string | null;
+  }>;
+}
+
+/**
+ * Get aggregated feedback statistics per SQL for a datasource.
+ * Returns a Map of sql -> { positiveCount, negativeCount, topCategories }.
+ */
+export function getFeedbackStatsBySQL(datasourceId: string): Map<string, {
+  positiveCount: number;
+  negativeCount: number;
+  topCategories: string[];
+}> {
+  const rows = getDb().prepare(`
+    SELECT
+      COALESCE(sqh.sql, '') AS sql,
+      SUM(CASE WHEN qf.rating = 'positive' THEN 1 ELSE 0 END) AS positive_count,
+      SUM(CASE WHEN qf.rating = 'negative' THEN 1 ELSE 0 END) AS negative_count,
+      GROUP_CONCAT(DISTINCT CASE WHEN qf.feedback_category IS NOT NULL THEN qf.feedback_category END, '|') AS categories
+    FROM query_feedback qf
+    LEFT JOIN sql_query_history sqh ON qf.sql_query_history_id = sqh.id
+    WHERE sqh.datasource_id = ? OR (qf.sql_query_history_id IS NULL AND qf.conversation_id IN (
+      SELECT id FROM conversations WHERE datasource_id = ?
+    ))
+    GROUP BY sqh.sql
+    HAVING sqh.sql IS NOT NULL AND sqh.sql != ''
+  `).all(datasourceId, datasourceId) as Array<{
+    sql: string;
+    positive_count: number;
+    negative_count: number;
+    categories: string | null;
+  }>;
+
+  const map = new Map<string, { positiveCount: number; negativeCount: number; topCategories: string[] }>();
+  for (const row of rows) {
+    if (!row.sql) continue;
+    map.set(row.sql, {
+      positiveCount: row.positive_count,
+      negativeCount: row.negative_count,
+      topCategories: row.categories ? row.categories.split("|") : [],
+    });
+  }
+  return map;
 }
 
 // ==================== Conversations CRUD ====================
@@ -633,6 +902,142 @@ export function listMessages(conversationId: string): StoredMessage[] {
   return stmt.all(conversationId) as StoredMessage[];
 }
 
+
+// ==================== Query History Sync & Context ====================
+
+/**
+ * Sync query_examples from sql_query_history statistics.
+ * Aggregates execution counts by (question, sql), identifies high-frequency
+ * successful queries, and upserts them into query_examples so that
+ * lookup_examples can surface them as Few-Shot references.
+ */
+export function syncQueryExamplesFromHistory(datasourceId: string): number {
+  const db = getDb();
+
+  // Aggregate successful executions grouped by (question, sql)
+  const stats = db.prepare(`
+    SELECT
+      question,
+      sql,
+      COUNT(*) AS total_executions,
+      SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) AS success_executions,
+      AVG(CASE WHEN execution_time_ms IS NOT NULL THEN execution_time_ms ELSE NULL END) AS avg_time_ms
+    FROM sql_query_history
+    WHERE datasource_id = ? AND question IS NOT NULL AND question != ''
+    GROUP BY question, sql
+    HAVING success_executions >= 2
+    ORDER BY success_executions DESC, total_executions DESC
+    LIMIT 50
+  `).all(datasourceId) as Array<{
+    question: string;
+    sql: string;
+    total_executions: number;
+    success_executions: number;
+    avg_time_ms: number | null;
+  }>;
+
+  let upserted = 0;
+  const upsertStmt = db.prepare(`
+    INSERT INTO query_examples (id, datasource_id, conversation_id, question, sql, tables_used, difficulty, success_count, is_verified)
+    VALUES (?, ?, NULL, ?, ?, ?, ?, ?, 0)
+    ON CONFLICT(datasource_id, question, sql) DO UPDATE SET
+      success_count = excluded.success_count,
+      tables_used = excluded.tables_used,
+      difficulty = excluded.difficulty,
+      updated_at = CURRENT_TIMESTAMP
+  `);
+
+  // Extract table names from SQL (simple heuristic)
+  function extractTables(sql: string): string[] {
+    const matches = sql.match(/(?:FROM|JOIN)\s+`?(\w+)`?/gi) ?? [];
+    return [...new Set(matches.map(m => {
+      const name = m.match(/`?(\w+)`?$/)?.[1] ?? "";
+      return name;
+    }).filter(Boolean))];
+  }
+
+  for (const row of stats) {
+    const tables = extractTables(row.sql);
+    const difficulty: string = row.avg_time_ms !== null && row.avg_time_ms > 2000 ? "complex"
+      : tables.length > 2 ? "medium"
+      : "simple";
+
+    upsertStmt.run(
+      generateId(),
+      datasourceId,
+      row.question,
+      row.sql,
+      JSON.stringify(tables),
+      difficulty,
+      row.success_executions,
+    );
+    upserted++;
+  }
+
+  return upserted;
+}
+
+export function getQueryExecutionStats(datasourceId: string): Map<string, { successCount: number; errorCount: number; avgTimeMs: number }> {
+  const rows = getDb().prepare(`
+    SELECT
+      sql,
+      SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) AS success_count,
+      SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END) AS error_count,
+      AVG(CASE WHEN execution_time_ms IS NOT NULL THEN execution_time_ms ELSE NULL END) AS avg_time_ms
+    FROM sql_query_history
+    WHERE datasource_id = ?
+    GROUP BY sql
+  `).all(datasourceId) as Array<{ sql: string; success_count: number; error_count: number; avg_time_ms: number | null }>;
+
+  const map = new Map<string, { successCount: number; errorCount: number; avgTimeMs: number }>();
+  for (const row of rows) {
+    map.set(row.sql, {
+      successCount: row.success_count,
+      errorCount: row.error_count,
+      avgTimeMs: row.avg_time_ms ?? 0,
+    });
+  }
+  return map;
+}
+
+export function getRecentSqlContext(datasourceId: string, limit = 3): Array<{
+  question: string | null;
+  sql: string;
+  tables: string[];
+  executionTimeMs: number | null;
+  rowCount: number | null;
+}> {
+  const rows = getDb().prepare(`
+    SELECT question, sql, execution_time_ms, row_count
+    FROM sql_query_history
+    WHERE datasource_id = ? AND status = 'success' AND question IS NOT NULL AND question != ''
+    ORDER BY executed_at DESC
+    LIMIT ?
+  `).all(datasourceId, limit) as Array<{
+    question: string | null;
+    sql: string;
+    execution_time_ms: number | null;
+    row_count: number | null;
+  }>;
+
+  return rows.map(row => {
+    // Extract table names from SQL
+    const matches = row.sql.match(/(?:FROM|JOIN)\s+`?(\w+)`?/gi) ?? [];
+    const tables = [...new Set(matches.map(m => {
+      const name = m.match(/`?(\w+)`?$/)?.[1] ?? "";
+      return name;
+    }).filter(Boolean))];
+
+    return {
+      question: row.question,
+      sql: row.sql,
+      tables,
+      executionTimeMs: row.execution_time_ms,
+      rowCount: row.row_count,
+    };
+  });
+}
+
 // ==================== Semantic Metrics CRUD ====================
 
 export function listMetrics(datasourceId: string): SemanticMetric[] {
@@ -647,21 +1052,28 @@ export function getMetric(id: string): SemanticMetric | undefined {
 
 export function createMetric(input: Omit<SemanticMetric, "id" | "created_at" | "updated_at">): SemanticMetric {
   const id = generateId();
+  // Normalize SQL — fix keyword粘连 (e.g. "revenueFROM" → "revenue FROM")
+  const normalizedSql = normalizeSql(input.sql);
   getDb().prepare(`
-    INSERT INTO semantic_metrics (id, datasource_id, name, display_name, description, sql_expression, filters, dimensions, default_granularity, unit, category, aliases, status, version)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, input.datasource_id, input.name, input.display_name, input.description, input.sql_expression, input.filters, input.dimensions, input.default_granularity ?? null, input.unit ?? null, input.category ?? null, input.aliases, input.status, input.version ?? 1);
+    INSERT INTO semantic_metrics (id, datasource_id, name, display_name, description, sql, dimensions, default_granularity, unit, category, aliases, metric_type, business_context, calculation_logic, applicable_scenarios, data_quality_notes, default_sort, status, version, created_by, agent_session_id, validation_status, validation_result)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, input.datasource_id, input.name, input.display_name, input.description, normalizedSql, input.dimensions, input.default_granularity ?? null, input.unit ?? null, input.category ?? null, input.aliases, input.metric_type ?? 'atomic', input.business_context ?? '', input.calculation_logic ?? '', input.applicable_scenarios ?? '', input.data_quality_notes ?? '', input.default_sort ?? null, input.status, input.version ?? 1, input.created_by ?? 'manual', input.agent_session_id ?? null, input.validation_status ?? 'unvalidated', input.validation_result ?? null);
   return getMetric(id)!;
 }
 
 export function updateMetric(id: string, input: Partial<Omit<SemanticMetric, "id" | "datasource_id" | "created_at" | "updated_at">>): SemanticMetric | undefined {
   const updates: string[] = [];
   const values: unknown[] = [];
-  const fields = ["name", "display_name", "description", "sql_expression", "filters", "dimensions", "default_granularity", "unit", "category", "aliases", "status"];
+  const fields = ["name", "display_name", "description", "sql", "dimensions", "default_granularity", "unit", "category", "aliases", "metric_type", "business_context", "calculation_logic", "applicable_scenarios", "data_quality_notes", "default_sort", "status"];
   for (const f of fields) {
     if ((input as any)[f] !== undefined) {
       updates.push(`${f} = ?`);
-      values.push((input as any)[f]);
+      // Normalize SQL field — fix keyword粘连
+      let value = (input as any)[f];
+      if (f === "sql" && typeof value === "string") {
+        value = normalizeSql(value);
+      }
+      values.push(value);
     }
   }
   if (updates.length === 0) return getMetric(id);
@@ -674,6 +1086,21 @@ export function updateMetric(id: string, input: Partial<Omit<SemanticMetric, "id
 
 export function deleteMetric(id: string): boolean {
   return getDb().prepare("DELETE FROM semantic_metrics WHERE id = ?").run(id).changes > 0;
+}
+
+// ==================== Metric Conflict Checks ====================
+
+export function checkMetricNameConflict(datasourceId: string, name: string): SemanticMetric | null {
+  const row = getDb().prepare(
+    "SELECT * FROM semantic_metrics WHERE datasource_id = ? AND name = ?"
+  ).get(datasourceId, name) as SemanticMetric | undefined;
+  return row ?? null;
+}
+
+export function checkMetricDisplayNameConflict(datasourceId: string, displayName: string): SemanticMetric[] {
+  return getDb().prepare(
+    "SELECT * FROM semantic_metrics WHERE datasource_id = ? AND display_name = ?"
+  ).all(datasourceId, displayName) as SemanticMetric[];
 }
 
 // ==================== Semantic Dimensions CRUD ====================
@@ -691,19 +1118,19 @@ export function getDimension(id: string): SemanticDimension | undefined {
 export function createDimension(input: Omit<SemanticDimension, "id" | "created_at" | "updated_at">): SemanticDimension {
   const id = generateId();
   getDb().prepare(`
-    INSERT INTO semantic_dimensions (id, datasource_id, name, display_name, sql_expression, data_type, hierarchy, values)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, input.datasource_id, input.name, input.display_name, input.sql_expression, input.data_type, input.hierarchy ?? null, input.values ?? null);
+    INSERT INTO semantic_dimensions (id, datasource_id, name, display_name, description, sql_expression, data_type, hierarchy, "values", status, grain, date_column, is_enum_dict, created_by, agent_session_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, input.datasource_id, input.name, input.display_name, input.description ?? '', input.sql_expression, input.data_type, input.hierarchy ?? null, input.values ?? null, input.status ?? 'draft', input.grain ?? null, input.date_column ?? null, input.is_enum_dict ? 1 : 0, input.created_by ?? 'manual', input.agent_session_id ?? null);
   return getDimension(id)!;
 }
 
 export function updateDimension(id: string, input: Partial<Omit<SemanticDimension, "id" | "datasource_id" | "created_at" | "updated_at">>): SemanticDimension | undefined {
   const updates: string[] = [];
   const values: unknown[] = [];
-  const fields = ["name", "display_name", "sql_expression", "data_type", "hierarchy", "values"];
+  const fields = ["name", "display_name", "description", "sql_expression", "data_type", "hierarchy", "values", "status", "grain", "date_column", "is_enum_dict"];
   for (const f of fields) {
     if ((input as any)[f] !== undefined) {
-      updates.push(`${f} = ?`);
+      updates.push(`${f === "values" ? '"values"' : f} = ?`);
       values.push((input as any)[f]);
     }
   }
@@ -733,16 +1160,16 @@ export function getModel(id: string): SemanticModel | undefined {
 export function createModel(input: Omit<SemanticModel, "id" | "created_at" | "updated_at">): SemanticModel {
   const id = generateId();
   getDb().prepare(`
-    INSERT INTO semantic_models (id, datasource_id, name, description, base_table, joins, metrics, dimensions)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, input.datasource_id, input.name, input.description ?? null, input.base_table, input.joins, input.metrics, input.dimensions);
+    INSERT INTO semantic_models (id, datasource_id, name, description, base_table, joins, metrics, dimensions, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, input.datasource_id, input.name, input.description ?? null, input.base_table, input.joins, input.metrics, input.dimensions, input.status || 'draft');
   return getModel(id)!;
 }
 
 export function updateModel(id: string, input: Partial<Omit<SemanticModel, "id" | "datasource_id" | "created_at" | "updated_at">>): SemanticModel | undefined {
   const updates: string[] = [];
   const values: unknown[] = [];
-  const fields = ["name", "description", "base_table", "joins", "metrics", "dimensions"];
+  const fields = ["name", "description", "base_table", "joins", "metrics", "dimensions", "status"];
   for (const f of fields) {
     if ((input as any)[f] !== undefined) {
       updates.push(`${f} = ?`);
@@ -879,10 +1306,259 @@ export function listAllSqlQueryHistory(limit = 200): SqlQueryHistory[] {
 export function createSqlQueryHistory(input: Omit<SqlQueryHistory, "id" | "created_at">): SqlQueryHistory {
   const id = generateId();
   getDb().prepare(`
-    INSERT INTO sql_query_history (id, datasource_id, datasource_name, conversation_id, question, sql, executed_at, execution_time_ms, row_count, status, error_message)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, input.datasource_id, input.datasource_name, input.conversation_id ?? null, input.question ?? null, input.sql, input.executed_at, input.execution_time_ms ?? null, input.row_count ?? null, input.status, input.error_message ?? null);
+    INSERT INTO sql_query_history (id, datasource_id, datasource_name, conversation_id, question, sql, executed_at, execution_time_ms, row_count, status, error_message, parent_query_id, correction_round, intent_type)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    id,
+    input.datasource_id,
+    input.datasource_name,
+    input.conversation_id ?? null,
+    input.question ?? null,
+    input.sql,
+    input.executed_at,
+    input.execution_time_ms ?? null,
+    input.row_count ?? null,
+    input.status,
+    input.error_message ?? null,
+    input.parent_query_id ?? null,
+    input.correction_round ?? 0,
+    input.intent_type ?? null,
+  );
   return getDb().prepare(`SELECT * FROM sql_query_history WHERE id = ?`).get(id) as SqlQueryHistory;
+}
+
+// ==================== Query Bookmarks CRUD ====================
+
+export function listBookmarks(datasourceId: string): QueryBookmark[] {
+  return getDb().prepare(`
+    SELECT * FROM query_bookmarks WHERE datasource_id = ? ORDER BY sort_order, created_at DESC
+  `).all(datasourceId) as QueryBookmark[];
+}
+
+export function createBookmark(input: Omit<QueryBookmark, "id" | "created_at">): QueryBookmark {
+  const id = generateId();
+  getDb().prepare(`
+    INSERT INTO query_bookmarks (id, datasource_id, title, sql, description, sort_order)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(id, input.datasource_id, input.title, input.sql, input.description ?? null, input.sort_order ?? 0);
+  return getDb().prepare(`SELECT * FROM query_bookmarks WHERE id = ?`).get(id) as QueryBookmark;
+}
+
+export function deleteBookmark(id: string): boolean {
+  return getDb().prepare("DELETE FROM query_bookmarks WHERE id = ?").run(id).changes > 0;
+}
+
+// ==================== Insights Stats ====================
+
+export interface InsightsStats {
+  totalQueries: number;
+  successRate: number;
+  avgExecutionTimeMs: number;
+  topTable: { name: string; count: number } | null;
+  dailyTrend: Array<{ date: string; count: number }>;
+}
+
+export function getInsightsStats(datasourceId: string): InsightsStats {
+  const db = getDb();
+
+  const totalRow = db.prepare(`
+    SELECT COUNT(*) AS cnt FROM sql_query_history WHERE datasource_id = ?
+  `).get(datasourceId) as { cnt: number };
+  const totalQueries = totalRow.cnt;
+
+  const successRow = db.prepare(`
+    SELECT
+      COUNT(*) AS total,
+      SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) AS successes
+    FROM sql_query_history WHERE datasource_id = ?
+  `).get(datasourceId) as { total: number; successes: number };
+  const successRate = successRow.total > 0
+    ? Math.round((successRow.successes / successRow.total) * 1000) / 10
+    : 0;
+
+  const avgRow = db.prepare(`
+    SELECT AVG(execution_time_ms) AS avg_ms FROM sql_query_history
+    WHERE datasource_id = ? AND status = 'success' AND execution_time_ms IS NOT NULL
+  `).get(datasourceId) as { avg_ms: number | null };
+  const avgExecutionTimeMs = avgRow.avg_ms ? Math.round(avgRow.avg_ms) : 0;
+
+  // Most queried table
+  const tableRows = db.prepare(`
+    SELECT sql FROM sql_query_history WHERE datasource_id = ? AND status = 'success'
+  `).all(datasourceId) as Array<{ sql: string }>;
+  const tableCounts = new Map<string, number>();
+  for (const row of tableRows) {
+    const matches = row.sql.match(/(?:FROM|JOIN)\s+`?(\w+)`?/gi) ?? [];
+    for (const m of matches) {
+      const name = m.match(/`?(\w+)`?$/)?.[1] ?? "";
+      if (name) tableCounts.set(name, (tableCounts.get(name) ?? 0) + 1);
+    }
+  }
+  let topTable: { name: string; count: number } | null = null;
+  for (const [name, count] of tableCounts) {
+    if (!topTable || count > topTable.count) topTable = { name, count };
+  }
+
+  // Daily trend (last 7 days)
+  const dailyTrend: Array<{ date: string; count: number }> = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const countRow = db.prepare(`
+      SELECT COUNT(*) AS cnt FROM sql_query_history
+      WHERE datasource_id = ? AND date(executed_at) = ?
+    `).get(datasourceId, dateStr) as { cnt: number };
+    dailyTrend.push({ date: dateStr, count: countRow.cnt });
+  }
+
+  return { totalQueries, successRate, avgExecutionTimeMs, topTable, dailyTrend };
+}
+
+export interface TopQuery {
+  sql: string;
+  question: string | null;
+  executionCount: number;
+  lastExecutedAt: string;
+}
+
+export function getTopQueries(datasourceId: string, limit = 10): TopQuery[] {
+  return getDb().prepare(`
+    SELECT
+      sql,
+      MAX(question) AS question,
+      COUNT(*) AS execution_count,
+      MAX(executed_at) AS last_executed_at
+    FROM sql_query_history
+    WHERE datasource_id = ? AND status = 'success'
+    GROUP BY sql
+    ORDER BY execution_count DESC
+    LIMIT ?
+  `).all(datasourceId, limit) as any[];
+}
+
+// ==================== Query Skill CRUD ====================
+
+export function listQuerySkills(datasourceId: string, domain?: string): QuerySkill[] {
+  if (domain) {
+    return getDb().prepare(`
+      SELECT * FROM query_skill
+      WHERE datasource_id = ? AND domain = ?
+      ORDER BY sort_order, created_at
+    `).all(datasourceId, domain) as QuerySkill[];
+  }
+  return getDb().prepare(`
+    SELECT * FROM query_skill
+    WHERE datasource_id = ?
+    ORDER BY domain, sort_order, created_at
+  `).all(datasourceId) as QuerySkill[];
+}
+
+export function getQuerySkill(id: string): QuerySkill | undefined {
+  return getDb().prepare(`SELECT * FROM query_skill WHERE id = ?`).get(id) as QuerySkill | undefined;
+}
+
+export function createQuerySkill(input: {
+  datasource_id: string;
+  domain: string;
+  name: string;
+  trigger_keywords?: string;
+  business_context?: string;
+  core_tables?: string;
+  join_path?: string;
+  query_steps?: string;
+  example_sql?: string;
+  caveats?: string;
+  common_issues?: string;
+  enabled?: number;
+  sort_order?: number;
+}): QuerySkill {
+  const id = generateId();
+  const stmt = getDb().prepare(`
+    INSERT INTO query_skill (id, datasource_id, domain, name, trigger_keywords, business_context, core_tables, join_path, query_steps, example_sql, caveats, common_issues, enabled, sort_order)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  stmt.run(
+    id,
+    input.datasource_id,
+    input.domain,
+    input.name,
+    input.trigger_keywords ?? "[]",
+    input.business_context ?? "",
+    input.core_tables ?? "[]",
+    input.join_path ?? "",
+    input.query_steps ?? "",
+    input.example_sql ?? "",
+    input.caveats ?? "",
+    input.common_issues ?? "",
+    input.enabled ?? 1,
+    input.sort_order ?? 0,
+  );
+  return getQuerySkill(id)!;
+}
+
+export function updateQuerySkill(id: string, input: {
+  domain?: string;
+  name?: string;
+  trigger_keywords?: string;
+  business_context?: string;
+  core_tables?: string;
+  join_path?: string;
+  query_steps?: string;
+  example_sql?: string;
+  caveats?: string;
+  common_issues?: string;
+  enabled?: number;
+  sort_order?: number;
+}): QuerySkill | undefined {
+  const existing = getQuerySkill(id);
+  if (!existing) return undefined;
+
+  const updates: string[] = [];
+  const values: any[] = [];
+
+  if (input.domain !== undefined) { updates.push("domain = ?"); values.push(input.domain); }
+  if (input.name !== undefined) { updates.push("name = ?"); values.push(input.name); }
+  if (input.trigger_keywords !== undefined) { updates.push("trigger_keywords = ?"); values.push(input.trigger_keywords); }
+  if (input.business_context !== undefined) { updates.push("business_context = ?"); values.push(input.business_context); }
+  if (input.core_tables !== undefined) { updates.push("core_tables = ?"); values.push(input.core_tables); }
+  if (input.join_path !== undefined) { updates.push("join_path = ?"); values.push(input.join_path); }
+  if (input.query_steps !== undefined) { updates.push("query_steps = ?"); values.push(input.query_steps); }
+  if (input.example_sql !== undefined) { updates.push("example_sql = ?"); values.push(input.example_sql); }
+  if (input.caveats !== undefined) { updates.push("caveats = ?"); values.push(input.caveats); }
+  if (input.common_issues !== undefined) { updates.push("common_issues = ?"); values.push(input.common_issues); }
+  if (input.enabled !== undefined) { updates.push("enabled = ?"); values.push(input.enabled); }
+  if (input.sort_order !== undefined) { updates.push("sort_order = ?"); values.push(input.sort_order); }
+
+  if (updates.length === 0) return existing;
+
+  updates.push("updated_at = datetime('now')");
+  values.push(id);
+
+  getDb().prepare(`UPDATE query_skill SET ${updates.join(", ")} WHERE id = ?`).run(...values);
+  return getQuerySkill(id);
+}
+
+export function deleteQuerySkill(id: string): boolean {
+  const result = getDb().prepare(`DELETE FROM query_skill WHERE id = ?`).run(id);
+  return result.changes > 0;
+}
+
+export function listEnabledQuerySkills(datasourceId: string): QuerySkill[] {
+  return getDb().prepare(`
+    SELECT * FROM query_skill
+    WHERE datasource_id = ? AND enabled = 1
+    ORDER BY domain, sort_order, created_at
+  `).all(datasourceId) as QuerySkill[];
+}
+
+export function listQuerySkillDomains(datasourceId: string): string[] {
+  const rows = getDb().prepare(`
+    SELECT DISTINCT domain FROM query_skill
+    WHERE datasource_id = ?
+    ORDER BY domain
+  `).all(datasourceId) as { domain: string }[];
+  return rows.map(r => r.domain);
 }
 
 // Close database connection

@@ -74,6 +74,29 @@ function extractTableNames(sql: string): string[] {
 }
 
 /**
+ * Extract column references from a SQL query.
+ * Returns an array of { table, column } pairs.
+ * Handles: table.column patterns (qualified references).
+ */
+function extractColumnReferences(sql: string): Array<{ table: string | null; column: string }> {
+  const refs: Array<{ table: string | null; column: string }> = [];
+
+  // Match table.column patterns (e.g., orders.amount, o.total)
+  const qualifiedRegex = /\b(\w+)\.(\w+)\b/g;
+  const sqlKeywords = new Set(['GROUP', 'ORDER', 'LEFT', 'RIGHT', 'INNER', 'OUTER', 'CROSS', 'NATURAL', 'USING', 'ON', 'AND', 'OR', 'NOT', 'AS', 'IS', 'IN', 'BETWEEN', 'LIKE', 'NULL', 'TRUE', 'FALSE', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 'SELECT', 'FROM', 'WHERE', 'HAVING', 'LIMIT', 'OFFSET', 'UNION', 'ALL', 'DISTINCT', 'EXISTS', 'ASC', 'DESC']);
+  let match;
+  while ((match = qualifiedRegex.exec(sql)) !== null) {
+    const table = match[1];
+    const column = match[2];
+    if (!sqlKeywords.has(table.toUpperCase())) {
+      refs.push({ table, column });
+    }
+  }
+
+  return refs;
+}
+
+/**
  * Validate SQL against schema cache.
  */
 export function validateSqlAgainstSchema(
@@ -114,6 +137,35 @@ export function validateSqlAgainstSchema(
         : `Table '${table}' does not exist in the schema.`;
       result.passed = false;
       result.errors.push(msg);
+    }
+  }
+
+  // 3. Column name validation (warn mode — don't block execution, just warn)
+  const columnRefs = extractColumnReferences(sql);
+  for (const ref of columnRefs) {
+    if (ref.table && cache.columns.has(ref.table)) {
+      const tableColumns = cache.columns.get(ref.table)!;
+      // Skip common SQL pseudo-columns and aggregate functions
+      const skipColumns = new Set(['*', 'count', 'sum', 'avg', 'min', 'max', 'row_number', 'rank', 'dense_rank']);
+      if (skipColumns.has(ref.column.toLowerCase())) continue;
+
+      if (!tableColumns.has(ref.column) && !tableColumns.has(ref.column.toLowerCase())) {
+        // Find closest match using Levenshtein distance
+        let suggestion = "";
+        let minDist = Infinity;
+        for (const col of tableColumns) {
+          const d = levenshtein(ref.column.toLowerCase(), col.toLowerCase());
+          if (d < minDist && d <= 3) {
+            minDist = d;
+            suggestion = col;
+          }
+        }
+        const msg = suggestion
+          ? `Column '${ref.table}.${ref.column}' does not exist. Did you mean '${ref.table}.${suggestion}'?`
+          : `Column '${ref.table}.${ref.column}' does not exist in table '${ref.table}'.`;
+        // Use warning (not error) for column validation — LLM may use aliases or expressions
+        result.warnings.push(msg);
+      }
     }
   }
 

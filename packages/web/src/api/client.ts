@@ -111,10 +111,12 @@ export interface SchemaAnnotation {
   datasource_id: string;
   table_name: string;
   field_name: string | null;
+  column_type: string | null;
   annotation: string;
   status: "draft" | "confirmed";
   domain_type: "enum" | "range" | null;
   domain_values: string | null;
+  sample_data: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -230,7 +232,13 @@ export const queryExamplesApi = {
 // ==================== Feedback ====================
 
 export const feedbackApi = {
-  submit: (convId: string, msgId: string, data: { rating: string; issue_type?: string; issue_detail?: string }) =>
+  submit: (convId: string, msgId: string, data: {
+    rating: string;
+    issue_type?: string;
+    issue_detail?: string;
+    feedback_category?: string;
+    sql_query_history_id?: string;
+  }) =>
     request<any>(`/api/conversations/${convId}/messages/${msgId}/feedback`, {
       method: "POST",
       body: JSON.stringify(data),
@@ -251,13 +259,18 @@ export interface SemanticMetric {
   name: string;
   display_name: string;
   description: string;
-  sql_expression: string;
-  filters: string;
+  sql: string;
   dimensions: string;
   default_granularity: string | null;
   unit: string | null;
   category: string | null;
   aliases: string;
+  metric_type: "atomic" | "derived" | "compound";
+  business_context: string;
+  calculation_logic: string;
+  applicable_scenarios: string;
+  data_quality_notes: string;
+  default_sort: string | null;
   status: "draft" | "published" | "deprecated";
   version: number;
   created_at: string;
@@ -273,6 +286,11 @@ export interface SemanticDimension {
   data_type: "string" | "number" | "date";
   hierarchy: string | null;
   values: string | null;
+  status: "draft" | "published" | "deprecated";
+  grain: "day" | "week" | "month" | "quarter" | "year" | null;
+  date_column: string | null;
+  description: string;
+  is_enum_dict: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -286,6 +304,7 @@ export interface SemanticModel {
   joins: string;
   metrics: string;
   dimensions: string;
+  status: "draft" | "published" | "deprecated";
   created_at: string;
   updated_at: string;
 }
@@ -321,7 +340,19 @@ export const semanticApi = {
     request<{ success: boolean }>(`/api/datasources/${dsId}/models/${id}`, { method: "DELETE" }),
 
   aiSuggestSemantic: (dsId: string) =>
-    request<{ tables: any[] }>(`/api/datasources/${dsId}/ai-suggest-semantic`, { method: "POST" }),
+    request<{ created: any }>(`/api/datasources/${dsId}/ai-suggest-semantic`, { method: "POST", body: JSON.stringify({ tableNames: undefined }) }),
+  aiSuggestSemanticForTables: (dsId: string, tableNames?: string[]) =>
+    request<{ created: any }>(`/api/datasources/${dsId}/ai-suggest-semantic`, { method: "POST", body: JSON.stringify({ tableNames }) }),
+  aiSuggestDimensions: (dsId: string, tableNames?: string[]) =>
+    request<{ created: any }>(`/api/datasources/${dsId}/ai-suggest-dimensions`, { method: "POST", body: JSON.stringify({ tableNames }) }),
+  bulkImportMetrics: (dsId: string, content: string, contentType: "sql" | "description" | "document") =>
+    request<{ created: any }>(`/api/datasources/${dsId}/bulk-import-metrics`, { method: "POST", body: JSON.stringify({ content, contentType }) }),
+  aiPreviewSemantic: (dsId: string, tableNames?: string[]) =>
+    request<{ suggestions: { metrics?: any[]; dimensions?: any[]; models?: any[] } }>(`/api/datasources/${dsId}/ai-preview-semantic`, { method: "POST", body: JSON.stringify({ tableNames }) }),
+  aiPreviewDimensions: (dsId: string, tableNames?: string[]) =>
+    request<{ suggestions: { dimensions?: any[] } }>(`/api/datasources/${dsId}/ai-preview-dimensions`, { method: "POST", body: JSON.stringify({ tableNames }) }),
+  batchCreateFromSuggestions: (dsId: string, suggestions: { metrics?: any[]; dimensions?: any[]; models?: any[] }) =>
+    request<{ created: { metrics: any[]; dimensions: any[]; models: any[] } }>(`/api/datasources/${dsId}/batch-create-suggestions`, { method: "POST", body: JSON.stringify(suggestions) }),
 };
 
 // ==================== Models ====================
@@ -420,6 +451,29 @@ export const dictionaryApi = {
     request<RecentChanges>(`/api/datasources/${dsId}/dictionary/recent-changes`),
 };
 
+// ==================== Enum Dictionary ====================
+
+export interface EnumDictEntry {
+  source: "dimension" | "annotation";
+  id: string;
+  name: string;
+  display_name: string;
+  table_name?: string;
+  field_name?: string;
+  data_type?: string;
+  values: Array<{ key: string; value: string }>;
+}
+
+export const enumDictApi = {
+  list: (dsId: string) =>
+    request<EnumDictEntry[]>(`/api/datasources/${dsId}/dictionary/enums`),
+  update: (dsId: string, source: "dimension" | "annotation", id: string, values: Array<{ key: string; value: string }>) =>
+    request<any>(`/api/datasources/${dsId}/dictionary/enums/${source}/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ values }),
+    }),
+};
+
 // ==================== Schema Browse ====================
 
 export interface BrowseTable {
@@ -441,6 +495,23 @@ export const schemaBrowseApi = {
 };
 
 // ==================== SQL Query History ====================
+
+// ==================== Analysis (Self-Service SQL) ====================
+
+export interface AnalysisResult {
+  columns: string[];
+  rows: Record<string, unknown>[];
+  rowCount: number;
+  executionTime: number;
+}
+
+export const analysisApi = {
+  executeSql: (dsId: string, sql: string) =>
+    request<AnalysisResult>(`/api/datasources/${dsId}/execute-sql`, {
+      method: "POST",
+      body: JSON.stringify({ sql }),
+    }),
+};
 
 export interface SqlQueryHistoryItem {
   id: string;
@@ -466,4 +537,143 @@ export const queryHistoryApi = {
     const params = limit ? `?limit=${limit}` : "";
     return request<SqlQueryHistoryItem[]>(`/api/query-history${params}`);
   },
+};
+
+// ==================== Insights ====================
+
+export interface InsightsStatsResponse {
+  totalQueries: number;
+  successRate: number;
+  avgExecutionTimeMs: number;
+  topTable: { name: string; count: number } | null;
+  dailyTrend: Array<{ date: string; count: number }>;
+}
+
+export interface TopQueryItem {
+  sql: string;
+  question: string | null;
+  execution_count: number;
+  last_executed_at: string;
+}
+
+export const insightsApi = {
+  stats: (dsId: string) =>
+    request<InsightsStatsResponse>(`/api/datasources/${dsId}/insights/stats`),
+  topQueries: (dsId: string, limit?: number) => {
+    const params = limit ? `?limit=${limit}` : "";
+    return request<TopQueryItem[]>(`/api/datasources/${dsId}/insights/top-queries${params}`);
+  },
+  execute: (dsId: string, sql: string) =>
+    request<AnalysisResult>(`/api/datasources/${dsId}/insights/execute`, {
+      method: "POST",
+      body: JSON.stringify({ sql }),
+    }),
+};
+
+// ==================== Bookmarks ====================
+
+export interface Bookmark {
+  id: string;
+  datasource_id: string;
+  title: string;
+  sql: string;
+  description: string | null;
+  sort_order: number;
+  created_at: string;
+}
+
+export const bookmarksApi = {
+  list: (dsId: string) =>
+    request<Bookmark[]>(`/api/datasources/${dsId}/bookmarks`),
+  create: (dsId: string, data: { title: string; sql: string; description?: string }) =>
+    request<Bookmark>(`/api/datasources/${dsId}/bookmarks`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  delete: (dsId: string, id: string) =>
+    request<{ success: boolean }>(`/api/datasources/${dsId}/bookmarks/${id}`, {
+      method: "DELETE",
+    }),
+  execute: (dsId: string, id: string) =>
+    request<AnalysisResult>(`/api/datasources/${dsId}/bookmarks/${id}/execute`, {
+      method: "POST",
+    }),
+};
+
+// ==================== Query Skills ====================
+
+export interface CoreTableEntry {
+  table: string;
+  purpose: string;
+}
+
+export interface QuerySkill {
+  id: string;
+  datasource_id: string;
+  domain: string;
+  name: string;
+  trigger_keywords: string; // JSON array
+  business_context: string;
+  core_tables: string; // JSON array of CoreTableEntry
+  join_path: string;
+  query_steps: string;
+  example_sql: string;
+  caveats: string;
+  common_issues: string;
+  enabled: number;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface QuerySkillDraft {
+  domain: string;
+  name: string;
+  trigger_keywords?: string[];
+  business_context?: string;
+  core_tables?: CoreTableEntry[];
+  join_path?: string;
+  query_steps?: string;
+  example_sql?: string;
+  caveats?: string;
+  common_issues?: string;
+}
+
+export const querySkillApi = {
+  list: (dsId: string, domain?: string) =>
+    request<QuerySkill[]>(`/api/datasources/${dsId}/query-skills${domain ? `?domain=${encodeURIComponent(domain)}` : ""}`),
+  get: (dsId: string, id: string) =>
+    request<QuerySkill>(`/api/datasources/${dsId}/query-skills/${id}`),
+  domains: (dsId: string) =>
+    request<string[]>(`/api/datasources/${dsId}/query-skills/domains`),
+  create: (dsId: string, data: QuerySkillDraft & { enabled?: number; sort_order?: number }) =>
+    request<QuerySkill>(`/api/datasources/${dsId}/query-skills`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (dsId: string, id: string, data: Partial<QuerySkillDraft> & { enabled?: number; sort_order?: number }) =>
+    request<QuerySkill>(`/api/datasources/${dsId}/query-skills/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  delete: (dsId: string, id: string) =>
+    request<{ success: boolean }>(`/api/datasources/${dsId}/query-skills/${id}`, {
+      method: "DELETE",
+    }),
+  toggle: (dsId: string, id: string) =>
+    request<QuerySkill>(`/api/datasources/${dsId}/query-skills/${id}/toggle`, {
+      method: "PUT",
+    }),
+  preview: (dsId: string) =>
+    request<{ skills: Array<{ skillId: string; skillDir: string; skillName: string; skillSummary: string; skillFullContent: string }> }>(`/api/datasources/${dsId}/query-skills/preview`),
+  generate: (dsId: string, data: { domain: string; scenario: string }) =>
+    request<{ skill: QuerySkillDraft }>(`/api/datasources/${dsId}/query-skills/generate`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  generateBatch: (dsId: string, data: { domain: string }) =>
+    request<{ skills: QuerySkillDraft[] }>(`/api/datasources/${dsId}/query-skills/generate-batch`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };

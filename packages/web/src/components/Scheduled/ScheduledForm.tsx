@@ -142,7 +142,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
   return (
     <div className="card-cream space-y-5">
       <h3 className="font-display text-heading-4 text-[var(--ink)]">
-        {isEdit ? "Edit Scheduled Query" : "New Scheduled Query"}
+        {isEdit ? "编辑定时查询" : "新建定时查询"}
       </h3>
 
       {error && (
@@ -153,19 +153,19 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
 
       {/* Name */}
       <div>
-        <label className="block text-sm font-medium text-[var(--ink)] mb-1">Name</label>
+        <label className="block text-sm font-medium text-[var(--ink)] mb-1">名称</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g., Daily Revenue Check"
+          placeholder="例如：每日营收检查"
           className="w-full px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
         />
       </div>
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-medium text-[var(--ink)] mb-1">Description</label>
+        <label className="block text-sm font-medium text-[var(--ink)] mb-1">描述</label>
         <input
           type="text"
           value={description}
@@ -178,10 +178,11 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
       {/* AI SQL Generation */}
       <div className="p-4 rounded-lg border border-dashed border-[var(--primary)]/40 bg-[var(--primary-soft)]/50">
         <label className="block text-sm font-medium text-[var(--ink)] mb-2 flex items-center gap-2">
-          <span>🤖</span> AI SQL Generation
+          <svg className="w-4 h-4 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" /></svg>
+          AI 生成 SQL
         </label>
         <p className="text-xs text-[var(--steel)] mb-2">
-          Describe the query in natural language and AI will generate SQL for you
+          用自然语言描述查询需求，AI 将自动生成 SQL
         </p>
         <div className="flex gap-2">
           <input
@@ -189,7 +190,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
             value={aiPrompt}
             onChange={(e) => setAiPrompt(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleGenerateSql(); } }}
-            placeholder="e.g., Show daily revenue for the last 30 days grouped by region"
+            placeholder="例如：展示最近30天各地区每日营收"
             className="flex-1 px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
             disabled={generatingSql}
           />
@@ -199,7 +200,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
             disabled={generatingSql || !aiPrompt.trim()}
             className="btn-primary text-sm whitespace-nowrap disabled:opacity-40"
           >
-            {generatingSql ? "Generating..." : "Generate SQL"}
+            {generatingSql ? "生成中..." : "生成 SQL"}
           </button>
         </div>
         {aiError && (
@@ -209,7 +210,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
 
       {/* SQL */}
       <div>
-        <label className="block text-sm font-medium text-[var(--ink)] mb-1">SQL Query</label>
+        <label className="block text-sm font-medium text-[var(--ink)] mb-1">SQL 查询</label>
         <textarea
           value={sql}
           onChange={(e) => setSql(e.target.value)}
@@ -221,7 +222,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
 
       {/* Cron + Presets */}
       <div>
-        <label className="block text-sm font-medium text-[var(--ink)] mb-1">Schedule (Cron)</label>
+        <label className="block text-sm font-medium text-[var(--ink)] mb-1">定时规则 (Cron)</label>
         <input
           type="text"
           value={cronExpression}
@@ -252,7 +253,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
 
       {/* Timezone */}
       <div>
-        <label className="block text-sm font-medium text-[var(--ink)] mb-1">Timezone</label>
+        <label className="block text-sm font-medium text-[var(--ink)] mb-1">时区</label>
         <select
           value={timezone}
           onChange={(e) => setTimezone(e.target.value)}
@@ -274,7 +275,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
           onClick={onCancel}
           className="btn-ghost"
         >
-          Cancel
+          取消
         </button>
         <button
           type="button"
@@ -282,7 +283,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
           disabled={saving}
           className="btn-primary"
         >
-          {saving ? "Saving..." : isEdit ? "Update" : "Create"}
+          {saving ? "保存中..." : isEdit ? "更新" : "创建"}
         </button>
       </div>
     </div>

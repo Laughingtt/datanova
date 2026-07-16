@@ -1,11 +1,13 @@
 import { useAppStore, type AppView } from "../stores/app";
 
 const navItems: { key: AppView; label: string; icon: string }[] = [
+  { key: "dashboard", label: "数据概览", icon: "📈" },
   { key: "chat", label: "对话", icon: "💬" },
   { key: "datasources", label: "数据源", icon: "🔌" },
   { key: "schemas", label: "Schema 标注", icon: "🏷️" },
   { key: "metrics", label: "指标管理", icon: "📊" },
-  { key: "scheduled", label: "定时查询", icon: "⏰" },
+  { key: "querySkills", label: "查询技能", icon: "🎯" },
+  { key: "analysis", label: "自助分析", icon: "🔍" },
   { key: "dictionary", label: "数据字典", icon: "📖" },
   { key: "queryHistory", label: "SQL 历史", icon: "📋" },
 ];

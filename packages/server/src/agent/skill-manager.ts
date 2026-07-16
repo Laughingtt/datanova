@@ -1,8 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { SKILLS_DIR, ANNOTATIONS_DIR } from "../config.js";
-import { getAnnotations } from "../store.js";
-import { discoverSchema } from "../mysql/discovery.js";
+import { SKILLS_DIR } from "../config.js";
 import type { Skill } from "@earendil-works/pi-agent-core";
 
 export interface SkillFile {
@@ -12,12 +10,12 @@ export interface SkillFile {
 }
 
 /**
- * List all skill files from the skills/ and annotations/ directories.
+ * List all skill files from the skills/ directory.
  */
 export function listSkillFiles(): SkillFile[] {
   const skills: SkillFile[] = [];
 
-  for (const dir of [SKILLS_DIR, ANNOTATIONS_DIR]) {
+  for (const dir of [SKILLS_DIR]) {
     if (!fs.existsSync(dir)) continue;
 
     const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -43,18 +41,10 @@ export function listSkillFiles(): SkillFile[] {
  * Get the content of a specific skill.
  */
 export function getSkillContent(name: string): string | null {
-  // Check skills dir first
   const skillPath = path.join(SKILLS_DIR, name, "SKILL.md");
   if (fs.existsSync(skillPath)) {
     return fs.readFileSync(skillPath, "utf-8");
   }
-
-  // Check annotations dir
-  const annotationPath = path.join(ANNOTATIONS_DIR, name, "SKILL.md");
-  if (fs.existsSync(annotationPath)) {
-    return fs.readFileSync(annotationPath, "utf-8");
-  }
-
   return null;
 }
 
@@ -83,87 +73,60 @@ export function deleteSkill(name: string): boolean {
     return true;
   }
 
-  const annotationDir = path.join(ANNOTATIONS_DIR, name);
-  if (fs.existsSync(annotationDir)) {
-    fs.rmSync(annotationDir, { recursive: true, force: true });
-    return true;
-  }
-
   return false;
 }
 
 /**
- * Auto-generate a SKILL.md from schema annotations for a datasource.
+ * Parse YAML frontmatter from SKILL.md content.
+ * Returns { frontmatter, body } or null if no valid frontmatter.
  */
-export async function generateAnnotationSkill(datasourceId: string, datasourceName: string): Promise<SkillFile | null> {
-  const annotations = getAnnotations(datasourceId);
+function parseFrontmatter(rawContent: string): { frontmatter: Record<string, string>; body: string } | null {
+  const normalized = rawContent.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  if (!normalized.startsWith("---")) return null;
 
-  if (annotations.length === 0) {
-    return null;
+  const endIndex = normalized.indexOf("\n---", 3);
+  if (endIndex === -1) return null;
+
+  const yamlString = normalized.slice(4, endIndex);
+  const body = normalized.slice(endIndex + 4).trim();
+
+  // Simple YAML parsing for flat key: value pairs
+  const frontmatter: Record<string, string> = {};
+  for (const line of yamlString.split("\n")) {
+    const colonIndex = line.indexOf(":");
+    if (colonIndex === -1) continue;
+    const key = line.slice(0, colonIndex).trim();
+    const value = line.slice(colonIndex + 1).trim();
+    if (key) frontmatter[key] = value;
   }
 
-  // Group annotations by table
-  const tableAnnotations = new Map<string, Map<string, string>>();
-
-  for (const ann of annotations) {
-    if (!tableAnnotations.has(ann.table_name)) {
-      tableAnnotations.set(ann.table_name, new Map());
-    }
-
-    if (ann.field_name) {
-      tableAnnotations.get(ann.table_name)!.set(ann.field_name, ann.annotation);
-    } else {
-      // Table-level annotation stored with empty key
-      tableAnnotations.get(ann.table_name)!.set("", ann.annotation);
-    }
-  }
-
-  // Build SKILL.md content
-  const lines: string[] = [];
-  lines.push(`# ${datasourceName} Schema Annotations`);
-  lines.push("");
-  lines.push("This skill provides business context for the database schema.");
-  lines.push("");
-  lines.push("## Business Context");
-  lines.push("");
-
-  for (const [tableName, fields] of tableAnnotations) {
-    const tableDesc = fields.get("");
-    lines.push(`### ${tableName}`);
-    if (tableDesc) {
-      lines.push(`- **Table Description**: ${tableDesc}`);
-    }
-
-    for (const [fieldName, annotation] of fields) {
-      if (fieldName === "") continue;
-      lines.push(`- **${fieldName}**: ${annotation}`);
-    }
-    lines.push("");
-  }
-
-  const content = lines.join("\n");
-  const skillName = `${datasourceName}-annotations`;
-
-  // Save to annotations dir
-  const skillDir = path.join(ANNOTATIONS_DIR, skillName);
-  if (!fs.existsSync(skillDir)) {
-    fs.mkdirSync(skillDir, { recursive: true });
-  }
-
-  const skillPath = path.join(skillDir, "SKILL.md");
-  fs.writeFileSync(skillPath, content, "utf-8");
-
-  return { name: skillName, path: skillPath, content };
+  return { frontmatter, body };
 }
 
 /**
  * Load all skills as pi Skill objects.
+ *
+ * Reads SKILL.md files with YAML frontmatter (name, description).
+ * Falls back to directory name as name and first heading as description
+ * for SKILL.md files without frontmatter.
  */
 export function loadAllSkills(): Skill[] {
   const skillFiles = listSkillFiles();
 
   return skillFiles.map((sf) => {
-    // Extract description from first heading or first line
+    const parsed = parseFrontmatter(sf.content);
+
+    if (parsed?.frontmatter.name && parsed?.frontmatter.description) {
+      // SKILL.md with valid frontmatter — use it directly
+      return {
+        name: parsed.frontmatter.name,
+        description: parsed.frontmatter.description,
+        content: parsed.body,
+        filePath: sf.path,
+      };
+    }
+
+    // Fallback: extract description from first heading
     const lines = sf.content.split("\n");
     const firstHeading = lines.find((l) => l.startsWith("# "));
     const description = firstHeading

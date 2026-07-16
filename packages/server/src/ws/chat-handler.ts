@@ -1,7 +1,18 @@
 import type { WSContext } from "hono/ws";
-import { createHarness, getHarness, removeHarness, type CreateHarnessOptions } from "../agent/harness-factory.js";
+import { createHarness, getHarness, removeHarness, harnessMap, type CreateHarnessOptions } from "../agent/harness-factory.js";
 import type { AgentHarnessEvent, Skill, PromptTemplate } from "@earendil-works/pi-agent-core";
-import { saveMessage, listMessages } from "../store.js";
+import { saveMessage, listMessages, getRecentSqlContext } from "../store.js";
+import { discoverSchema } from "../mysql/discovery.js";
+import { setSchemaCache } from "../mysql/validator.js";
+import { agentRegistry } from "../agent/agent-registration.js";
+
+// Track conversationId -> datasourceId for context injection
+const conversationDatasourceMap = new Map<string, string>();
+
+// Shared streaming state per conversation, so handleInit and handleMessage
+// accumulate into the same object. Without this, handleMessage creates its own
+// empty state that never receives events from the harness subscriber.
+const streamingStates = new Map<string, StreamingAssistantState>();
 
 interface WsMessage {
   type: "init" | "message" | "reset_context";
@@ -82,10 +93,47 @@ async function handleInit(ws: WSContext, data: WsMessage): Promise<void> {
   }
 
   try {
-    const harness = await createHarness(options);
+    // Agent routing: query走原有createHarness，其他Agent走注册表
+    const agentType = (payload.agentType as string) || "query";
+    let harness: Awaited<ReturnType<typeof createHarness>>;
 
-    // Streaming assistant state — accumulates content/steps for DB persistence
+    if (agentType === "query") {
+      // 现有流程，零改动
+      harness = await createHarness(options);
+    } else {
+      // 新Agent走注册表 — 传入完整的模型配置，与query agent一致
+      harness = await agentRegistry.createHarness(agentType, {
+        datasourceId: options.datasourceId!,
+        modelProvider: options.modelProvider,
+        modelId: options.modelId,
+      });
+      harnessMap.set(options.conversationId, harness);
+    }
+
+    // Pre-populate schema cache for validator so column validation works
+    // even if the LLM skips discover_schema on the first query
+    if (options.datasourceId) {
+      try {
+        const schemaInfo = await discoverSchema(options.datasourceId);
+        if (schemaInfo && schemaInfo.tables) {
+          const tables = schemaInfo.tables.map((t: any) => t.table.name);
+          const columnsByTable = new Map<string, string[]>();
+          for (const tableSchema of schemaInfo.tables) {
+            columnsByTable.set(
+              tableSchema.table.name,
+              tableSchema.columns.map((c: any) => c.name)
+            );
+          }
+          setSchemaCache(options.datasourceId, tables, columnsByTable);
+        }
+      } catch {
+        // Non-critical: schema discovery may fail if DB is unreachable
+      }
+    }
+
+    // Streaming assistant state — shared via Map so handleMessage can access it
     const streamingState: StreamingAssistantState = { content: "", steps: [] };
+    streamingStates.set(options.conversationId, streamingState);
 
     // Subscribe to harness events — this is the ONLY way to forward
     // streaming events (text deltas, thinking, tool calls, etc.)
@@ -113,6 +161,11 @@ async function handleInit(ws: WSContext, data: WsMessage): Promise<void> {
     }
 
     sendEvent(ws, { type: "init_success", conversationId: options.conversationId });
+
+    // Track datasource for context injection in follow-up messages
+    if (options.datasourceId) {
+      conversationDatasourceMap.set(options.conversationId, options.datasourceId);
+    }
   } catch (err) {
     const error = err as Error;
     sendEvent(ws, { type: "error", error: `Failed to initialize: ${error.message}` });
@@ -147,37 +200,58 @@ async function handleMessage(ws: WSContext, data: WsMessage): Promise<void> {
       content: text,
     });
 
-    // Streaming assistant state for this turn
-    const streamingState: StreamingAssistantState = { content: "", steps: [] };
+    // Build structured SQL context for multi-turn follow-up queries
+    const datasourceId = conversationDatasourceMap.get(conversationId);
+    let contextPrefix = "";
+    if (datasourceId) {
+      const recentSql = getRecentSqlContext(datasourceId, 3);
+      if (recentSql.length > 0) {
+        const contextLines = recentSql.map((ctx, i) => {
+          const tables = ctx.tables.join(", ");
+          return "[Recent query " + (i + 1) + "] Question: \"" + ctx.question + "\" | Tables: " + tables + " | Rows: " + (ctx.rowCount ?? "?") + " | Time: " + (ctx.executionTimeMs ?? "?") + "ms\n  SQL: " + ctx.sql;
+        });
+        contextPrefix = "[Conversation SQL Context - " + recentSql.length + " recent queries]\n" + contextLines.join("\n") + "\n\n";
+      }
+    }
 
-    // We need to capture the streaming state from the harness events.
-    // Re-subscribe with an accumulator that also forwards.
-    // Since handleInit already subscribed, we track via a wrapper.
-    // Actually, we'll use a simpler approach: accumulate from the
-    // response object after prompt() resolves.
+    // Inject conversation_id into context so LLM can pass it to tools
+    if (conversationId) {
+      contextPrefix += `[Current conversation_id: ${conversationId}]\n\n`;
+    }
+
+    // Reset streaming state for this turn (shared with handleInit's subscriber)
+    const streamingState = streamingStates.get(conversationId);
+    if (streamingState) {
+      streamingState.content = "";
+      streamingState.steps = [];
+    }
 
     // prompt() triggers the agent loop. All streaming events
-    // are forwarded via the subscribe() handler in handleInit.
-    // We just await the final result here.
-    const response = await harness.prompt(text);
+    // are forwarded via the subscribe() handler in handleInit,
+    // which accumulates into the shared streamingState.
+    const response = await harness.prompt(contextPrefix + text);
 
     // Extract full response content
     const fullContent = typeof response.content === "string"
       ? response.content
       : response.content.map((c: any) => c.text ?? "").join("");
 
-    // Persist assistant message
+    // If the LLM returned no content (e.g. API key error, rate limit),
+    // the streaming error event was already forwarded via message_end handler.
+    // Still persist and send response_complete so the frontend can close the stream.
+    const persistedSteps = streamingState?.steps ?? [];
     saveMessage({
       conversationId,
       role: "assistant",
-      content: fullContent,
+      content: fullContent || "（AI 未返回内容，请检查 API 配置）",
+      steps: persistedSteps,
     });
 
     // Send a final "response" event with the complete message content
     // so the frontend can use it if it missed streaming deltas.
     sendEvent(ws, {
       type: "response_complete",
-      content: fullContent,
+      content: fullContent || "（AI 未返回内容，请检查 API 配置）",
     });
   } catch (err) {
     const error = err as Error;
@@ -197,6 +271,7 @@ async function handleResetContext(ws: WSContext, data: WsMessage): Promise<void>
 
   try {
     // Remove existing harness (clears agent context)
+    conversationDatasourceMap.delete(conversationId);
     await removeHarness(conversationId);
 
     // Re-create with the same options (datasource info from payload)
@@ -210,14 +285,20 @@ async function handleResetContext(ws: WSContext, data: WsMessage): Promise<void>
 
     const harness = await createHarness(options);
 
-    // Re-subscribe to events
+    // Re-subscribe to events with shared streaming state
     const streamingState: StreamingAssistantState = { content: "", steps: [] };
+    streamingStates.set(conversationId, streamingState);
     harness.subscribe((event: AgentHarnessEvent<Skill, PromptTemplate>) => {
       accumulateStreamingState(streamingState, event);
       forwardEvent(ws, event);
     });
 
     sendEvent(ws, { type: "init_success", conversationId });
+    // Track datasource for context injection
+    const resetDsId = data.payload?.datasourceId as string | undefined;
+    if (resetDsId) {
+      conversationDatasourceMap.set(conversationId, resetDsId);
+    }
   } catch (err) {
     const error = err as Error;
     sendEvent(ws, { type: "error", error: `Failed to reset context: ${error.message}` });
@@ -378,9 +459,17 @@ function forwardEvent(ws: WSContext, event: AgentHarnessEvent<Skill, PromptTempl
       break;
     }
 
-    case "message_end":
-      // Message complete — no special action needed
+    case "message_end": {
+      // Check for error stopReason — LLM API failures (invalid key, rate limit, etc.)
+      // result in stopReason="error" but no explicit error event from the harness.
+      const msg = (event as any).message;
+      if (msg && msg.stopReason === "error") {
+        const errorDetail = msg.content?.find((c: any) => c.type === "error")?.text
+          || "AI 服务调用失败，请检查 API Key 配置或网络连接";
+        sendEvent(ws, { type: "error", error: errorDetail });
+      }
       break;
+    }
 
     // ---- Tool execution ----
 
@@ -393,18 +482,26 @@ function forwardEvent(ws: WSContext, event: AgentHarnessEvent<Skill, PromptTempl
       });
       break;
 
-    case "tool_execution_end":
+    case "tool_execution_end": {
+      const toolName = (event as any).toolName;
+      const result = (event as any).result;
       sendEvent(ws, {
         type: "tool_execution_end",
         toolCallId: (event as any).toolCallId,
-        toolName: (event as any).toolName,
-        result: (event as any).result,
+        toolName,
+        result,
+        details: result?.details,
         isError: (event as any).isError,
       });
+      // Detect confirmAction in tool result and forward as confirm_action event
+      if (result?.details?.confirmAction) {
+        sendEvent(ws, {
+          type: "confirm_action",
+          confirmAction: result.details.confirmAction,
+        });
+      }
       break;
-
-    // ---- Harness own events (tool_call/tool_result are pre/post hooks) ----
-
+    }
     case "tool_call":
       // Pre-execution hook — skip, we use tool_execution_start instead
       break;
@@ -419,6 +516,13 @@ function forwardEvent(ws: WSContext, event: AgentHarnessEvent<Skill, PromptTempl
         isError: tr.isError,
         details: tr.details,
       });
+      // Detect confirmAction in tool result and forward as confirm_action event
+      if (tr.details?.confirmAction) {
+        sendEvent(ws, {
+          type: "confirm_action",
+          confirmAction: tr.details.confirmAction,
+        });
+      }
       break;
     }
 

@@ -6,10 +6,11 @@ import { createAiAnnotateSchemaTool } from "./tools/ai-annotate-schema.js";
 import { createLookupSemanticLayerTool } from "./tools/lookup-semantic-layer.js";
 import { createLookupExamplesTool } from "./tools/lookup-examples.js";
 import { createAiSuggestSemanticTool } from "./tools/ai-suggest-semantic.js";
+import { createReadSkillTool } from "./tools/read-skill.js";
 import { buildDataNovaSystemPrompt, type DataNovaSystemPromptOptions } from "./prompt-builder.js";
 import { loadAllSkills } from "./skill-manager.js";
 
-const harnessMap = new Map<string, AgentHarness>();
+export const harnessMap = new Map<string, AgentHarness>();
 const sessionRepo = new InMemorySessionRepo();
 
 export interface CreateHarnessOptions {
@@ -27,7 +28,11 @@ export async function createHarness(options: CreateHarnessOptions): Promise<Agen
     await removeHarness(options.conversationId);
   }
 
-  // Create tools
+  // Load skills
+  const skills = loadAllSkills();
+
+  // Create tools — read_skill needs access to the current skills list
+  const getSkills = () => loadAllSkills();
   const tools: AgentTool[] = [
     createDiscoverSchemaTool(),
     createExecuteSqlTool(),
@@ -35,10 +40,8 @@ export async function createHarness(options: CreateHarnessOptions): Promise<Agen
     createLookupSemanticLayerTool(),
     createLookupExamplesTool(),
     createAiSuggestSemanticTool(),
+    createReadSkillTool(getSkills),
   ];
-
-  // Load skills
-  const skills = loadAllSkills();
 
   // Build system prompt options
   const promptOptions: DataNovaSystemPromptOptions = {

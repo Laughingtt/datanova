@@ -12,11 +12,19 @@ import skillsRoutes from "./routes/skills.js";
 import conversationsRoutes from "./routes/conversations.js";
 import modelsRoutes from "./routes/models.js";
 import { createChatHandler } from "./ws/chat-handler.js";
-import { saveFeedback, listSqlQueryHistory, listAllSqlQueryHistory } from "./store.js";
+import { saveFeedback, listSqlQueryHistory, listAllSqlQueryHistory, syncQueryExamplesFromHistory, listDatasources } from "./store.js";
 import { createSemanticRoutes } from "./routes/semantic.js";
 import { createScheduledRoutes } from "./routes/scheduled.js";
 import { createDictionaryRoutes } from "./routes/dictionary.js";
+import { createInsightsRoutes } from "./routes/insights.js";
+import { createBookmarkRoutes } from "./routes/bookmarks.js";
+import { createQuerySkillRoutes } from "./routes/query-skills.js";
 import { startScheduler, stopScheduler } from "./scheduler.js";
+import testHelpersRoutes from "./routes/test-helpers.js";
+import { initAgentFramework } from "./agent/agent-registration.js";
+
+// Initialize Agent Framework before app creation
+initAgentFramework();
 
 // Ensure data directories exist
 ensureDataDirs();
@@ -57,6 +65,8 @@ app.post("/api/conversations/:convId/messages/:msgId/feedback", async (c) => {
     rating: body.rating,
     issue_type: body.issue_type ?? null,
     issue_detail: body.issue_detail ?? null,
+    feedback_category: body.feedback_category ?? null,
+    sql_query_history_id: body.sql_query_history_id ?? null,
   });
   return c.json(feedback, 201);
 });
@@ -65,6 +75,12 @@ app.post("/api/conversations/:convId/messages/:msgId/feedback", async (c) => {
 app.route("/", createSemanticRoutes());
 app.route("/", createScheduledRoutes());
 app.route("/", createDictionaryRoutes());
+app.route("/", createInsightsRoutes());
+app.route("/", createBookmarkRoutes());
+app.route("/", createQuerySkillRoutes());
+
+// Test helpers (non-production only)
+app.route("/api/test", testHelpersRoutes);
 
 // Query history API
 app.get("/api/datasources/:dsId/query-history", (c) => {

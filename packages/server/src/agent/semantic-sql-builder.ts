@@ -1,58 +1,86 @@
-/**
- * buildSemanticSql — Deterministically build SQL from semantic layer data.
- * This is the most important function for accuracy:
- * when a metric is found in the semantic layer, we generate SQL
- * deterministically rather than relying on NL→SQL.
- */
-export function buildSemanticSql(options: {
-  metric: { sql_expression: string; name: string; filters: string };
-  dimensions: Array<{ sql_expression: string; name: string }>;
-  model: { base_table: string; joins: string };
-  userFilters?: Array<{ column: string; operator: string; value: string }>;
-}): string {
-  const { metric, dimensions, model, userFilters } = options;
+interface ResolveOptions {
+  metric: {
+    sql: string;
+    name: string;
+    metric_type: string;
+    default_sort: string | null;
+    business_context: string;
+    calculation_logic: string;
+    applicable_scenarios: string;
+    data_quality_notes: string;
+  };
+  dimensions: Array<{
+    name: string;
+    sql_expression: string;
+    data_type: string;
+    grain: string | null;
+    date_column: string | null;
+    values?: string | null;
+  }>;
+  model: {
+    base_table: string;
+    joins: string;
+  } | null;
+}
 
-  // 1. Build SELECT: metric expression + dimension expressions
-  const selectParts = [`${metric.sql_expression} AS ${metric.name}`];
-  for (const dim of dimensions) {
-    selectParts.push(`${dim.sql_expression} AS ${dim.name}`);
+interface ResolveResult {
+  sql: string;
+  metric_type: string;
+  available_dimensions: Array<{
+    name: string;
+    grain: string | null;
+    enum_values?: string | null;
+  }>;
+  notes: string;
+}
+
+function getMetricTypeNotes(metricType: string): string {
+  switch (metricType) {
+    case 'atomic':
+      return '基础聚合指标，可直接修改 WHERE 条件和 GROUP BY 维度';
+    case 'derived':
+      return '衍生指标，含比率/差值计算，修改时注意分子分母的同步';
+    case 'compound':
+      return '复合指标，含窗口函数/CTE，修改时注意 PARTITION BY 和 ORDER BY 子句';
+    default:
+      return '基础聚合指标，可直接修改 WHERE 条件和 GROUP BY 维度';
   }
+}
 
-  // 2. Build FROM + JOINs
-  let fromClause = model.base_table;
-  try {
-    const joins = JSON.parse(model.joins) as Array<{ table: string; on: string; type: string }>;
-    for (const j of joins) {
-      fromClause += ` ${j.type.toUpperCase()} JOIN ${j.table} ON ${j.on}`;
+export function resolveSemanticSql(options: ResolveOptions): ResolveResult {
+  const { metric, dimensions } = options;
+
+  const notesParts: string[] = [getMetricTypeNotes(metric.metric_type)];
+
+  // Collect available dimensions with grain info and enum values
+  const availableDimensions = dimensions.map(d => {
+    let enumStr: string | null = null;
+    if (d.values) {
+      try {
+        const parsed = JSON.parse(d.values);
+        if (Array.isArray(parsed)) {
+          if (parsed.length > 0 && typeof parsed[0] === "object" && parsed[0].key !== undefined) {
+            enumStr = parsed.map((item: any) => `${item.key}=${item.value}`).join(', ');
+          } else {
+            enumStr = parsed.map((v: any) => String(v)).join(', ');
+          }
+        }
+      } catch { /* skip */ }
     }
-  } catch { /* no joins or invalid JSON */ }
+    return { name: d.name, grain: d.grain, enum_values: enumStr };
+  });
 
-  // 3. Build WHERE: metric fixed filters + user filters
-  const whereParts: string[] = [];
-  try {
-    const metricFilters = JSON.parse(metric.filters) as Array<{ column: string; operator: string; value: string }>;
-    for (const f of metricFilters) {
-      whereParts.push(`${f.column} ${f.operator} ${typeof f.value === "string" ? `'${f.value}'` : f.value}`);
-    }
-  } catch { /* no metric filters */ }
-
-  if (userFilters) {
-    for (const f of userFilters) {
-      whereParts.push(`${f.column} ${f.operator} ${typeof f.value === "string" ? `'${f.value}'` : f.value}`);
-    }
+  // Check if any dimension has grain info
+  const timeDimensions = dimensions.filter(d => d.grain);
+  if (timeDimensions.length > 0) {
+    const grainOptions = ['day', 'week', 'month', 'quarter', 'year'];
+    notesParts.push(`可调整时间粒度: ${grainOptions.join('/')}`);
   }
 
-  // 4. Build GROUP BY: dimension expressions
-  const groupByParts = dimensions.map(d => d.sql_expression);
-
-  // Assemble
-  let sql = `/* source: semantic_layer */ SELECT ${selectParts.join(", ")} FROM ${fromClause}`;
-  if (whereParts.length > 0) {
-    sql += ` WHERE ${whereParts.join(" AND ")}`;
-  }
-  if (groupByParts.length > 0) {
-    sql += ` GROUP BY ${groupByParts.join(", ")}`;
-  }
-
-  return sql;
+  return {
+    sql: metric.sql,
+    metric_type: metric.metric_type,
+    available_dimensions: availableDimensions,
+    notes: notesParts.join('。'),
+  };
 }

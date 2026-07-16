@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -6,6 +6,7 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table";
 import type { TableData } from "../../hooks/useAgentStream";
+import * as XLSX from "xlsx";
 
 interface TableResultProps {
   data: TableData;
@@ -82,7 +83,42 @@ function isAnomalyHigh(value: unknown, stats: ColumnStats | null): boolean {
 
 // ==================== Main Component ====================
 
+function exportToExcel(data: TableData) {
+  const ws = XLSX.utils.json_to_sheet(data.rows, { header: data.columns });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "查询结果");
+  const now = new Date();
+  const ts = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
+  XLSX.writeFile(wb, `查询结果_${ts}.xlsx`);
+}
+
+function downloadCSV(data: TableData) {
+  const escapeField = (v: unknown): string => {
+    const s = v === null || v === undefined ? "" : String(v);
+    if (s.includes(",") || s.includes('"') || s.includes("\n") || s.includes("\r")) {
+      return `"${s.replace(/"/g, '""')}"`;
+    }
+    return s;
+  };
+  const header = data.columns.map(escapeField).join(",");
+  const body = data.rows.map((row) => data.columns.map((col) => escapeField(row[col])).join(",")).join("\n");
+  const csv = "﻿" + header + "\n" + body;
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const now = new Date();
+  const ts = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
+  a.href = url;
+  a.download = `查询结果_${ts}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function TableResult({ data }: TableResultProps) {
+  const handleExport = useCallback(() => {
+    exportToExcel(data);
+  }, [data]);
+
   // Detect date-like column and numeric columns
   const { dateColumn, numericColumns } = useMemo(() => {
     if (data.rows.length === 0) {
@@ -208,16 +244,32 @@ export default function TableResult({ data }: TableResultProps) {
   });
 
   return (
-    <div className="my-3 overflow-x-auto border border-[var(--hairline)] rounded-lg">
-      {data.executionTime !== undefined && (
-        <div className="px-3 py-1.5 bg-[var(--surface)] text-xs text-[var(--steel)] border-b border-[var(--hairline)]">
-          {data.rows.length} rows · {data.executionTime}ms
+    <div className="my-3 overflow-x-auto border border-[var(--hairline)] rounded-xl shadow-sm">
+      <div className="px-3 py-1.5 bg-[var(--canvas)] text-xs text-[var(--steel)] border-b border-[var(--hairline)]">
+        <div className="flex items-center justify-between">
+          <span>{data.rows.length} 行{data.executionTime !== undefined ? ` · ${data.executionTime}ms` : ""}</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => downloadCSV(data)}
+              className="text-[var(--primary)] hover:underline font-medium flex items-center gap-1"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              导出 CSV
+            </button>
+            <button
+              onClick={handleExport}
+              className="text-[var(--primary)] hover:underline font-medium flex items-center gap-1"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              导出 Excel
+            </button>
+          </div>
         </div>
-      )}
+      </div>
       <table className="w-full text-sm">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id} className="bg-[var(--cream-soft)]">
+            <tr key={headerGroup.id} className="bg-[var(--canvas)]">
               {headerGroup.headers.map((header) => {
                 const isTrendCol = header.id.endsWith("_trend");
                 return (

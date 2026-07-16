@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="原理框图">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="2" value="&lt;b&gt;三模块闭环协同原理框图&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="270" y="10" width="400" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ===== S1 Module ===== -->
+        <mxCell id="s1" value="S1: Agent驱动语义层自动构建与人工审核增补" style="swimlane;startSize=28;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="400" height="420" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s1_1" value="S1-1: Schema自动发现&#xa;查询INFORMATION_SCHEMA&#xa;获取表/列/FK元数据&#xa;构建Schema缓存" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="s1">
+          <mxGeometry x="20" y="40" width="360" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s1_2" value="S1-2: 样本数据采集&#xa;Agent自主调用SQL执行工具&#xa;获取少量样本行数据" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="s1">
+          <mxGeometry x="20" y="110" width="360" height="45" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s1_3" value="S1-3: 第一结构化提示 → AI业务语义标注&#xa;表名+列名+外键+样本行 → LLM&#xa;输出: 表级描述+列级语义+域类型+域值枚举" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="s1">
+          <mxGeometry x="20" y="170" width="360" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s1_4" value="S1-4: 第二结构化提示 → AI语义层推荐&#xa;Schema+业务语义+样本 → LLM&#xa;输出: 指标(含类型/业务背景/计算逻辑)&#xa;    +维度(含粒度/源日期列/枚举字典)&#xa;    +模型(基表+JOIN)&#xa;★ 递进式构建: 第二阶段输入含第一阶段输出" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="s1">
+          <mxGeometry x="20" y="240" width="360" height="95" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s1_5" value="S1-5: 三级生命周期管理&#xa;draft → confirmed/published&#xa;Agent生成→人工审核→可修改/增补/删除→发布" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="s1">
+          <mxGeometry x="20" y="350" width="360" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- S1 output: 语义知识体 -->
+        <mxCell id="s1_out" value="完整语义知识体&#xa;Schema+语义标注+指标+维度+样本" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="490" y="160" width="230" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- S1 internal arrows -->
+        <mxCell id="s1e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="s1" source="s1_1" target="s1_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s1e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="s1" source="s1_2" target="s1_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s1e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="s1" source="s1_3" target="s1_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s1e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="s1" source="s1_4" target="s1_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== S2 Module ===== -->
+        <mxCell id="s2" value="S2: Agent自主决策的多级检索与多路径SQL生成调度" style="swimlane;startSize=28;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="80" width="420" height="420" as="geometry" />
+        </mxCell>
+
+        <!-- Four-level search -->
+        <mxCell id="s2_search" value="四级检索优先链 (Agent自主决策)" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontStyle=1;" vertex="1" parent="s2">
+          <mxGeometry x="10" y="35" width="200" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s2_l1" value="① 语义层检索&#xa;指标→维度→模型关联&#xa;命中: 返回确定性SQL+元信息" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="s2">
+          <mxGeometry x="20" y="60" width="380" height="45" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s2_l2" value="② 查询技能检索&#xa;技能摘要匹配→加载完整攻略&#xa;命中: 按步骤构建SQL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="s2">
+          <mxGeometry x="20" y="115" width="380" height="45" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s2_l3" value="③ 历史示例检索&#xa;反馈门控+多信号评分&#xa;命中: Few-Shot示例参考" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="s2">
+          <mxGeometry x="20" y="170" width="380" height="45" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s2_l4" value="④ Schema自动发现&#xa;表/列/FK/业务标注&#xa;从零生成SQL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="s2">
+          <mxGeometry x="20" y="225" width="380" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Four paths -->
+        <mxCell id="s2_paths" value="四路径SQL生成" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontStyle=1;" vertex="1" parent="s2">
+          <mxGeometry x="10" y="280" width="120" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s2_p1" value="确定性路径&#xa;SQL+元信息→Agent判断" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="s2">
+          <mxGeometry x="20" y="305" width="170" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_p2" value="技能引导路径&#xa;按步骤构建+规避陷阱" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" vertex="1" parent="s2">
+          <mxGeometry x="200" y="305" width="170" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_p3" value="参考增强路径&#xa;Few-Shot+Schema" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;" vertex="1" parent="s2">
+          <mxGeometry x="20" y="355" width="170" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_p4" value="自由生成路径&#xa;LLM从零生成" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;" vertex="1" parent="s2">
+          <mxGeometry x="200" y="355" width="170" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- S2 internal arrows: levels -->
+        <mxCell id="s2e1" value="未命中" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="s2" source="s2_l1" target="s2_l2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s2e2" value="未命中" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="s2" source="s2_l2" target="s2_l3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s2e3" value="未命中" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="s2" source="s2_l3" target="s2_l4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- S2 output -->
+        <mxCell id="s2_out" value="SQL执行结果+来源标记&#xa;(semantic_layer/skill_guided/&#xa;example_guided/agent_exploration)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="490" y="370" width="240" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ===== S3 Module ===== -->
+        <mxCell id="s3" value="S3: 反馈驱动的查询示例检索优化闭环" style="swimlane;startSize=28;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="560" width="1140" height="220" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s3_1" value="S3-1: 全量查询历史记录&#xa;来源标记+parent_query_id&#xa;+correction_round→纠错DAG" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="s3">
+          <mxGeometry x="20" y="40" width="250" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s3_2" value="S3-2: 结构化反馈采集&#xa;反馈类型(👍👎)+反馈分类&#xa;关联到具体SQL执行记录" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="s3">
+          <mxGeometry x="290" y="40" width="250" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s3_3" value="S3-3: 反馈门控过滤&#xa;保留: verified OR success≥阈值&#xa;排除: negative≥阈值 AND positive=0" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="s3">
+          <mxGeometry x="560" y="40" width="260" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s3_4" value="S3-4: 多信号复合评分&#xa;关键词重叠度+验证状态&#xa;+执行历史可靠性+反馈加权&#xa;(负反馈权重≥2×正反馈)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="s3">
+          <mxGeometry x="840" y="40" width="260" height="65" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s3_5" value="S3-5: 自优化循环&#xa;正反馈→正循环放大效应&#xa;负反馈→负循环抑制效应&#xa;无需微调即可持续提升" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=5;fontStyle=1;" vertex="1" parent="s3">
+          <mxGeometry x="20" y="120" width="240" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s3_6" value="S3-6: 懒同步刷新&#xa;检索前增量同步&#xa;冲突更新+难度分类" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="s3">
+          <mxGeometry x="290" y="120" width="200" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- S3 internal arrows -->
+        <mxCell id="s3e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="s3" source="s3_1" target="s3_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s3e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="s3" source="s3_2" target="s3_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s3e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="s3" source="s3_3" target="s3_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s3e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="s3" source="s3_4" target="s3_5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="970" y="130" />
+              <mxPoint x="140" y="130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ===== Closed-loop arrows between S1/S2/S3 ===== -->
+
+        <!-- S1 → S2: 语义知识体 -->
+        <mxCell id="loop1" value="S1→S2&#xa;语义知识体→&#xa;语义层检索+Agent上下文" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_out" target="s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- S1_out connects from s1_5 -->
+        <mxCell id="s1_out_link" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="s1" target="s1_out">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- S2 → s2_out -->
+        <mxCell id="s2_out_link" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="s2" target="s2_out">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- S2 → S3: 查询结果+来源标记 -->
+        <mxCell id="loop2" value="S2→S3&#xa;查询结果+来源标记→&#xa;反馈采集" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_out" target="s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- S3 → S2: few-shot优化 -->
+        <mxCell id="loop3" value="S3→S2&#xa;few-shot优化→&#xa;示例检索质量提升" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;strokeWidth=2;dashed=1;dashPattern=8 4;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3" target="s2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1220" y="670" />
+              <mxPoint x="1220" y="520" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- S3 → S1: 标注优先级 -->
+        <mxCell id="loop4" value="S3→S1&#xa;反馈统计→&#xa;标注优先级调整" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;strokeWidth=2;dashed=1;dashPattern=8 4;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3" target="s1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="10" y="670" />
+              <mxPoint x="10" y="520" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend_title" value="&lt;b&gt;闭环协同关系&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="490" y="530" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_s1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="490" y="555" width="15" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_s1t" value="S1 语义层构建" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="510" y="553" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_s2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="620" y="555" width="15" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_s2t" value="S2 多级检索调度" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="640" y="553" width="110" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_s3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="760" y="555" width="15" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_s3t" value="S3 反馈优化闭环" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="780" y="553" width="110" height="20" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

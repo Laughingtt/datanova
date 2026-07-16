@@ -30,6 +30,9 @@ export default function ModelForm({
   const [name, setName] = useState(model?.name ?? "");
   const [description, setDescription] = useState(model?.description ?? "");
   const [baseTable, setBaseTable] = useState(model?.base_table ?? "");
+  const [status, setStatus] = useState<"draft" | "published" | "deprecated">(
+    model?.status ?? "draft"
+  );
 
   // Joins: dynamic list
   const [joins, setJoins] = useState<JoinEntry[]>(() => {
@@ -66,6 +69,30 @@ export default function ModelForm({
 
   const [schemaTables, setSchemaTables] = useState<string[]>([]);
   const [schemaColumns, setSchemaColumns] = useState<Record<string, string[]>>({});
+
+  // Re-initialize form when model prop changes
+  useEffect(() => {
+    setName(model?.name ?? "");
+    setDescription(model?.description ?? "");
+    setBaseTable(model?.base_table ?? "");
+    setStatus(model?.status ?? "draft");
+    try {
+      setJoins(model?.joins ? JSON.parse(model.joins) : []);
+    } catch {
+      setJoins([]);
+    }
+    try {
+      setSelectedMetrics(model?.metrics ? JSON.parse(model.metrics) : []);
+    } catch {
+      setSelectedMetrics(model?.metrics ? model.metrics.split(",").filter(Boolean) : []);
+    }
+    try {
+      setSelectedDimensions(model?.dimensions ? JSON.parse(model.dimensions) : []);
+    } catch {
+      setSelectedDimensions(model?.dimensions ? model.dimensions.split(",").filter(Boolean) : []);
+    }
+    setError(null);
+  }, [model]);
 
   useEffect(() => {
     if (!datasourceId) return;
@@ -122,6 +149,7 @@ export default function ModelForm({
         joins: JSON.stringify(joins.filter((j) => j.table && j.on)),
         metrics: JSON.stringify(selectedMetrics),
         dimensions: JSON.stringify(selectedDimensions),
+        status,
       };
 
       if (isEdit && model) {
@@ -154,7 +182,7 @@ export default function ModelForm({
   return (
     <div className="card-base">
       <h3 className="font-display text-heading-4 text-[var(--ink)] mb-5">
-        {isEdit ? "Edit Model" : "Add Model"}
+        {isEdit ? "编辑模型" : "新增模型"}
       </h3>
 
       {error && (
@@ -167,7 +195,7 @@ export default function ModelForm({
         {/* Row: name + base_table */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="label-mono">Name</label>
+            <label className="label-mono">标识名</label>
             <input
               className="input-field"
               value={name}
@@ -178,7 +206,7 @@ export default function ModelForm({
             />
           </div>
           <div>
-            <label className="label-mono">Base Table</label>
+            <label className="label-mono">基础表</label>
             {schemaTables.length > 0 ? (
               <select
                 className="input-field font-mono text-xs"
@@ -186,7 +214,7 @@ export default function ModelForm({
                 onChange={(e) => setBaseTable(e.target.value)}
                 required
               >
-                <option value="">Select table...</option>
+                <option value="">选择表...</option>
                 {schemaTables.map(t => (
                   <option key={t} value={t}>{t}</option>
                 ))}
@@ -205,7 +233,7 @@ export default function ModelForm({
 
         {/* Description */}
         <div>
-          <label className="label-mono">Description</label>
+          <label className="label-mono">描述</label>
           <textarea
             className="input-field min-h-[60px] resize-y"
             value={description}
@@ -217,18 +245,18 @@ export default function ModelForm({
         {/* Joins */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="label-mono mb-0">Joins</label>
+            <label className="label-mono mb-0">关联</label>
             <button
               type="button"
               onClick={addJoin}
               className="btn-ghost text-xs"
             >
-              + Add Join
+              + 添加关联
             </button>
           </div>
           {joins.length === 0 ? (
             <div className="p-3 rounded-md border border-dashed border-[var(--hairline-strong)] text-xs text-[var(--stone)]">
-              No joins defined. Click "+ Add Join" to add one.
+              暂无关联定义，点击「+ 添加关联」添加
             </div>
           ) : (
             <div className="space-y-2">
@@ -252,7 +280,7 @@ export default function ModelForm({
                       value={join.table}
                       onChange={(e) => updateJoin(i, "table", e.target.value)}
                     >
-                      <option value="">table</option>
+                      <option value="">表</option>
                       {schemaTables.filter(t => t !== baseTable).map(t => (
                         <option key={t} value={t}>{t}</option>
                       ))}
@@ -287,10 +315,10 @@ export default function ModelForm({
 
         {/* Metrics multi-select */}
         <div>
-          <label className="label-mono">Metrics</label>
+          <label className="label-mono">指标</label>
           <div className="flex flex-wrap gap-2 p-3 rounded-md border border-[var(--hairline-strong)] bg-[var(--canvas)] min-h-[44px]">
             {metrics.length === 0 ? (
-              <span className="text-xs text-[var(--stone)]">No metrics available</span>
+              <span className="text-xs text-[var(--stone)]">暂无可用指标</span>
             ) : (
               metrics.map((m) => {
                 const isSelected = selectedMetrics.includes(m.name);
@@ -315,10 +343,10 @@ export default function ModelForm({
 
         {/* Dimensions multi-select */}
         <div>
-          <label className="label-mono">Dimensions</label>
+          <label className="label-mono">维度</label>
           <div className="flex flex-wrap gap-2 p-3 rounded-md border border-[var(--hairline-strong)] bg-[var(--canvas)] min-h-[44px]">
             {dimensions.length === 0 ? (
-              <span className="text-xs text-[var(--stone)]">No dimensions available</span>
+              <span className="text-xs text-[var(--stone)]">暂无可用维度</span>
             ) : (
               dimensions.map((d) => {
                 const isSelected = selectedDimensions.includes(d.name);
@@ -341,10 +369,39 @@ export default function ModelForm({
           </div>
         </div>
 
+        {/* Status */}
+        <div>
+          <label className="label-mono">状态</label>
+          <div className="flex gap-3">
+            {(["draft", "published", "deprecated"] as const).map((s) => {
+              const badge = {
+                draft: { dot: "bg-[var(--warning)]", label: "草稿" },
+                published: { dot: "bg-[var(--success)]", label: "已发布" },
+                deprecated: { dot: "bg-[var(--error)]", label: "已弃用" },
+              }[s];
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setStatus(s)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm border transition-colors ${
+                    status === s
+                      ? "border-[var(--primary)] bg-[var(--primary-soft)]"
+                      : "border-[var(--hairline)] text-[var(--steel)]"
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${badge.dot}`} />
+                  {badge.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Actions */}
         <div className="flex items-center gap-3 pt-2">
           <button type="submit" className="btn-dark" disabled={saving}>
-            {saving ? "Saving..." : isEdit ? "Update" : "Create"}
+            {saving ? "保存中..." : isEdit ? "更新" : "创建"}
           </button>
           {isEdit && (
             <button
@@ -353,7 +410,7 @@ export default function ModelForm({
               onClick={handleDelete}
               disabled={deleting}
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {deleting ? "删除中..." : "删除"}
             </button>
           )}
         </div>

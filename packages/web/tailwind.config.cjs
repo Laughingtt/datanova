@@ -1,31 +1,30 @@
-/** @type {import('tailwindcss').Config} */
+﻿/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       colors: {
-        // Brand
         primary:         "var(--primary)",
         "primary-deep":  "var(--primary-deep)",
         "primary-soft":  "var(--primary-soft)",
         "primary-text":  "var(--primary-text)",
-
-        // Cream
-        cream:           "var(--cream)",
-        "cream-soft":    "var(--cream-soft)",
-        "cream-deeper":  "var(--cream-deeper)",
-        "beige-deep":    "var(--beige-deep)",
-
-        // Surface
+        "primary-glow":  "var(--primary-glow)",
+        "accent-100":    "var(--accent-100)",
+        "accent-200":    "var(--accent-200)",
+        "accent-300":    "var(--accent-300)",
+        "accent-400":    "var(--accent-400)",
+        "accent-500":    "var(--accent-500)",
+        "accent-600":    "var(--accent-600)",
+        "accent-700":    "var(--accent-700)",
+        highlight:       "var(--highlight)",
+        "highlight-soft":"var(--highlight-soft)",
         canvas:          "var(--canvas)",
         surface:         "var(--surface)",
-        "surface-cream": "var(--surface-cream)",
+        "surface-raised":"var(--surface-raised)",
         "surface-code":  "var(--surface-code)",
         hairline:        "var(--hairline)",
         "hairline-soft": "var(--hairline-soft)",
         "hairline-strong":"var(--hairline-strong)",
-
-        // Text
         ink:             "var(--ink)",
         "ink-tint":      "var(--ink-tint)",
         charcoal:        "var(--charcoal)",
@@ -35,22 +34,19 @@ module.exports = {
         muted:           "var(--muted)",
         "on-dark":       "var(--on-dark)",
         "on-dark-muted": "var(--on-dark-muted)",
-        "on-cream":      "var(--on-cream)",
-
-        // Sidebar
+        "on-surface":    "var(--on-surface)",
         "sb-bg":         "var(--sidebar-bg)",
         "sb-hover":      "var(--sidebar-hover)",
         "sb-active":     "var(--sidebar-active)",
-
-        // Semantic
         success:         "var(--success)",
         "success-soft":  "var(--success-soft)",
         warning:         "var(--warning)",
         "warning-soft":  "var(--warning-soft)",
         error:           "var(--error)",
         "error-soft":    "var(--error-soft)",
-
-        // Legacy aliases (migration)
+        info:            "var(--info)",
+        "info-soft":     "var(--info-soft)",
+        // Legacy aliases
         "coral":            "var(--primary)",
         "action-blue":      "var(--primary)",
         "focus-blue":       "var(--primary)",
@@ -71,9 +67,9 @@ module.exports = {
         "border-hairline":  "var(--hairline)",
       },
       fontFamily: {
-        display: ['"PP Editorial Old"', '"Times New Roman"', "Georgia", "serif"],
-        body: ['"Inter"', "ui-sans-serif", "system-ui", "sans-serif"],
-        mono: ['"JetBrains Mono"', '"Fira Code"', "ui-monospace", "monospace"],
+        display: ['"Playfair Display"', "Georgia", "serif"],
+        body:    ['"Geist"', "-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "sans-serif"],
+        mono:    ['"Geist Mono"', "ui-monospace", "monospace"],
       },
       borderRadius: {
         xs: "4px",
@@ -101,10 +97,13 @@ module.exports = {
         "code-md":      ["14px", { lineHeight: "1.50", letterSpacing: "0" }],
       },
       boxShadow: {
-        "1": "0 1px 2px rgba(0,0,0,0.04)",
-        "2": "0 4px 12px rgba(0,0,0,0.04)",
-        "3": "0 12px 24px -4px rgba(0,0,0,0.08)",
-        "4": "0 16px 48px -8px rgba(0,0,0,0.12)",
+        "1": "var(--shadow-1)",
+        "2": "var(--shadow-2)",
+        "3": "var(--shadow-3)",
+        "glow": "var(--shadow-glow)",
+      },
+      animation: {
+        "fade-in": "fadeSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards",
       },
     },
   },

@@ -22,7 +22,7 @@ const ISSUE_TYPES: IssueType[] = [
 interface FeedbackButtonsProps {
   conversationId: string;
   messageId: string;
-  onFeedbackSubmit?: (rating: string, issueType?: string, issueDetail?: string) => void;
+  onFeedbackSubmit?: (rating: string, issueType?: string, issueDetail?: string, feedbackCategory?: string) => void;
   onExplainRequest?: () => void;
 }
 
@@ -51,7 +51,7 @@ export default function FeedbackButtons({
   };
 
   const handleSubmitFeedback = () => {
-    onFeedbackSubmit?.("negative", selectedIssue, issueDetail);
+    onFeedbackSubmit?.("negative", selectedIssue, issueDetail, selectedIssue);
     setSubmitted(true);
     setShowFeedbackForm(false);
   };

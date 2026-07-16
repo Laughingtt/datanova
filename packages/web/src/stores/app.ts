@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type AppView = "chat" | "datasources" | "schemas" | "metrics" | "scheduled" | "dictionary" | "queryHistory";
+export type AppView = "dashboard" | "chat" | "datasources" | "schemas" | "metrics" | "analysis" | "dictionary" | "queryHistory" | "insights" | "querySkills";
 
 interface AppState {
   // Navigation
@@ -28,11 +28,17 @@ interface AppState {
   // Onboarding state
   onboardingCompleted: boolean;
   setOnboardingCompleted: (completed: boolean) => void;
+
+  // Agent channel state
+  activeChannel: string;
+  channelSessions: Record<string, string>;
+  setActiveChannel: (channel: string) => void;
+  setChannelSession: (channel: string, sessionId: string) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
   // Navigation
-  view: "chat",
+  view: "dashboard",
   setView: (view) => set({ view }),
 
   // Selected datasource
@@ -59,4 +65,12 @@ export const useAppStore = create<AppState>((set) => ({
   // Onboarding state
   onboardingCompleted: false,
   setOnboardingCompleted: (completed) => set({ onboardingCompleted: completed }),
+
+  // Agent channel state
+  activeChannel: "query",
+  channelSessions: {},
+  setActiveChannel: (channel) => set({ activeChannel: channel }),
+  setChannelSession: (channel, sessionId) => set((state) => ({
+    channelSessions: { ...state.channelSessions, [channel]: sessionId },
+  })),
 }));

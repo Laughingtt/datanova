@@ -16,10 +16,12 @@ export interface SchemaAnnotation {
   datasource_id: string;
   table_name: string;
   field_name: string | null;
+  column_type: string | null;
   annotation: string;
   status: "draft" | "confirmed";
   domain_type: "enum" | "range" | null;
   domain_values: string | null; // JSON string
+  sample_data: string | null; // JSON string
   created_at: string;
   updated_at: string;
 }
@@ -42,6 +44,8 @@ export interface QueryFeedback {
   rating: "positive" | "negative";
   issue_type: string | null;
   issue_detail: string | null;
+  feedback_category?: string | null;  // 'wrong_result' | 'slow_query' | 'wrong_table' | 'missing_data' | 'other'
+  sql_query_history_id?: string | null;  // FK to sql_query_history
   created_at: string;
 }
 
@@ -131,15 +135,24 @@ export interface SemanticMetric {
   name: string;
   display_name: string;
   description: string;
-  sql_expression: string;
-  filters: string; // JSON array
+  sql: string;
   dimensions: string; // JSON array of dimension names
   default_granularity: string | null;
   unit: string | null;
   category: string | null;
   aliases: string; // JSON array
+  metric_type: "atomic" | "derived" | "compound";
+  business_context: string;
+  calculation_logic: string;
+  applicable_scenarios: string;
+  data_quality_notes: string;
+  default_sort: string | null;
   status: "draft" | "published" | "deprecated";
   version: number;
+  created_by: "manual" | "agent" | "ai_suggest";
+  agent_session_id: string | null;
+  validation_status: "unvalidated" | "passed" | "failed";
+  validation_result: string | null; // JSON
   created_at: string;
   updated_at: string;
 }
@@ -153,6 +166,13 @@ export interface SemanticDimension {
   data_type: "string" | "number" | "date";
   hierarchy: string | null; // JSON object
   values: string | null; // JSON array
+  status: "draft" | "published" | "deprecated";
+  grain: "day" | "week" | "month" | "quarter" | "year" | null;
+  date_column: string | null;
+  description: string;
+  is_enum_dict: boolean;
+  created_by: "manual" | "agent" | "ai_suggest";
+  agent_session_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -166,6 +186,7 @@ export interface SemanticModel {
   joins: string; // JSON array
   metrics: string; // JSON array of metric names
   dimensions: string; // JSON array of dimension names
+  status: "draft" | "published" | "deprecated";
   created_at: string;
   updated_at: string;
 }
@@ -212,6 +233,46 @@ export interface QueryExecutionHistory {
 
 // ==================== SQL Query History ====================
 
+// ==================== Query Bookmarks ====================
+
+export interface QueryBookmark {
+  id: string;
+  datasource_id: string;
+  title: string;
+  sql: string;
+  description: string | null;
+  sort_order: number;
+  created_at: string;
+}
+
+// ==================== Query Skills ====================
+
+export interface CoreTableEntry {
+  table: string;
+  purpose: string;
+}
+
+export interface QuerySkill {
+  id: string;
+  datasource_id: string;
+  domain: string;
+  name: string;
+  trigger_keywords: string; // JSON array of strings
+  business_context: string;
+  core_tables: string; // JSON array of CoreTableEntry objects
+  join_path: string;
+  query_steps: string;
+  example_sql: string;
+  caveats: string;
+  common_issues: string;
+  enabled: number; // 0 or 1
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// ==================== SQL Query History ====================
+
 export interface SqlQueryHistory {
   id: string;
   datasource_id: string;
@@ -224,5 +285,8 @@ export interface SqlQueryHistory {
   row_count: number | null;
   status: "success" | "error";
   error_message: string | null;
+  parent_query_id?: string | null;    // for self-correction chain
+  correction_round?: number;           // 0 = original, 1+ = correction attempt
+  intent_type?: string | null;         // 'new_query' | 'refine' | 'drill_down' | 'compare' | 'explain' | 'correction'
   created_at: string;
 }

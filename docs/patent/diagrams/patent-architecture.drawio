@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="技术架构图">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="2" value="&lt;b&gt;DataNova 智能问数系统 — 技术架构图&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="250" y="10" width="500" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ===== Frontend Layer ===== -->
+        <mxCell id="fe_container" value="前端层 (React 19 + Vite 6 + TailwindCSS 3)" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="70" width="920" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="fe1" value="ChatWindow&#xa;消息状态+WS事件+&#xa;多Agent频道切换" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_container">
+          <mxGeometry x="20" y="40" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fe2" value="ChannelTabs&#xa;Agent频道切换&#xa;智能问数/指标开发" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_container">
+          <mxGeometry x="180" y="40" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fe3" value="useAgentStream&#xa;Agent流处理&#xa;processWsEvent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_container">
+          <mxGeometry x="340" y="40" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fe4" value="消息渲染组件&#xa;SqlBlock/TableResult&#xa;ChartView/FeedbackButtons&#xa;ConfirmActionCard" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_container">
+          <mxGeometry x="500" y="40" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="fe5" value="Agent 注册表&#xa;AGENT_REGISTRY&#xa;getAgentById()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_container">
+          <mxGeometry x="700" y="40" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fe_zustand" value="Zustand Store&#xa;(view/datasourceId/&#xa;activeChannel)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="fe_container">
+          <mxGeometry x="700" y="105" width="140" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ===== WebSocket Layer ===== -->
+        <mxCell id="ws_container" value="WebSocket 通信层" style="swimlane;startSize=25;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="240" width="920" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ws1" value="useWebSocket&#xa;自动重连" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="ws_container">
+          <mxGeometry x="20" y="30" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="ws2" value="init (agentType 路由)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="ws_container">
+          <mxGeometry x="160" y="30" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="ws3" value="message / reset_context" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="ws_container">
+          <mxGeometry x="330" y="30" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="ws4" value="事件流转发&#xa;agent_start/text_delta/&#xa;tool_execution/confirm_action" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="ws_container">
+          <mxGeometry x="500" y="30" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="ws5" value="Vite Proxy&#xa;/api → :3000&#xa;/ws → ws://:3000" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="ws_container">
+          <mxGeometry x="720" y="30" width="150" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ===== Agent Framework Layer ===== -->
+        <mxCell id="agent_container" value="Agent 自主决策框架层 (AgentHarness + AgentRegistry)" style="swimlane;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="350" width="920" height="200" as="geometry" />
+        </mxCell>
+
+        <!-- Query Agent -->
+        <mxCell id="qa_container" value="智能问数 Agent (query)" style="swimlane;startSize=22;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="agent_container">
+          <mxGeometry x="20" y="40" width="430" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="qa_prompt" value="System Prompt&#xa;基础指令+数据源+&#xa;Skills摘要+自定义指令" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="qa_container">
+          <mxGeometry x="10" y="30" width="130" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="qa_tools" value="6 工具集&#xa;discover_schema&#xa;execute_sql&#xa;lookup_semantic_layer&#xa;lookup_examples&#xa;read_skill&#xa;ai_annotate_schema" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="qa_container">
+          <mxGeometry x="150" y="30" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="qa_decision" value="四级检索决策&#xa;①语义层&#xa;②查询技能&#xa;③历史示例&#xa;④Schema发现" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="qa_container">
+          <mxGeometry x="300" y="30" width="120" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- Metric Dev Agent -->
+        <mxCell id="md_container" value="指标开发 Agent (metric_dev)" style="swimlane;startSize=22;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="agent_container">
+          <mxGeometry x="470" y="40" width="430" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="md_prompt" value="System Prompt&#xa;先查后建+验证闭环&#xa;自动修复+草稿安全" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="md_container">
+          <mxGeometry x="10" y="30" width="130" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="md_tools" value="10 工具集&#xa;discover_schema&#xa;execute_sql&#xa;lookup_semantic_layer&#xa;validate_and_test_metric&#xa;check_metric_conflict&#xa;create_metric_draft&#xa;create_dimension_draft&#xa;request_user_confirm&#xa;lookup_examples&#xa;read_skill" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="md_container">
+          <mxGeometry x="150" y="30" width="140" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="md_flow" value="工作流&#xa;冲突检查→Schema&#xa;→SQL生成→验证&#xa;→修复→确认卡片&#xa;→保存草稿" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="md_container">
+          <mxGeometry x="300" y="30" width="120" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ===== Data & Knowledge Layer ===== -->
+        <mxCell id="data_container" value="语义知识体 + 数据存储层" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="580" width="920" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- Semantic Layer -->
+        <mxCell id="sl_container" value="语义层 (确定性SQL)" style="swimlane;startSize=22;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="data_container">
+          <mxGeometry x="20" y="40" width="200" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="sl1" value="语义指标&#xa;(atomic/derived/&#xa;compound)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=9;" vertex="1" parent="sl_container">
+          <mxGeometry x="10" y="30" width="80" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="sl2" value="语义维度&#xa;(grain/enum/&#xa;date_column)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=9;" vertex="1" parent="sl_container">
+          <mxGeometry x="110" y="30" width="80" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="sl3" value="语义模型&#xa;(base_table+&#xa;joins)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=9;" vertex="1" parent="sl_container">
+          <mxGeometry x="60" y="85" width="80" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Query Skills -->
+        <mxCell id="qs_container" value="查询技能 (攻略知识)" style="swimlane;startSize=22;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontStyle=1;" vertex="1" parent="data_container">
+          <mxGeometry x="240" y="40" width="200" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="qs1" value="核心表+关联路径&#xa;查询步骤(1,2,3..)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=9;" vertex="1" parent="qs_container">
+          <mxGeometry x="10" y="30" width="90" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="qs2" value="示例SQL&#xa;注意事项&#xa;常见问题" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=9;" vertex="1" parent="qs_container">
+          <mxGeometry x="110" y="30" width="80" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="qs3" value="qs-*/SKILL.md&#xa;渐进式加载" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=9;" vertex="1" parent="qs_container">
+          <mxGeometry x="50" y="85" width="100" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Feedback & History -->
+        <mxCell id="fb_container" value="反馈与历史" style="swimlane;startSize=22;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1;" vertex="1" parent="data_container">
+          <mxGeometry x="460" y="40" width="200" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="fb1" value="查询历史&#xa;(全量记录+&#xa;纠错DAG)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;fontSize=9;" vertex="1" parent="fb_container">
+          <mxGeometry x="10" y="30" width="80" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="fb2" value="用户反馈&#xa;(结构化+&#xa;反馈分类)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;fontSize=9;" vertex="1" parent="fb_container">
+          <mxGeometry x="110" y="30" width="80" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="fb3" value="示例检索优化&#xa;门控+4信号评分&#xa;+懒同步刷新" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;fontSize=9;" vertex="1" parent="fb_container">
+          <mxGeometry x="50" y="85" width="100" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Schema Annotations -->
+        <mxCell id="sa_container" value="Schema标注" style="swimlane;startSize=22;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontStyle=1;" vertex="1" parent="data_container">
+          <mxGeometry x="680" y="40" width="220" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="sa1" value="业务语义标注&#xa;表级+列级描述&#xa;域类型+域值枚举" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="sa_container">
+          <mxGeometry x="10" y="30" width="95" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="sa2" value="AI自动构建&#xa;两阶段递进提示&#xa;draft→confirmed&#xa;→published" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="sa_container">
+          <mxGeometry x="115" y="30" width="95" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- ===== External Data Layer ===== -->
+        <mxCell id="ext_container" value="外部数据层" style="swimlane;startSize=25;fillColor=#f5f5f5;strokeColor=#999999;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="770" width="920" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ext1" value="SQLite WAL&#xa;(datanova.db)&#xa;元数据/语义层/配置" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="ext_container">
+          <mxGeometry x="80" y="25" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="ext2" value="MySQL Server&#xa;(用户业务数据库)&#xa;INFORMATION_SCHEMA" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="ext_container">
+          <mxGeometry x="380" y="25" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="ext3" value="LLM API&#xa;(Anthropic/DeepSeek)" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="ext_container">
+          <mxGeometry x="680" y="25" width="160" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Vertical arrows: Frontend to WS -->
+        <mxCell id="ve1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;flowAnimation=1;" edge="1" parent="1" source="fe_container" target="ws_container">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- WS to Agent -->
+        <mxCell id="ve2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;flowAnimation=1;" edge="1" parent="1" source="ws_container" target="agent_container">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Agent to Data -->
+        <mxCell id="ve3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;flowAnimation=1;" edge="1" parent="1" source="agent_container" target="data_container">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Data to External -->
+        <mxCell id="ve4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;flowAnimation=1;" edge="1" parent="1" source="data_container" target="ext_container">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Closed loop arrow: Feedback back to Agent -->
+        <mxCell id="ve5" value="反馈闭环" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=8 4;strokeColor=#b85450;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="fb_container" target="agent_container">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="990" y="650" />
+              <mxPoint x="990" y="450" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

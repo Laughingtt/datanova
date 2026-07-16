@@ -219,6 +219,7 @@ export function formatSchemaForPrompt(
   // Build annotation map from typed annotations (P1-C4: build internally)
   const annotationMap = new Map<string, string>();
   const domainMap = new Map<string, { domainType: string; domainValues: string }>();
+  const sampleDataMap = new Map<string, string[]>();
 
   for (const a of annotations) {
     if (a.status !== "confirmed") continue; // Only include confirmed annotations
@@ -226,6 +227,14 @@ export function formatSchemaForPrompt(
     annotationMap.set(key, a.annotation);
     if (a.domain_type && a.domain_values) {
       domainMap.set(key, { domainType: a.domain_type, domainValues: a.domain_values });
+    }
+    if (a.sample_data) {
+      try {
+        const parsed = JSON.parse(a.sample_data);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          sampleDataMap.set(key, parsed.map(String));
+        }
+      } catch { /* skip invalid JSON */ }
     }
   }
 
@@ -262,6 +271,7 @@ export function formatSchemaForPrompt(
       const colKey = `${table.name}.${col.name}`;
       const colAnnotation = annotationMap.get(colKey);
       const colDomain = domainMap.get(colKey);
+      const colSamples = sampleDataMap.get(colKey);
 
       const parts = [
         `  - ${col.name}`,
@@ -296,6 +306,11 @@ export function formatSchemaForPrompt(
           const { min, max, avg } = JSON.parse(colDomain.domainValues);
           lines.push(`    Range: ${min}~${max} (avg: ${avg})`);
         } catch { /* skip invalid JSON */ }
+      }
+      // Sample data
+      if (colSamples && colSamples.length > 0) {
+        const displaySamples = colSamples.slice(0, 8);
+        lines.push(`    Sample Values: [${displaySamples.join(", ")}${colSamples.length > 8 ? `, ...(${colSamples.length} total)` : ""}]`);
       }
     }
 

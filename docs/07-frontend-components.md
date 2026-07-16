@@ -1,4 +1,4 @@
-﻿# 前端组件详解
+# 前端组件详解
 
 > 本文档详解前端的组件层级、状态管理和关键交互流程。
 
@@ -13,6 +13,7 @@
 | TailwindCSS | 3 | 原子化 CSS |
 | Zustand | 5 | 全局状态管理 |
 | TanStack Table | — | 数据表格渲染 |
+| Recharts | — | 图表渲染 |
 
 ---
 
@@ -21,10 +22,12 @@
 ```
 App.tsx
   └─ Layout.tsx（侧边栏 + 主内容区）
-       ├─ Sidebar.tsx           ← 独立的侧边栏组件（现未使用）
+       ├─ Sidebar.tsx           ← 导航侧边栏 (8 nav items: 数据概览/对话/数据源/Schema标注/指标管理/自助分析/数据字典/SQL历史)
        └─ 主内容区（按 view 切换）：
+            ├─ DashboardPage.tsx       ← 数据概览 (默认视图)
+            │
             ├─ ChatWindow.tsx          ← 聊天视图
-            │    ├─ DatasourceSelector.tsx
+            │    ├─ DatasourceSelector.tsx  ← 数据源选择器
             │    ├─ ModelSelector.tsx
             │    ├─ MessageList.tsx
             │    │    └─ MessageItem.tsx
@@ -33,6 +36,8 @@ App.tsx
             │    │         ├─ ValidationBanner.tsx   （校验提示）
             │    │         ├─ SqlBlock.tsx           （SQL 代码块）
             │    │         ├─ TableResult.tsx        （数据表格）
+            │    │         ├─ ChartView.tsx          （图表视图切换）
+            │    │         ├─ MarkdownContent.tsx    （Markdown 渲染）
             │    │         ├─ AttributionView.tsx    （归因分析）
             │    │         └─ FeedbackButtons.tsx    （👍👎）
             │    └─ ChatInput.tsx
@@ -54,14 +59,27 @@ App.tsx
             │    ├─ DimensionForm.tsx
             │    └─ ModelForm.tsx
             │
-            ├─ ScheduledPage.tsx      ← 定时查询
-            │    ├─ ScheduledForm.tsx
-            │    └─ AlertConfig.tsx
+            ├─ AnalysisPage.tsx       ← 自助分析 (含定时查询功能)
             │
             ├─ DictionaryPage.tsx     ← 数据字典
+            │    ├─ BrowseTree.tsx
+            │    ├─ RelationshipDiagram.tsx
             │    └─ EntryDetail.tsx
             │
-            └─ OnboardingWizard.tsx   ← 新手引导（仅首次）
+            ├─ QueryHistoryPage.tsx   ← SQL 查询历史
+            │
+            ├─ InsightsPage.tsx       ← BI 看板 (侧边栏无入口)
+            │    ├─ StatsBar.tsx
+            │    ├─ ChartCard.tsx
+            │    └─ BookmarkDialog.tsx
+            │
+            ├─ OnboardingWizard.tsx   ← 新手引导（仅首次）
+            │    └─ WizardStep.tsx
+            │
+            └─ 共享组件：
+                 ├─ ChartRenderers.tsx    ← 共享图表渲染 (Recharts)
+                 ├─ ReportView.tsx        ← 报告视图
+                 └─ ReportExport.tsx      ← 报告导出 (xlsx)
 ```
 
 ---
@@ -73,7 +91,7 @@ App.tsx
 ```typescript
 interface AppState {
   // 导航
-  view: "chat" | "datasources" | "schemas" | "metrics" | "scheduled" | "dictionary";
+  view: "dashboard" | "chat" | "datasources" | "schemas" | "metrics" | "analysis" | "dictionary" | "queryHistory" | "insights";
   setView: (view: AppView) => void;
 
   // 当前选中的数据源
@@ -93,6 +111,10 @@ interface AppState {
   modelProvider: string | null;
   modelId: string | null;
   setModel: (provider: string, modelId: string) => void;
+
+  // 新手引导状态
+  onboardingCompleted: boolean;
+  setOnboardingCompleted: (completed: boolean) => void;
 }
 ```
 
@@ -100,23 +122,40 @@ interface AppState {
 
 ## 四、CSS 变量体系
 
-项目使用 CSS 变量实现主题，核心变量：
+项目使用 CSS 变量实现主题，核心变量（Indigo/Purple 主题）：
 
 ```css
-/* 主色调 */
---primary          /* 主色（橙色） */
---primary-text     /* 主色文字 */
+/* 主色调 (Indigo/Purple) */
+--primary          /* 主色 (#4f46e5 indigo) */
 --primary-soft     /* 主色浅底 */
+--primary-deep     /* 主色深色 */
+--primary-glow     /* 主色发光 */
+--primary-text     /* 主色文字 */
+
+/* 强调色 */
+--accent-100 ~ --accent-700  /* 强调色阶梯 */
+--highlight        /* 高亮色 */
+--highlight-soft   /* 高亮浅底 */
 
 /* 表面色 */
 --canvas           /* 页面背景 */
 --surface          /* 卡片/面板背景 */
---cream            /* 暖色表面 */
+--surface-raised   /* 提升表面 */
+--surface-code     /* 代码块背景 */
 
 /* 文字色 */
 --ink              /* 主文字 */
+--ink-tint         /* 略淡主文字 */
 --slate            /* 次要文字 */
 --steel            /* 三级文字 */
+--charcoal         /* 强调文字 */
+--stone            /* 标签文字 */
+--muted            /* 禁用/占位文字 */
+
+/* 侧边栏 */
+--sidebar-bg       /* 侧边栏背景 */
+--sidebar-hover    /* 侧边栏悬停 */
+--sidebar-active   /* 侧边栏激活 */
 
 /* 边框 */
 --hairline         /* 1px 分割线 */
@@ -125,7 +164,18 @@ interface AppState {
 --success          /* 成功 */
 --warning          /* 警告 */
 --error            /* 错误 */
---error-soft       /* 错误浅底 */
+--info             /* 信息 */
+--info-soft        /* 信息浅底 */
+
+/* 阴影 */
+--shadow-1 ~ --shadow-3  /* 阴影层级 */
+--shadow-glow      /* 发光阴影 */
+
+/* 圆角 */
+--radius-sm/md/lg/xl  /* 圆角阶梯 */
+
+/* 过渡 */
+--transition-fast/base/slow  /* 过渡时间 */
 ```
 
 ---
@@ -187,7 +237,48 @@ saveMessage({ conversationId, role: "assistant", content, steps });
 
 ---
 
-## 六、数据源管理页面
+## 六、数据概览页面
+
+`DashboardPage.tsx`（默认视图 dashboard）：
+- 展示数据源概览信息
+- 作为用户进入应用的首屏体验
+- 需选择数据源后显示相关统计数据
+
+---
+
+## 七、自助分析页面
+
+`AnalysisPage.tsx`（视图 analysis）：
+- 整合了原 ScheduledPage 的定时查询功能
+- 提供自助 SQL 分析能力
+- 定时查询管理：创建/编辑/删除定时查询
+- 告警配置：AlertConfig
+
+---
+
+## 八、Insights BI 看板
+
+`InsightsPage.tsx`（视图 insights）：
+- 注意：侧边栏无导航入口，需通过编程方式访问
+- 子组件：
+  - StatsBar.tsx：查询统计展示
+  - ChartCard.tsx：图表面板
+  - BookmarkDialog.tsx：查询收藏对话框
+- API：/api/datasources/:dsId/insights/stats, /top-queries, /execute
+- 收藏查询：/api/datasources/:dsId/bookmarks
+
+---
+
+## 九、SQL 查询历史页面
+
+`QueryHistoryPage.tsx`（视图 queryHistory）：
+- 展示所有已执行的 SQL 查询记录
+- 数据来自 sql_query_history 表
+- API：GET /api/query-history, GET /api/datasources/:dsId/query-history
+
+---
+
+## 十、数据源管理页面
 
 `DatasourcePage.tsx`：
 - 列表展示所有数据源
@@ -196,10 +287,11 @@ saveMessage({ conversationId, role: "assistant", content, steps });
 - 创建时先调 `POST /api/datasources`（服务端自动测试连接）
 - 编辑时如果改连接信息，服务端重新测试连接
 - 密码字段：编辑时留空表示不修改
+- `DatasourceSelector.tsx` 在 ChatWindow 中用于切换当前数据源
 
 ---
 
-## 七、Schema 注解页面
+## 十一、Schema 注解页面
 
 `SchemaPage.tsx` 支持两种模式：
 
@@ -217,7 +309,7 @@ saveMessage({ conversationId, role: "assistant", content, steps });
 
 ---
 
-## 八、语义层管理页面
+## 十二、语义层管理页面
 
 `MetricsPage.tsx` 三个标签页：
 
@@ -244,7 +336,7 @@ saveMessage({ conversationId, role: "assistant", content, steps });
 
 ---
 
-## 九、模型选择器
+## 十三、模型选择器
 
 `ModelSelector.tsx`：
 1. 加载时调 `GET /api/models` 获取可用模型

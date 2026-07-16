@@ -84,3 +84,29 @@ export function isSelectQuery(sql: string): boolean {
 
   return false;
 }
+
+/**
+ * Validate a SQL statement by running EXPLAIN.
+ * Returns { valid: true } if EXPLAIN succeeds, or { valid: false, error: string } if it fails.
+ * Throws only on connection errors (not SQL errors).
+ */
+export async function validateSqlViaExplain(
+  datasourceId: string,
+  sql: string
+): Promise<{ valid: true } | { valid: false; error: string }> {
+  const pool = getPool(datasourceId);
+  if (!pool) {
+    return { valid: false, error: "数据源连接池不可用" };
+  }
+
+  const conn = await pool.getConnection();
+  try {
+    await conn.query(`EXPLAIN ${sql}`);
+    return { valid: true };
+  } catch (err) {
+    const error = err as Error & { code?: string };
+    return { valid: false, error: error.message || "SQL 验证失败" };
+  } finally {
+    conn.release();
+  }
+}

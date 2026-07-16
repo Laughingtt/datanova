@@ -31,10 +31,10 @@ export default function SchemaPromptPreview({ datasourceId }: SchemaPromptPrevie
           disabled={loading}
           className="btn-primary text-sm disabled:opacity-50"
         >
-          {loading ? "Loading..." : "Load Preview"}
+          {loading ? "加载中..." : "加载预览"}
         </button>
         <span className="text-xs text-[var(--steel)]">
-          Preview the schema prompt the Agent sees at query time
+          预览 Agent 查询时实际接收的 Schema 提示词（包含标注、值域、查询示例等）
         </span>
       </div>
 

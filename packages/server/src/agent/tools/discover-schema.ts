@@ -69,10 +69,12 @@ export function createDiscoverSchemaTool(): AgentTool<typeof DiscoverSchemaParam
                 datasource_id: typedParams.datasource_id,
                 table_name: domain.tableName,
                 field_name: domain.columnName,
+                column_type: null,
                 annotation: domain.annotation,
                 status: "confirmed",
                 domain_type: domain.domainType,
                 domain_values: domain.domainValues,
+                sample_data: null,
               });
             }
           }

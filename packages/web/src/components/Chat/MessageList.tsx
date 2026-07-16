@@ -1,13 +1,15 @@
 import { useEffect, useRef } from "react";
-import type { ChatMessage } from "../../hooks/useAgentStream";
+import type { ChatMessage, ConfirmAction } from "../../hooks/useAgentStream";
 import MessageItem from "./MessageItem";
 
 interface MessageListProps {
   messages: ChatMessage[];
   conversationId?: string;
+  onConfirmAction?: (action: ConfirmAction) => void;
+  onCancelAction?: (action: ConfirmAction) => void;
 }
 
-export default function MessageList({ messages, conversationId }: MessageListProps) {
+export default function MessageList({ messages, conversationId, onConfirmAction, onCancelAction }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export default function MessageList({ messages, conversationId }: MessageListPro
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar bg-[var(--surface)]">
       {messages.map((message) => (
-        <MessageItem key={message.id} message={message} conversationId={conversationId} />
+        <MessageItem key={message.id} message={message} conversationId={conversationId} onConfirmAction={onConfirmAction} onCancelAction={onCancelAction} />
       ))}
       <div ref={bottomRef} />
     </div>
