@@ -275,8 +275,10 @@ export default function DictionaryPage() {
                             <div className="space-y-1.5">
                               {recentChanges.dimensions.map((d: any, idx: number) => (
                                 <div key={d.id ?? idx} className="card-base px-4 py-2.5">
-                                  <p className="text-sm font-medium text-[var(--ink)]">{d.display_name || d.name}</p>
-                                  {d.data_type && <span className="text-xs font-mono text-[var(--steel)]">{d.data_type}</span>}
+                                  <div className="card-base-inner">
+                                    <p className="text-sm font-medium text-[var(--ink)]">{d.display_name || d.name}</p>
+                                    {d.data_type && <span className="text-xs font-mono text-[var(--steel)]">{d.data_type}</span>}
+                                  </div>
                                 </div>
                               ))}
                             </div>
