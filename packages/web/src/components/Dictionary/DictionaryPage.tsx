@@ -245,8 +245,10 @@ export default function DictionaryPage() {
                             <div className="space-y-1.5">
                               {recentChanges.annotations.map((ann: any, idx: number) => (
                                 <div key={ann.id ?? idx} className="card-base px-4 py-2.5">
-                                  <p className="text-sm text-[var(--ink)]">{ann.annotation}</p>
-                                  <p className="text-xs text-[var(--steel)] mt-0.5">{ann.table_name}{ann.field_name ? `.${ann.field_name}` : ""}</p>
+                                  <div className="card-base-inner">
+                                    <p className="text-sm text-[var(--ink)]">{ann.annotation}</p>
+                                    <p className="text-xs text-[var(--steel)] mt-0.5">{ann.table_name}{ann.field_name ? `.${ann.field_name}` : ""}</p>
+                                  </div>
                                 </div>
                               ))}
                             </div>
