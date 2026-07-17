@@ -179,7 +179,9 @@ export default function DictionaryPage() {
                 {results ? (
                   totalCount === 0 ? (
                     <div className="card-base text-center py-12">
-                      <p className="text-sm text-[var(--steel)]">未找到结果："{query}"</p>
+                      <div className="card-base-inner">
+                        <p className="text-sm text-[var(--steel)]">未找到结果："{query}"</p>
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-6">
