@@ -419,6 +419,7 @@ export default function DimensionForm({
           )}
         </div>
       </form>
+      </div>
     </div>
   );
 }
