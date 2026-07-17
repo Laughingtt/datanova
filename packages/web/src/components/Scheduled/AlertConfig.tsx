@@ -68,7 +68,7 @@ export default function AlertConfig({ conditions, onChange }: AlertConfigProps) 
             value={cond.threshold}
             onChange={(e) => updateCondition(index, "threshold", e.target.value)}
             placeholder="阈值"
-            className="w-24 px-3 py-1.5 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
+            className="input-field w-24"
           />
           <button
             type="button"
