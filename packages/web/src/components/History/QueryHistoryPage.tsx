@@ -152,6 +152,7 @@ export default function QueryHistoryPage() {
           <div className="flex-1 min-w-0 overflow-y-auto custom-scrollbar">
             {selectedItem ? (
               <div className="card-base">
+                <div className="card-base-inner">
                 <div className="space-y-5">
                   <div>
                     <h3 className="label-mono">状态</h3>
