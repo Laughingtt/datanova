@@ -46,7 +46,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 key={item.key}
                 onClick={() => setView(item.key)}
                 className={`
-                  w-full text-left px-3 py-2 flex items-center gap-3
+                  w-full text-left px-3 py-2 flex items-center gap-3 relative
                   text-[13px] font-medium rounded-lg
                   transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]
                   ${isActive
