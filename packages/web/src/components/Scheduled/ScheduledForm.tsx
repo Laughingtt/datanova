@@ -287,6 +287,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
           {saving ? "保存中..." : isEdit ? "更新" : "创建"}
         </button>
       </div>
+      </div>
     </div>
   );
 }
