@@ -66,10 +66,12 @@ export default function AIAnnotationReview({
   if (annotations.length === 0) {
     return (
       <div className="card-cream text-center py-12">
-        <p className="text-sm text-[var(--on-cream)]">暂无草稿标注</p>
-        <p className="text-xs text-[var(--slate)] mt-2">
-          使用 AI 自动标注来生成草稿标注
-        </p>
+        <div className="card-cream-inner">
+          <p className="text-sm text-[var(--on-cream)]">暂无草稿标注</p>
+          <p className="text-xs text-[var(--slate)] mt-2">
+            使用 AI 自动标注来生成草稿标注
+          </p>
+        </div>
       </div>
     );
   }
