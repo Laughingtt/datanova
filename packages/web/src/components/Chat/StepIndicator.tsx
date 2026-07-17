@@ -8,14 +8,9 @@ export default function StepIndicator({ step }: StepIndicatorProps) {
   switch (step.type) {
     case "thinking":
       return (
-        <div className="flex items-center gap-2 py-1">
-          <span className="animate-pulse text-[var(--primary)]">●</span>
-          <span className="text-xs text-[var(--steel)]">Thinking…</span>
-          {step.content && (
-            <span className="text-xs text-[var(--stone)] truncate max-w-xs">
-              {step.content}
-            </span>
-          )}
+        <div className="flex items-center gap-2 px-4 py-3">
+          <div className="skeleton-shimmer h-4 w-32 rounded-full" />
+          <div className="skeleton-shimmer h-4 w-20 rounded-full" />
         </div>
       );
 
