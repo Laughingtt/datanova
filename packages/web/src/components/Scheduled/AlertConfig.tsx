@@ -51,7 +51,7 @@ export default function AlertConfig({ conditions, onChange }: AlertConfigProps) 
             value={cond.metric_column}
             onChange={(e) => updateCondition(index, "metric_column", e.target.value)}
             placeholder="列名"
-            className="flex-1 px-3 py-1.5 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
+            className="input-field flex-1"
           />
           <select
             value={cond.condition}
