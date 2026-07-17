@@ -82,10 +82,12 @@ export default function SchemaPage() {
           </div>
         ) : datasourceNotFound ? (
           <div className="card-cream text-center py-16">
-            <p className="text-sm text-[var(--on-surface)]">数据源连接已失效</p>
-            <p className="text-xs text-[var(--steel)] mt-2">
-              之前选择的数据源已被删除，请重新选择数据源
-            </p>
+            <div className="card-cream-inner">
+              <p className="text-sm text-[var(--on-surface)]">数据源连接已失效</p>
+              <p className="text-xs text-[var(--steel)] mt-2">
+                之前选择的数据源已被删除，请重新选择数据源
+              </p>
+            </div>
           </div>
         ) : (
           <>
