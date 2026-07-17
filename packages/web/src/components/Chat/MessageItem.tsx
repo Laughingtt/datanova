@@ -61,7 +61,7 @@ function DataViewToggle({ tableData, isMarkdownTable }: { tableData: TableData; 
       <div className="flex items-center gap-1 mb-2">
         <button
           onClick={() => setTab("table")}
-          className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+          className="px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 active:scale-95"
           style={{
             backgroundColor: tab === "table" ? "var(--primary-soft)" : "transparent",
             color: tab === "table" ? "var(--primary)" : "var(--steel)",
@@ -72,7 +72,7 @@ function DataViewToggle({ tableData, isMarkdownTable }: { tableData: TableData; 
         </button>
         <button
           onClick={() => setTab("chart")}
-          className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+          className="px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 active:scale-95"
           style={{
             backgroundColor: tab === "chart" ? "var(--primary-soft)" : "transparent",
             color: tab === "chart" ? "var(--primary)" : "var(--steel)",
