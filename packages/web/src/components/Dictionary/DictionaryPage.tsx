@@ -260,8 +260,10 @@ export default function DictionaryPage() {
                             <div className="space-y-1.5">
                               {recentChanges.metrics.map((m: any, idx: number) => (
                                 <div key={m.id ?? idx} className="card-base px-4 py-2.5">
-                                  <p className="text-sm font-medium text-[var(--ink)]">{m.display_name || m.name}</p>
-                                  {m.description && <p className="text-xs text-[var(--steel)] mt-0.5">{m.description}</p>}
+                                  <div className="card-base-inner">
+                                    <p className="text-sm font-medium text-[var(--ink)]">{m.display_name || m.name}</p>
+                                    {m.description && <p className="text-xs text-[var(--steel)] mt-0.5">{m.description}</p>}
+                                  </div>
                                 </div>
                               ))}
                             </div>
