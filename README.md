@@ -1406,6 +1406,221 @@ Agent Loop (LLM 逐步调用工具):
 
 ## 后端 Agent 处理流
 
+### 完整请求生命周期
+
+从用户输入到结果展示的完整数据流，标注每一步涉及的文件和关键函数。
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 阶段 1: 用户输入 (前端)                                                     │
+│                                                                             │
+│ ChatInput.handleSubmit() → onSend(text) → ChatWindow.handleSend(text)       │
+│   ├─ 创建 userMsg: { role:"user", content:text }                            │
+│   ├─ setMessages(prev => [...prev, userMsg])  ← 乐观更新                    │
+│   ├─ 设置 15s 响应超时                                                       │
+│   └─ 判断 selectedConversationId:                                           │
+│       ├─ 无 → conversationsApi.create() → initSession() → 500ms → send     │
+│       └─ 有 → sendMessage(text, conversationId)                             │
+│                                                                             │
+│ 📁 ChatInput.tsx · ChatWindow.tsx:handleSend()                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 阶段 2: WebSocket 传输 (前端 → 后端)                                        │
+│                                                                             │
+│ initSession: send({ type:"init", payload:{                                  │
+│   conversationId, datasourceId, datasourceName,                             │
+│   modelProvider, modelId, agentType ← "query" 或 "metric_dev"              │
+│ }})                                                                         │
+│                                                                             │
+│ sendMessage: send({ type:"message", text, payload:{ conversationId } })     │
+│                                                                             │
+│ → useWebSocket.send() → Vite Proxy /ws → ws://localhost:3000/ws/chat        │
+│                                                                             │
+│ 📁 useAgentStream.ts:initSession/sendMessage · useWebSocket.ts:send()       │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 阶段 3: WebSocket 接收与路由 (后端)                                         │
+│                                                                             │
+│ chat-handler.ts:onMessage(data)                                             │
+│   ├─ "init"         → handleInit()                                         │
+│   ├─ "message"      → handleMessage()                                      │
+│   └─ "reset_context"→ handleResetContext()                                 │
+│                                                                             │
+│ 📁 chat-handler.ts:onMessage()                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 阶段 4: Agent 路由与 Harness 创建 (后端)                                    │
+│                                                                             │
+│ handleInit() 读取 agentType (默认 "query")                                  │
+│                                                                             │
+│ ┌─────────────────────────────────────────────────────────────────────────┐ │
+│ │ 路径 A: agentType === "query"                                          │ │
+│ │   createHarness(options)  ← harness-factory.ts                         │ │
+│ │     ├─ 创建 7 个工具 (含 ai_suggest_semantic, 不在 registry 中)        │ │
+│ │     ├─ loadAllSkills() → 加载 qs-* SKILL.md                            │ │
+│ │     ├─ buildDataNovaSystemPrompt() → 组装系统提示                       │ │
+│ │     ├─ InMemorySessionRepo.create() → session                          │ │
+│ │     ├─ new AgentHarness({ session, tools, resources:{skills},           │ │
+│ │     │    systemPrompt, model, getApiKeyAndHeaders })                    │ │
+│ │     └─ harnessMap.set(conversationId, harness)                          │ │
+│ │                                                                         │ │
+│ │ 📁 harness-factory.ts:createHarness()                                   │ │
+│ └─────────────────────────────────────────────────────────────────────────┘ │
+│                                                                             │
+│ ┌─────────────────────────────────────────────────────────────────────────┐ │
+│ │ 路径 B: agentType !== "query" (如 "metric_dev")                        │ │
+│ │   agentRegistry.createHarness(agentType, options)                       │ │
+│ │     ├─ getAgent(agentType) → AgentDefinition                           │ │
+│ │     ├─ getAgentTools(agentType) → 从 toolPool 解析 toolSet → AgentTool[]│ │
+│ │     └─ AgentDefinition.harnessFactory(options, tools)                   │ │
+│ │         → createMetricDevHarness(options, tools)                        │ │
+│ │           ├─ buildMetricDevSystemPrompt(context) → 系统提示             │ │
+│ │           ├─ metricDevSessionRepo.create() → session                    │ │
+│ │           ├─ new AgentHarness({ session, tools, resources:{},           │ │
+│ │           │    systemPrompt, model, getApiKeyAndHeaders })              │ │
+│ │           └─ harnessMap.set(convId, harness)  ← 在 handleInit 中存储   │ │
+│ │                                                                         │ │
+│ │ 📁 agent-registry.ts:createHarness() · metric-dev-harness.ts            │ │
+│ └─────────────────────────────────────────────────────────────────────────┘ │
+│                                                                             │
+│ 两条路径汇合后:                                                             │
+│   1. discoverSchema(datasourceId) → setSchemaCache()  ← 预填充 Schema     │
+│   2. harness.subscribe(event => {                                           │
+│        accumulateStreamingState(state, event)                               │
+│        forwardEvent(ws, event)                                              │
+│      })                                                                     │
+│   3. listMessages(conversationId) → send({ type:"message_history" })        │
+│   4. send({ type:"init_success" })                                          │
+│                                                                             │
+│ 📁 chat-handler.ts:handleInit()                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 阶段 5: 消息处理与 Agent Loop (后端)                                        │
+│                                                                             │
+│ handleMessage():                                                            │
+│   1. getHarness(conversationId) → 从 harnessMap 获取                        │
+│   2. saveMessage({ conversationId, role:"user", content:text })             │
+│   3. 构建上下文前缀:                                                        │
+│      a. getRecentSqlContext(dsId, 3) → 最近 3 条查询                        │
+│      b. [Current conversation_id: xxx]                                      │
+│   4. 重置 streamingState (content="", steps=[])                             │
+│   5. harness.prompt(contextPrefix + text)  ← 触发 Agent Loop               │
+│                                                                             │
+│ 📁 chat-handler.ts:handleMessage()                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 阶段 6: Agent Loop (pi-agent-core 内部)                                     │
+│                                                                             │
+│ ┌─────────────────────────────────────────────────────────────────────────┐ │
+│ │ prompt(text)                                                            │ │
+│ │   ├─ Phase 检查 (必须 idle) → setPhase("turn")                         │ │
+│ │   ├─ createTurnState() — 重建 session 上下文 + 解析 systemPrompt        │ │
+│ │   ├─ runAgentLoop():                                                    │ │
+│ │   │   ┌───────────────────────────────────────────────────────────────┐ │ │
+│ │   │   │ while (LLM 未自然停止):                                       │ │ │
+│ │   │   │   emit turn_start                                             │ │ │
+│ │   │   │   LLM API 调用 (streamSimple) → emit message_start/update/end │ │ │
+│ │   │   │                                                                │ │ │
+│ │   │   │   if tool_calls:                                              │ │ │
+│ │   │   │     for each tool_call:                                       │ │ │
+│ │   │   │       emit tool_execution_start                               │ │ │
+│ │   │   │       validate args against TypeBox schema                    │ │ │
+│ │   │   │       tool.execute(toolCallId, params, signal)                │ │ │
+│ │   │   │       emit tool_execution_end                                 │ │ │
+│ │   │   │     → 创建 ToolResultMessage → emit turn_end                  │ │ │
+│ │   │   │     → 检查 steering/followUp 队列 → prepareNextTurn → 继续    │ │ │
+│ │   │   │                                                                │ │ │
+│ │   │   │   else (无 tool_calls):                                       │ │ │
+│ │   │   │     → emit turn_end → 检查队列 → 无消息则退出循环             │ │ │
+│ │   │   └───────────────────────────────────────────────────────────────┘ │ │
+│ │   ├─ 提取最终 assistant message                                         │ │
+│ │   ├─ flush pendingSessionWrites                                        │ │
+│ │   └─ setPhase("idle"), emit "settled"                                  │ │
+│ └─────────────────────────────────────────────────────────────────────────┘ │
+│                                                                             │
+│ 📁 node_modules/@earendil-works/pi-agent-core/dist/harness/agent-harness.js│
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 阶段 7: 事件转发 (后端 → 前端)                                              │
+│                                                                             │
+│ harness.subscribe() 回调:                                                   │
+│   ├─ accumulateStreamingState(state, event) → 累积 content + steps          │
+│   └─ forwardEvent(ws, event) → 翻译为客户端事件                             │
+│                                                                             │
+│ ┌──────────────────────────┬──────────────────────────────────────────────┐ │
+│ │ Harness 内部事件          │ WebSocket 客户端事件                         │ │
+│ ├──────────────────────────┼──────────────────────────────────────────────┤ │
+│ │ agent_start              │ { type:"agent_start" }                       │ │
+│ │ turn_start               │ { type:"thinking" }                          │ │
+│ │ message_start (assistant)│ { type:"message_start" }                     │ │
+│ │ message_update text_delta│ { type:"text_delta", delta }                 │ │
+│ │ message_update think_δ   │ { type:"thinking", content }                 │ │
+│ │ tool_execution_start     │ { type:"tool_execution_start", ... }         │ │
+│ │ tool_execution_end       │ { type:"tool_execution_end", ... }           │ │
+│ │  + details.confirmAction │ { type:"confirm_action", confirmAction }     │ │
+│ │ tool_result              │ { type:"tool_result", ... }                  │ │
+│ │  + details.confirmAction │ { type:"confirm_action", confirmAction }     │ │
+│ │ message_end (error)      │ { type:"error", error }                      │ │
+│ │ agent_end                │ { type:"agent_end" }                         │ │
+│ │ settled                  │ { type:"settled" }                           │ │
+│ │ save_point/queue_update  │ (静默丢弃)                                   │ │
+│ └──────────────────────────┴──────────────────────────────────────────────┘ │
+│                                                                             │
+│ prompt() 完成后:                                                            │
+│   saveMessage({ role:"assistant", content, steps })                         │
+│   send({ type:"response_complete", content })                               │
+│                                                                             │
+│ 📁 chat-handler.ts:forwardEvent()                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 阶段 8: 前端事件处理与渲染                                                  │
+│                                                                             │
+│ useWebSocket.onMessage → ChatWindow.handleWsEvent                           │
+│   ├─ connected / init_success / message_history → 特殊处理                  │
+│   └─ 其他 → processWsEvent(event, currentAssistantRef)                      │
+│                                                                             │
+│ processWsEvent() → 更新 ChatMessage → setMessages() → React 重渲染         │
+│                                                                             │
+│ MessageItem 条件渲染 (数据驱动，不依赖 activeChannel):                      │
+│   StepIndicator → ResultSummaryCard → ReportView → ValidationBanner        │
+│   → SqlBlock → DataViewToggle(TableResult/ChartView) → ConfirmActionCard   │
+│   → MarkdownContent → FeedbackButtons                                      │
+│                                                                             │
+│ 📁 useAgentStream.ts:processWsEvent() · MessageItem.tsx                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 两个 Agent 的调用差异对比
+
+| 维度 | 智能问数 (`query`) | 指标开发 (`metric_dev`) |
+|---|---|---|
+| **创建路径** | `createHarness()` 直接调用 | `agentRegistry.createHarness()` 间接调用 |
+| **工具来源** | 内联创建 7 个工具 (含 `ai_suggest_semantic`) | 从 registry toolPool 获取 10 个工具 |
+| **registry 工具参数** | `_tools` 被忽略 ❌ | `tools` 被使用 ✅ |
+| **harnessMap 存储** | `createHarness()` 内部 | `handleInit()` 内部 |
+| **Session Repo** | `sessionRepo` (共享实例) | `metricDevSessionRepo` (独立实例) |
+| **Resources** | `{ skills }` — 加载 qs-* SKILL.md | `{}` — 空，无技能 |
+| **Skill 刷新** | 有 `refreshHarnessSkills()` | 无刷新机制 |
+| **模型环境变量** | 硬编码默认值 | 回退 `DATANOVA_PROVIDER`/`DATANOVA_MODEL` |
+| **reset_context** | ✅ 正常工作 | ❌ 始终创建 query harness (Bug) |
+| **ai_suggest_semantic** | ✅ 可用 (内联创建) | ❌ 不可用 (未注册到 toolPool) |
+
+> 📋 完整调研文档与改进建议见 [`docs/analysis/agent-processing-flow-research.md`](docs/analysis/agent-processing-flow-research.md)
+
 ### System Prompt 构建
 
 `buildDataNovaSystemPrompt()` 组装多段系统提示（智能问数 Agent）：
