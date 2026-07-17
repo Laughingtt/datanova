@@ -202,6 +202,7 @@ export default function AIAnnotationReview({
                 </button>
               </div>
             )}
+            </div>
           </div>
         );
       })}
