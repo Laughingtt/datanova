@@ -66,11 +66,13 @@ export default function DatasourcePage() {
 
         {showForm && (
           <div className="card-base mb-8 border-[var(--accent-100)] bg-[var(--primary-soft)]">
-            <DatasourceForm
-              datasource={editingDs}
-              onSave={handleSave}
-              onCancel={() => { setShowForm(false); setEditingDs(null); }}
-            />
+            <div className="card-base-inner">
+              <DatasourceForm
+                datasource={editingDs}
+                onSave={handleSave}
+                onCancel={() => { setShowForm(false); setEditingDs(null); }}
+              />
+            </div>
           </div>
         )}
 
