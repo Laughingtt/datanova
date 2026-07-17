@@ -56,7 +56,7 @@ export default function AlertConfig({ conditions, onChange }: AlertConfigProps) 
           <select
             value={cond.condition}
             onChange={(e) => updateCondition(index, "condition", e.target.value)}
-            className="px-3 py-1.5 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] focus:outline-none focus:border-[var(--primary)]"
+            className="input-field"
           >
             <option value="above">Above</option>
             <option value="below">Below</option>
