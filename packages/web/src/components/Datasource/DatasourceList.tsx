@@ -59,7 +59,8 @@ export default function DatasourceList({ datasources, onEdit, onDelete, onTest }
         const result = testResult[ds.id];
         return (
           <div key={ds.id} className="card-base flex items-center justify-between group hover:shadow-md transition-all duration-200">
-            <div className="flex-1 min-w-0">
+            <div className="card-base-inner flex items-center justify-between w-full">
+              <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3">
                 <div className={`w-2.5 h-2.5 rounded-full ${ds.enabled ? "bg-[var(--success)]" : "bg-[var(--stone)]"}`} />
                 <h3 className="text-sm font-medium text-[var(--ink)] truncate">{ds.name}</h3>
