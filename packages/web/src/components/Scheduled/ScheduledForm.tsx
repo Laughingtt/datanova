@@ -160,7 +160,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="例如：每日营收检查"
-          className="w-full px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
+          className="input-field"
         />
       </div>
 
@@ -172,7 +172,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="可选描述"
-          className="w-full px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
+          className="input-field"
         />
       </div>
 
