@@ -490,6 +490,7 @@ export default function MetricForm({
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }
