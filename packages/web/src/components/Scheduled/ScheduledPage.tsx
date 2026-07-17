@@ -273,6 +273,7 @@ export default function ScheduledPage() {
                     )}
                   </div>
                 )}
+                </div>
               </div>
             ))}
           </div>
