@@ -18,7 +18,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen bg-[var(--canvas)]">
-      <aside className="w-[240px] flex flex-col bg-[var(--sidebar-bg)] text-[var(--on-dark)] border-r border-white/5">
+      <aside className="w-[240px] flex flex-col bg-[var(--sidebar-bg)] text-[var(--on-dark)] shadow-[4px_0_24px_-4px_rgba(15,23,42,0.08)]">
         <div className="px-5 pt-6 pb-5">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-[var(--primary)] flex items-center justify-center">
