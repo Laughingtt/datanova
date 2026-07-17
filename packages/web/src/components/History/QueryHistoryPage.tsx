@@ -90,11 +90,13 @@ export default function QueryHistoryPage() {
               </div>
             ) : history.length === 0 ? (
               <div className="card-base text-center py-16">
-                <svg className="w-10 h-10 mx-auto text-[var(--stone)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                </svg>
-                <p className="text-sm text-[var(--steel)]">暂无查询历史</p>
-                <p className="text-xs text-[var(--stone)] mt-1">在对话中执行 SQL 查询后，记录将显示在这里</p>
+                <div className="card-base-inner">
+                  <svg className="w-10 h-10 mx-auto text-[var(--stone)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                  </svg>
+                  <p className="text-sm text-[var(--steel)]">暂无查询历史</p>
+                  <p className="text-xs text-[var(--stone)] mt-1">在对话中执行 SQL 查询后，记录将显示在这里</p>
+                </div>
               </div>
             ) : (
               <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1.5">
