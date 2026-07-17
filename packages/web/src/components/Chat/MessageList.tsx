@@ -38,7 +38,9 @@ export default function MessageList({ messages, conversationId, onConfirmAction,
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar bg-[var(--surface)]">
       {messages.map((message) => (
-        <MessageItem key={message.id} message={message} conversationId={conversationId} onConfirmAction={onConfirmAction} onCancelAction={onCancelAction} />
+        <div key={message.id} className="animate-slide-up">
+          <MessageItem message={message} conversationId={conversationId} onConfirmAction={onConfirmAction} onCancelAction={onCancelAction} />
+        </div>
       ))}
       <div ref={bottomRef} />
     </div>
