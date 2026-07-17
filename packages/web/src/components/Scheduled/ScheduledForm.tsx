@@ -141,6 +141,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
 
   return (
     <div className="card-cream space-y-5">
+      <div className="card-cream-inner space-y-5">
       <h3 className="font-display text-heading-4 text-[var(--ink)]">
         {isEdit ? "编辑定时查询" : "新建定时查询"}
       </h3>
