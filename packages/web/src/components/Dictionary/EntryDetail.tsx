@@ -221,6 +221,7 @@ export default function EntryDetail({ entry, entryType, onNavigate }: EntryDetai
       {entryType === "dimension" && renderDimension()}
       {entryType === "table" && renderTable()}
       {entryType === "column" && renderColumn()}
+      </div>
     </div>
   );
 }
