@@ -122,7 +122,7 @@ export default function SchemaEnhancement({ datasourceId, tables }: SchemaEnhanc
           value={tableSearch}
           onChange={(e) => setTableSearch(e.target.value)}
           placeholder="搜索表名..."
-          className="w-full px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)] mb-3"
+          className="input-field mb-3"
         />
         <div className="flex flex-wrap gap-2">
           {tables
