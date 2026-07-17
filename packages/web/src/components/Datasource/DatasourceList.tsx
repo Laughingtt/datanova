@@ -109,6 +109,7 @@ export default function DatasourceList({ datasources, onEdit, onDelete, onTest }
                   删除
                 </button>
               )}
+              </div>
             </div>
           </div>
         );
