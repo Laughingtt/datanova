@@ -88,6 +88,7 @@ export default function AIAnnotationReview({
             key={ann.id}
             className="card-base border-l-2 border-l-[var(--sunshine-500)]"
           >
+            <div className="card-base-inner">
             {/* Header */}
             <div className="flex items-center gap-2 mb-2">
               <span className="label-mono inline">
