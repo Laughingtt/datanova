@@ -211,6 +211,7 @@ export default function EntryDetail({ entry, entryType, onNavigate }: EntryDetai
 
   return (
     <div className="card-cream">
+      <div className="card-cream-inner">
       <div className="flex items-center gap-2 mb-4">
         <span className="text-xs font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-[var(--surface)] text-[var(--steel)]">
           {entryType}
