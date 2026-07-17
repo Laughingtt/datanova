@@ -160,6 +160,7 @@ export default function MetricForm({
 
   return (
     <div className="card-base">
+      <div className="card-base-inner">
       <h3 className="font-display text-heading-4 text-[var(--ink)] mb-5">
         {isEdit ? "编辑指标" : "新增指标"}
       </h3>
