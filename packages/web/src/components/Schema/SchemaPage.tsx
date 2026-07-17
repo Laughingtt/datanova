@@ -73,10 +73,12 @@ export default function SchemaPage() {
 
         {!selectedDatasourceId ? (
           <div className="card-cream text-center py-16">
-            <p className="text-sm text-[var(--on-surface)]">请先选择数据源</p>
-            <p className="text-xs text-[var(--steel)] mt-2">
-              前往数据源页面选择一个数据源来标注其 Schema
-            </p>
+            <div className="card-cream-inner">
+              <p className="text-sm text-[var(--on-surface)]">请先选择数据源</p>
+              <p className="text-xs text-[var(--steel)] mt-2">
+                前往数据源页面选择一个数据源来标注其 Schema
+              </p>
+            </div>
           </div>
         ) : datasourceNotFound ? (
           <div className="card-cream text-center py-16">
