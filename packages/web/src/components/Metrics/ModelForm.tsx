@@ -181,6 +181,7 @@ export default function ModelForm({
 
   return (
     <div className="card-base">
+      <div className="card-base-inner">
       <h3 className="font-display text-heading-4 text-[var(--ink)] mb-5">
         {isEdit ? "编辑模型" : "新增模型"}
       </h3>
