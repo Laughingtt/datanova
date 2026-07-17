@@ -42,11 +42,13 @@ export default function DatasourceList({ datasources, onEdit, onDelete, onTest }
   if (datasources.length === 0) {
     return (
       <div className="card-base text-center py-16">
-        <svg className="w-12 h-12 mx-auto text-[var(--stone)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-        </svg>
-        <p className="text-[var(--steel)] text-sm">暂无数据源配置</p>
-        <p className="text-[var(--stone)] text-xs mt-1">点击"添加数据源"开始配置</p>
+        <div className="card-base-inner">
+          <svg className="w-12 h-12 mx-auto text-[var(--stone)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+          </svg>
+          <p className="text-[var(--steel)] text-sm">暂无数据源配置</p>
+          <p className="text-[var(--stone)] text-xs mt-1">点击"添加数据源"开始配置</p>
+        </div>
       </div>
     );
   }
