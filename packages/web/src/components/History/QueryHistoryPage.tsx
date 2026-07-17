@@ -238,6 +238,7 @@ export default function QueryHistoryPage() {
                     </div>
                   )}
                 </div>
+                </div>
               </div>
             ) : (
               <div className="card-base text-center py-16">
