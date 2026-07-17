@@ -10,7 +10,9 @@ export default function EntryDetail({ entry, entryType, onNavigate }: EntryDetai
   if (!entry) {
     return (
       <div className="card-base text-center py-16">
-        <p className="text-sm text-[var(--steel)]">选择条目查看详情</p>
+        <div className="card-base-inner">
+          <p className="text-sm text-[var(--steel)]">选择条目查看详情</p>
+        </div>
       </div>
     );
   }
