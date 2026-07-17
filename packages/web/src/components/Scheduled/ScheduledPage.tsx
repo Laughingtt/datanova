@@ -188,6 +188,7 @@ export default function ScheduledPage() {
           <div className="space-y-4">
             {queries.map((q) => (
               <div key={q.id} className="card-base group hover:shadow-md transition-all duration-200">
+                <div className="card-base-inner">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3">
