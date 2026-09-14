@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: [main, release/**]
+  pull_request:
+    branches: [main, release/**]
+  workflow_dispatch:
+
+# Cancel in-progress runs for the same branch on new pushes
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  # ──────────────────────────────────────────────────────────────────────
+  # Job 1: lint + typecheck
+  # ──────────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck (server)
+        run: npm run build --workspace=packages/server -- --noEmit
+        continue-on-error: false
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Job 2: unit tests (Vitest)
+  # ──────────────────────────────────────────────────────────────────────
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Vitest
+        run: npm run --workspace=packages/server test
+
+      - name: Upload coverage (if available)
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: packages/server/coverage
+          retention-days: 7
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Job 3: dependency audit (informational)
+  # ──────────────────────────────────────────────────────────────────────
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Audit high-severity issues
+        run: |
+          if ! npm audit --audit-level=high; then
+            echo "::warning::npm audit found high-severity issues (informational)"
+          fi
+
+  # ──────────────────────────────────────────────────────────────────────
+  # All required checks must pass
+  # ──────────────────────────────────────────────────────────────────────
+  all-green:
+    name: All checks passed
+    runs-on: ubuntu-latest
+    needs: [lint, unit]
+    if: ${{ always() }}
+    steps:
+      - name: Verify required jobs
+        run: |
+          if [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.unit.result }}" != "success" ]; then
+            echo "One or more required checks failed:"
+            echo "  lint:   ${{ needs.lint.result }}"
+            echo "  unit:   ${{ needs.unit.result }}"
+            exit 1
+          fi
+          echo "All required checks passed ✅"

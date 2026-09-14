@@ -1,0 +1,35 @@
+name: ❓ Question
+description: Ask a question about how to use DataNova
+labels: ["question"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, please check:
+        - [README](https://github.com/your-org/datanova#readme)
+        - [docs/](https://github.com/your-org/datanova/tree/master/docs)
+        - [Existing issues](https://github.com/your-org/datanova/issues?q=is%3Aissue)
+        - [Discussions](https://github.com/your-org/datanova/discussions) (when available)
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What are you trying to accomplish? What's your role (admin, analyst, dev)?
+      validations:
+        required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you tried?
+      description: Steps you've already taken, docs you've read, settings you've adjusted.
+      validations:
+        required: true
+
+  - type: textarea
+    id: links
+    attributes:
+      label: Related issues / docs / screenshots

@@ -15,7 +15,6 @@ DataNova is an AI-powered SQL data query assistant. Users interact via natural l
 - **Chinese NLP**: nodejieba (中文分词, used in tokenizer for semantic layer & example lookup)
 - **Schema validation**: @sinclair/typebox
 - **Encryption**: AES-256-GCM (datasource passwords)
-- **E2E**: Playwright (`@playwright/test`)
 - **Unit tests**: Vitest (server only, no config file — uses defaults)
 
 ## Development Commands
@@ -38,14 +37,9 @@ npm run --workspace=packages/server start   # node dist/index.js
 npm run --workspace=packages/server test          # Run all vitest tests
 npm run --workspace=packages/server test:watch    # Watch mode
 npx vitest run packages/server/src/routes/__tests__/semantic.test.ts  # Single test file
-
-# E2E tests (auto-starts both server and web dev server)
-npx playwright test
 ```
 
-Note: E2E tests use Playwright's `webServer` config to auto-start the backend (`:3000`) and frontend (`:5173`). Set `reuseExistingServer: true` so already-running servers are reused.
-
-> **测试约定（前端端到端）**：前端端到端测试统一使用 `agent-browser` skill（基于 CDP 的无头浏览器自动化，命令链 `open <url>` → `snapshot -i` → `click/fill @eN` → `wait --text/--load` → `screenshot`），**不使用 Playwright/Puppeteer**。新测试一律走 agent-browser；Playwright 仅作为遗留 E2E（`e2e/*.spec.ts`）保留，不再新增。后续所有前端测试均遵循此约定。
+> **测试约定（前端端到端）**：前端端到端测试统一使用 `agent-browser` skill（基于 CDP 的无头浏览器自动化，命令链 `open <url>` → `snapshot -i` → `click/fill @eN` → `wait --text/--load` → `screenshot`），**不使用 Playwright/Puppeteer**。所有前端测试均遵循此约定。
 
 ## Architecture
 

@@ -1,77 +1,52 @@
-# DataNova ÏîÄ¿ÎÄµµ
+# DataNova é¡¹ç›®æ–‡æ¡£
 
-±¾Ä¿Â¼°üº¬ DataNova ÏîÄ¿µÄÍêÕû¼¼ÊõÎÄµµ£¬º­¸Ç¼Ü¹¹¡¢PiAgent ¿ò¼Ü¡¢Êı¾İÁ÷¡¢¹¤¾ß¡¢API¡¢Ç°¶Ë×é¼şºÍ¼¯³ÉÖ¸ÄÏ¡£
+æœ¬ç›®å½•æ”¶å½• DataNova é¡¹ç›®çš„æ ¸å¿ƒæŠ€æœ¯æ–‡æ¡£ï¼šæ¶æ„ã€PiAgent æ¡†æ¶ã€æ•°æ®å·¥å…·ã€APIã€å‰ç«¯ä¸è®¾è®¡è§„èŒƒã€‚
 
 ---
 
-## ÎÄµµÄ¿Â¼
+## æ–‡æ¡£ç›®å½•
 
-| # | ÎÄ¼ş | ÄÚÈİ | ÊÊºÏÈËÈº |
+| # | æ–‡ä»¶ | ç®€ä»‹ | é€‚åˆäººç¾¤ |
 |---|---|---|---|
-| 1 | [01-architecture-overview.md](./01-architecture-overview.md) | ÏîÄ¿¼Ü¹¹×ÜÀÀ£º¼¼ÊõÕ»¡¢Ä¿Â¼½á¹¹¡¢¶Ëµ½¶ËÊı¾İÁ÷¡¢×é¼ş¹ØÏµ | ĞÂ¼ÓÈëµÄ¿ª·¢Õß |
-| 2 | [02-pi-agent-internals.md](./02-pi-agent-internals.md) | PiAgent ¿ò¼ÜÄÚ²¿»úÖÆ£ºAgent Loop¡¢ÊÂ¼şÏµÍ³¡¢Hook¡¢ÏûÏ¢¶ÓÁĞ¡¢LLM µ÷ÓÃÁ÷³Ì | ÏëÉîÈëÀí½â Agent µÄ¿ª·¢Õß |
-| 3 | [03-tools-and-data.md](./03-tools-and-data.md) | Áù´ó¹¤¾ßÏê½â¡¢Êı¾İÀ´Ô´¡¢SQL ²éÑ¯²ßÂÔ¡¢ÀúÊ·¡úÊ¾ÀıÍ¬²½¡¢ÓïÒå²ã¹¹½¨¡¢ÅäÖÃÏî´æ´¢Î»ÖÃ | ĞèÒªĞŞ¸Ä»òĞÂÔö¹¤¾ßµÄ¿ª·¢Õß |
-| 4 | [04-agent-integration.md](./04-agent-integration.md) | Agent ¼¯³ÉÊµÕ½£ºWebSocket Ğ­Òé¡¢¹¤¾ß¶¨ÒåÄ£°å¡¢Skills »úÖÆ¡¢¶àÂÖ SQL ÉÏÏÂÎÄ×¢Èë¡¢ÔËĞĞÃüÁî | ĞèÒª¼¯³É PiAgent µ½ĞÂÏîÄ¿µÄ¿ª·¢Õß |
-| 5 | [05-types-and-data-model.md](./05-types-and-data-model.md) | ÍêÕûÀàĞÍ¶¨Òå + SQLite ±í½á¹¹ + ¼ÓÃÜÄ£¿é + Á¬½Ó³Ø + Á÷Ë®ÏßÓÅ»¯º¯Êı | ĞèÒªÀí½âÊı¾İÄ£ĞÍµÄ¿ª·¢Õß |
-| 6 | [06-route-registration.md](./06-route-registration.md) | Â·ÓÉ×¢²á·½Ê½¡¢ÍêÕû API Â·ÓÉ±í£¨º¬²âÊÔ¸¨ÖúÂ·ÓÉ£©¡¢API Éè¼ÆÄ£Ê½¡¢Vite ´úÀí | ĞèÒªĞÂÔö API µÄ¿ª·¢Õß |
-| 7 | [07-frontend-components.md](./07-frontend-components.md) | Ç°¶Ë×é¼şÊ÷¡¢Zustand ×´Ì¬¹ÜÀí¡¢CSS ±äÁ¿ÌåÏµ¡¢ÁÄÌìÁ÷³Ì | Ç°¶Ë¿ª·¢Õß |
+| 1 | [01-architecture-overview.md](./01-architecture-overview.md) | é¡¹ç›®æ¶æ„æ€»è§ˆï¼šæŠ€æœ¯æ ˆã€ç›®å½•ç»“æ„ã€æ•°æ®æµã€æ¨¡å—ä¾èµ–å…³ç³» | æ–°åŠ å…¥é¡¹ç›®çš„å¼€å‘è€… |
+| 2 | [02-pi-agent-internals.md](./02-pi-agent-internals.md) | PiAgent æ¡†æ¶å†…éƒ¨æœºåˆ¶ï¼šAgent Loopã€äº‹ä»¶ç³»ç»Ÿã€Hookã€æ¶ˆæ¯é˜Ÿåˆ—ã€LLM è°ƒåº¦ | éœ€è¦æ‰©å±• Agent æ¡†æ¶çš„å¼€å‘è€… |
+| 3 | [03-tools-and-data.md](./03-tools-and-data.md) | å†…ç½®å·¥å…·æ¸…å•ã€æ•°æ®æºã€SQL æŸ¥è¯¢æµç¨‹ã€å†å²ç¤ºä¾‹åŒæ­¥ã€è¯­ä¹‰å±‚æ„å»ºã€æ³¨è§£å­˜å‚¨ | éœ€è¦ä¿®æ”¹æˆ–æ‰©å±•å·¥å…·çš„å¼€å‘è€… |
+| 4 | [04-agent-integration.md](./04-agent-integration.md) | Agent é›†æˆå®æˆ˜ï¼šWebSocket åè®®ã€å·¥å…·å®šä¹‰æ¨¡æ¿ã€Skills æœºåˆ¶ã€æŸ¥è¯¢ SQL ä¸Šä¸‹æ–‡æ³¨å…¥ã€è·¯ç”± | éœ€è¦å¯¹æ¥ PiAgent å­èƒ½åŠ›çš„å¼€å‘è€… |
+| 5 | [05-types-and-data-model.md](./05-types-and-data-model.md) | åç«¯ç±»å‹å®šä¹‰ + SQLite è¡¨ç»“æ„ + é¢†åŸŸæ¨¡å‹ + è¡¨å…³ç³» + æµæ°´ä¼˜åŒ–è¯¦è§£ | éœ€è¦æ‰©å±•æ•°æ®æ¨¡å‹çš„å¼€å‘è€… |
+| 6 | [06-route-registration.md](./06-route-registration.md) | è·¯ç”±æ³¨å†Œæ–¹å¼ï¼šå†…ç½® API è·¯ç”±è¡¨ã€Hono å®ä¾‹åŒ–ã€è‡ªå®šä¹‰è·¯ç”±ã€API æ¨¡å¼ä¸ Vite ä»£ç† | éœ€è¦æ–°å¢ API çš„å¼€å‘è€… |
+| 7 | [07-frontend-components.md](./07-frontend-components.md) | å‰ç«¯ç»„ä»¶ã€Zustand çŠ¶æ€ç®¡ç†ã€CSS å˜é‡ä½“ç³»ã€åŠ¨æ•ˆ | å‰ç«¯å¼€å‘è€… |
 
----
+## è¡¥å……æ–‡æ¡£
 
-## ÔÄ¶ÁË³Ğò½¨Òé
-
-```
-µÚ 1 ²½£º01-architecture-overview.md  ¡û ÏÈ¸ãÇå³şÏîÄ¿³¤Ê²Ã´Ñù
-µÚ 2 ²½£º05-types-and-data-model.md  ¡û Àí½âÊı¾İÄ£ĞÍ
-µÚ 3 ²½£º06-route-registration.md    ¡û Àí½â API Éè¼Æ
-µÚ 4 ²½£º07-frontend-components.md   ¡û Àí½âÇ°¶Ë¼Ü¹¹
-µÚ 5 ²½£º04-agent-integration.md     ¡û ¿´¾ßÌå¼¯³É´úÂë
-µÚ 6 ²½£º03-tools-and-data.md        ¡û Àí½â 6 ¸ö¹¤¾ßÔõÃ´¹¤×÷
-µÚ 7 ²½£º02-pi-agent-internals.md    ¡û ÉîÈë¿ò¼Üµ×²ãÔ­Àí
-```
-
----
-
-## ºËĞÄ¸ÅÄîËÙ²é
-
-| ¸ÅÄî | ¶¨Òå | Ïê¼û |
-|---|---|---|
-| AgentHarness | PiAgent ºËĞÄÀà£¬¹ÜÀí LLM ? ¹¤¾ßµÄ¶àÂÖÑ­»· | [02](./02-pi-agent-internals.md#¶şagentharness-ÊÇÊ²Ã´) |
-| Agent Loop | Ë«²ã while Ñ­»·£¬ÄÚ²ã¹Ü¹¤¾ßµ÷ÓÃ£¬Íâ²ã¹Ü×·ÎÊ | [02](./02-pi-agent-internals.md#Èıagent-loopË«²ãÑ­»·½á¹¹) |
-| AgentEvent | Á÷Ê½ÊÂ¼şÀàĞÍ£¨agent_start/text_delta/tool_execution_*/agent_end£© | [02](./02-pi-agent-internals.md#ÆßÍêÕûÊÂ¼şÊ±Ğò) |
-| Hook | ¿ò¼ÜÔ¤ÁôµÄ²å¿Ú£¬ÈÃÄã½éÈëÁ÷³Ì£¨×èÖ¹/¸²¸Ç/ĞŞ¸Ä£© | [02](./02-pi-agent-internals.md#Áùhook-Ïê½â) |
-| subscribe | ÊÂ¼ş¼àÌı£¨Ö»¶Á£¬ÍÆÇ°¶ËÓÃ£© | [02](./02-pi-agent-internals.md#ÎåÊÂ¼şÏµÍ³subscribe-vs-on) |
-| AgentTool | ¹¤¾ß¶¨Òå£ºname + description + parameters + execute | [03](./03-tools-and-data.md) |
-| Semantic Layer | ÓÃ»§¶¨ÒåµÄÖ¸±ê/Î¬¶È/Ä£ĞÍ£¬ÓÃÓÚÈ·¶¨ĞÔ SQL Éú³É | [03](./03-tools-and-data.md#Ê®ÓïÒå²ã-sql-¹¹½¨Ô­Àí) |
-| Skill | SKILL.md ÎÄ¼ş£¬×¢Èë system prompt µÄÁìÓòÖªÊ¶ | [04](./04-agent-integration.md#Îåskills-»úÖÆ) |
-| Schema Cache | ±íÃû/×Ö¶ÎÃûµÄÄÚ´æ»º´æ£¬¹© SQL Ğ£ÑéÓÃ | [03](./03-tools-and-data.md#°ËËùÓĞ-sql-²éÑ¯»ã×Ü) |
-| History¡úExamples Sync | sql_query_history ×Ô¶¯Í¬²½¸ßÖÊÁ¿²éÑ¯µ½ query_examples | [01](./01-architecture-overview.md#°Ësql-×ª»¯Á÷Ë®ÏßÓÅ»¯) |
-| Execution Stats | ²éÑ¯Ö´ĞĞÍ³¼Æ£¨³É¹¦/Ê§°Ü´ÎÊı£©£¬ÓÃÓÚÊ¾ÀıÆÀ·Ö | [01](./01-architecture-overview.md#°Ësql-×ª»¯Á÷Ë®ÏßÓÅ»¯) |
-| SQL Context Injection | ¶àÂÖ¶Ô»°Ê±×¢Èë×î½ü³É¹¦²éÑ¯µÄ½á¹¹»¯ÉÏÏÂÎÄ | [01](./01-architecture-overview.md#°Ësql-×ª»¯Á÷Ë®ÏßÓÅ»¯) |
-| conversationDatasourceMap | chat-handler Î¬»¤µÄ conversationId¡údatasourceId Ó³Éä | [04](./04-agent-integration.md) |
-| Session | ¶Ô»°Ê÷´æ´¢£¨InMemorySessionRepo£© | [02](./02-pi-agent-internals.md#Ê®Ò»session-Óë¶Ô»°³Ö¾Ã»¯) |
-| steer / followUp | ÔËĞĞÖĞÍ¾µÄÏûÏ¢¶ÓÁĞ | [02](./02-pi-agent-internals.md#°ËÏûÏ¢¶ÓÁĞsteer--followup--nextturn) |
-| systemPrompt | LLM µÄ½ÇÉ«ËµÃ÷Êé | [04](./04-agent-integration.md#¶şagentharness-´´½¨Ê¾Àı) |
-| ExecutionEnv | ÎÄ¼şÏµÍ³³éÏó£¨DataNova ½ûÓÃÁË IO£© | [04](./04-agent-integration.md) |
-| pi-ai | LLM ¶à Provider ³éÏó²ã | [02](./02-pi-agent-internals.md#¾Ållm-µ÷ÓÃÁ÷³Ìpi-ai) |
-| TypeBox | ¹¤¾ß²ÎÊı schema ¶¨Òå + ×Ô¶¯Ğ£Ñé | [04](./04-agent-integration.md#Èıagenttool-Ä£Ê½) |
-
----
-
-## ÒÑÓĞÉè¼ÆÎÄµµ
-
-| ÎÄ¼ş | ÄÚÈİ |
+| æ–‡ä»¶ | ç®€ä»‹ |
 |---|---|
-| `DESIGN.md` | UI ÊÓ¾õÉè¼Æ¹æ·¶£¨Mistral ·ç¸ñ£© |
-| `text2sql-data-agent-features.md` | Text2SQL Agent ¹¦ÄÜ¹æ»®£¨Èı²ã¼Ü¹¹£© |
-| `superpowers/plans/` | ¸÷½×¶ÎÊµÊ©¼Æ»® |
-| `superpowers/specs/` | ¸÷½×¶Î¼Ü¹¹ÆÀÉó |
+| [DESIGN.md](./DESIGN.md) | UI è§†è§‰è®¾è®¡è§„èŒƒ |
+| [skills-guide.md](./skills-guide.md) | Skillsï¼ˆSKILL.mdï¼‰ç¼–å†™ä¸ç»´æŠ¤æŒ‡å— |
+
+## å†å²å½’æ¡£ï¼ˆspec/planï¼‰
+
+| ç›®å½• | ç®€ä»‹ |
+|---|---|
+| [superpowers/specs/](./superpowers/specs/) | å†å²é˜¶æ®µæ¶æ„è®¾è®¡ç¨¿ |
+| [superpowers/plans/](./superpowers/plans/) | å†å²é˜¶æ®µå®æ–½è®¡åˆ’ |
 
 ---
 
-## ¿ìËÙÁ´½Ó
+## é˜…è¯»é¡ºåºå»ºè®®
 
-- [AGENTS.md](../AGENTS.md) ¡ª ÏîÄ¿×ÜÀÀ£¨¸ø AI ¿´µÄÖ¸Áî£©
-- [.env.example](../.env.example) ¡ª »·¾³±äÁ¿Ä£°å
-- [packages/server/src/index.ts](../packages/server/src/index.ts) ¡ª ·şÎñ¶ËÈë¿Ú
-- [packages/web/src/App.tsx](../packages/web/src/App.tsx) ¡ª Ç°¶ËÈë¿Ú
+1. å…ˆçœ‹ [01-architecture-overview.md](./01-architecture-overview.md) â€”â€” äº†è§£é¡¹ç›®åœ¨åšä»€ä¹ˆ
+2. å†çœ‹ [05-types-and-data-model.md](./05-types-and-data-model.md) â€”â€” äº†è§£æ•°æ®æ¨¡å‹
+3. ç„¶åçœ‹ [06-route-registration.md](./06-route-registration.md) â€”â€” äº†è§£ API å±‚
+4. æ¥ç€çœ‹ [07-frontend-components.md](./07-frontend-components.md) â€”â€” äº†è§£å‰ç«¯æ¶æ„
+5. å†çœ‹ [04-agent-integration.md](./04-agent-integration.md) â€”â€” äº†è§£ Agent é›†æˆæ–¹å¼
+6. çœ‹ [03-tools-and-data.md](./03-tools-and-data.md) â€”â€” äº†è§£ 6 ä¸ªå·¥å…·æ€ä¹ˆåš
+7. æœ€åçœ‹ [02-pi-agent-internals.md](./02-pi-agent-internals.md) â€”â€” äº†è§£æœ€åº•å±‚åŸç†
+
+---
+
+## ç›¸å…³èµ„æº
+
+- [CLAUDE.md](../CLAUDE.md) â€”â€” ç»™å¼€å‘è€…çš„ AI åä½œæŒ‡å—
+- [.env.example](../.env.example) â€”â€” ç¯å¢ƒå˜é‡æ¨¡æ¿
+- [packages/server/src/index.ts](../packages/server/src/index.ts) â€”â€” åç«¯å…¥å£
+- [packages/web/src/App.tsx](../packages/web/src/App.tsx) â€”â€” å‰ç«¯å…¥å£

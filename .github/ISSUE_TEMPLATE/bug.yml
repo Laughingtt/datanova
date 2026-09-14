@@ -1,0 +1,91 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior in DataNova
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report!
+        Please fill in the sections below — the more detail, the faster we can reproduce and fix.
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js version
+      placeholder: "node --version"
+      validations:
+        required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      placeholder: "e.g. macOS 14.4, Ubuntu 22.04, Windows 11"
+      validations:
+        required: true
+
+  - type: input
+    id: db
+    attributes:
+      label: Database (type + version)
+      placeholder: "MySQL 8.0.36 / PostgreSQL 16 / ClickHouse 24.x"
+      validations:
+        required: true
+
+  - type: input
+    id: llm
+    attributes:
+      label: LLM provider & model
+      placeholder: "Anthropic claude-sonnet-4-20250514 / OpenAI gpt-4o / DeepSeek / Ollama llama3"
+      validations:
+        required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: DataNova version / commit
+      placeholder: "v1.0.0 / abc1234 / main"
+      validations:
+        required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Add datasource ...
+        2. Navigate to ...
+        3. Type the query ...
+        4. See error
+      validations:
+        required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      validations:
+        required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      validations:
+        required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / stack traces / screenshots
+      description: |
+        For agent issues, paste the relevant `agent_traces` row as JSON.
+        For UI issues, attach a screenshot.
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Anything else we should know — config snippets, related issues, workarounds.

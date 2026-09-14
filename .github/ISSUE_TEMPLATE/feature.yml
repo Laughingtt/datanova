@@ -1,0 +1,56 @@
+name: 💡 Feature Request
+description: Suggest a new feature or improvement
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help us understand the *why* behind this feature.
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: What problem are you trying to solve? Who would benefit?
+      placeholder: |
+        As a [data engineer / analyst / admin], I want to [do X] so that [outcome].
+      validations:
+        required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How do you imagine this working? Sketch the UI / API / agent-tool shape.
+      validations:
+        required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you weigh? Why is this one better?
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: |
+        Which subsystems does this touch?
+        - [ ] Semantic layer (metrics / dimensions / models)
+        - [ ] Agent tools or system prompt
+        - [ ] SQL safety pipeline
+        - [ ] UI / a new view
+        - [ ] Scheduled queries / alerts
+        - [ ] Database drivers
+        - [ ] Observability (agent_traces)
+
+  - type: textarea
+    id: willingness
+    attributes:
+      label: Willingness to contribute
+      description: |
+        Would you be willing to submit a PR for this? If yes, please indicate your timeline
+        and any blockers (e.g. "needs design discussion first").
