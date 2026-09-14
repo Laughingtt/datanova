@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import { datasourcesApi, type Datasource } from "../../api/client";
 import { useAppStore } from "../../stores/app";
+import { useDropdownAnimation } from "../../hooks/useGsapAnimations";
 
 export default function DatasourceSelector() {
   const { selectedDatasourceId, setSelectedDatasource } = useAppStore();
   const [datasources, setDatasources] = useState<Datasource[]>([]);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useDropdownAnimation(menuRef, open);
 
   useEffect(() => {
    datasourcesApi.list().then(setDatasources).catch(() => {});
@@ -36,7 +40,9 @@ export default function DatasourceSelector() {
                    bg-[var(--canvas)] hover:bg-[var(--surface)] transition-colors
                    text-sm text-[var(--ink)]"
       >
-        <span className="text-sm">🔌</span>
+        <svg className="w-4 h-4 text-[var(--steel)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h6m0 0l-3-3m3 3l-3 3M18 12h-6m0 0l3-3m-3 3l3 3M6.75 6.75h10.5v10.5H6.75V6.75z" />
+        </svg>
         <span className={`truncate max-w-[160px] ${currentDs ? "" : "text-[var(--stone)]"}`}>
           {currentDs ? currentDs.name : "选择数据源"}
         </span>
@@ -48,10 +54,11 @@ export default function DatasourceSelector() {
         </svg>
       </button>
 
-      {open && (
-        <div className="absolute top-full right-0 mt-1 w-[320px] max-h-[400px] overflow-y-auto
-                        bg-[var(--canvas)] border border-[var(--hairline)]
-                        rounded-lg shadow-4 z-50 custom-scrollbar">
+      <div ref={menuRef}
+           className="absolute top-full right-0 mt-1 w-[320px] max-h-[400px] overflow-y-auto
+                      bg-[var(--canvas)] border border-[var(--hairline)]
+                      rounded-lg shadow-4 z-50 custom-scrollbar"
+           style={!open ? { visibility: "hidden", opacity: 0, pointerEvents: "none" } : undefined}>
           {datasources.length === 0 ? (
             <div className="p-4 text-center">
               <p className="text-sm text-[var(--steel)]">暂无数据源</p>
@@ -113,7 +120,6 @@ export default function DatasourceSelector() {
             </>
           )}
         </div>
-      )}
     </div>
   );
 }

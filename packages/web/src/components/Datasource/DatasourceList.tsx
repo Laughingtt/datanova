@@ -1,5 +1,6 @@
-﻿import { useState } from "react";
+﻿import { useState, useRef } from "react";
 import type { Datasource } from "../../api/client";
+import { useFlipList, useEmptyStateEntrance } from "../../hooks/useGsapAnimations";
 
 interface DatasourceListProps {
   datasources: Datasource[];
@@ -12,6 +13,10 @@ export default function DatasourceList({ datasources, onEdit, onDelete, onTest }
   const [testingId, setTestingId] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<Record<string, { success: boolean; message?: string }>>({});
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const emptyRef = useRef<HTMLDivElement>(null);
+  useFlipList(listRef, ".ds-item", [datasources]);
+  useEmptyStateEntrance(emptyRef, ".empty-icon", [datasources.length]);
 
   const handleTest = async (id: string) => {
     setTestingId(id);
@@ -41,26 +46,23 @@ export default function DatasourceList({ datasources, onEdit, onDelete, onTest }
 
   if (datasources.length === 0) {
     return (
-      <div className="card-base text-center py-16">
-        <div className="card-base-inner">
-          <svg className="w-12 h-12 mx-auto text-[var(--stone)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-          </svg>
-          <p className="text-[var(--steel)] text-sm">暂无数据源配置</p>
-          <p className="text-[var(--stone)] text-xs mt-1">点击"添加数据源"开始配置</p>
-        </div>
+      <div ref={emptyRef} className="card-base text-center py-16">
+        <svg className="empty-icon w-12 h-12 mx-auto text-[var(--stone)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+        </svg>
+        <p className="text-[var(--steel)] text-sm">暂无数据源配置</p>
+        <p className="text-[var(--stone)] text-xs mt-1">点击"添加数据源"开始配置</p>
       </div>
     );
   }
 
   return (
-    <div className="grid gap-4">
+    <div ref={listRef} className="grid gap-4">
       {datasources.map((ds) => {
         const result = testResult[ds.id];
         return (
-          <div key={ds.id} className="card-base flex items-center justify-between group hover:shadow-md transition-all duration-200">
-            <div className="card-base-inner flex items-center justify-between w-full">
-              <div className="flex-1 min-w-0">
+          <div key={ds.id} className="ds-item card-base flex items-center justify-between group hover:shadow-md transition-all duration-200">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3">
                 <div className={`w-2.5 h-2.5 rounded-full ${ds.enabled ? "bg-[var(--success)]" : "bg-[var(--stone)]"}`} />
                 <h3 className="text-sm font-medium text-[var(--ink)] truncate">{ds.name}</h3>
@@ -109,7 +111,6 @@ export default function DatasourceList({ datasources, onEdit, onDelete, onTest }
                   删除
                 </button>
               )}
-              </div>
             </div>
           </div>
         );

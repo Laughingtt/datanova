@@ -1,4 +1,4 @@
-﻿import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import { useAgentStream, processWsEvent, uniqueId, type ChatMessage, type ConfirmAction } from "../../hooks/useAgentStream";
 import { conversationsApi, type Conversation } from "../../api/client";
@@ -155,7 +155,7 @@ export default function ChatWindow() {
     },
   });
 
-  const { initSession, sendMessage } = useAgentStream({
+  const { initSession, sendMessage, sendConfirmResponse } = useAgentStream({
     send,
     onEvent: handleWsEvent,
   });
@@ -318,17 +318,10 @@ export default function ChatWindow() {
         return msg;
       })
     );
-    // Send confirmation message to agent
-    const confirmText = "确认保存";
-    const userMsg: ChatMessage = {
-      id: uniqueId("user"),
-      role: "user",
-      content: confirmText,
-      timestamp: Date.now(),
-    };
-    setMessages((prev) => [...prev, userMsg]);
-    sendMessage(confirmText, selectedConversationId);
-  }, [sendMessage]);
+    // Send structured confirm_response — the server drives the confirm-state
+    // machine and re-triggers the agent turn so the save tools run automatically.
+    sendConfirmResponse(selectedConversationId, action.id, "confirmed");
+  }, [sendConfirmResponse]);
 
   const handleCancelAction = useCallback((action: ConfirmAction) => {
     const { selectedConversationId } = useAppStore.getState();
@@ -342,17 +335,9 @@ export default function ChatWindow() {
         return msg;
       })
     );
-    // Send cancel message to agent
-    const cancelText = "取消保存";
-    const userMsg: ChatMessage = {
-      id: uniqueId("user"),
-      role: "user",
-      content: cancelText,
-      timestamp: Date.now(),
-    };
-    setMessages((prev) => [...prev, userMsg]);
-    sendMessage(cancelText, selectedConversationId);
-  }, [sendMessage]);
+    // Send structured confirm_response for cancellation.
+    sendConfirmResponse(selectedConversationId, action.id, "cancelled");
+  }, [sendConfirmResponse]);
 
   return (
     <div className="flex h-full">
@@ -377,13 +362,12 @@ export default function ChatWindow() {
             </div>
           ) : (
             conversations.map((conv) => {
-              const { selectedConversationId } = useAppStore.getState();
               const isActive = selectedConversationId === conv.id;
               return (
                 <div
                   key={conv.id}
                   onClick={() => handleSelectConversation(conv.id)}
-                  className={`px-4 py-3 cursor-pointer border-b border-[var(--hairline-soft)] transition-all duration-200 ${
+                  className={`group px-4 py-3 cursor-pointer border-b border-[var(--hairline-soft)] transition-all duration-200 ${
                     isActive
                       ? "bg-[var(--primary-soft)] border-l-2 border-l-[var(--primary)]"
                       : "hover:bg-[var(--canvas)] border-l-2 border-l-transparent"

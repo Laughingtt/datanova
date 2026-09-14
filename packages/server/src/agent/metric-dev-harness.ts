@@ -1,5 +1,6 @@
 import { AgentHarness, InMemorySessionRepo, type AgentTool, type ExecutionEnv } from "@earendil-works/pi-agent-core";
-import { getModel, getEnvApiKey } from "@earendil-works/pi-ai";
+import { getEnvApiKey } from "@earendil-works/pi-ai";
+import { resolveModel } from "./model-provider.js";
 import { buildMetricDevSystemPrompt } from "./prompt-builder-metric-dev.js";
 import type { AgentContext, AgentHarnessOptions } from "./agent-registry.js";
 import { listDatasources } from "../store.js";
@@ -17,8 +18,8 @@ export async function createMetricDevHarness(options: AgentHarnessOptions, tools
 
   // Use frontend-provided model config, same as query agent (harness-factory.ts)
   const provider = options.modelProvider ?? process.env.DATANOVA_PROVIDER ?? "anthropic";
-  const modelId = options.modelId ?? process.env.DATANOVA_MODEL ?? "claude-sonnet-4-20250514";
-  const model = getModel(provider as "anthropic", modelId as any);
+  const modelId = options.modelId ?? process.env.DATANOVA_MODEL ?? "claude-sonnet-5";
+  const model = resolveModel(provider, modelId);
 
   const session = await metricDevSessionRepo.create({ id: `metric-dev:${options.datasourceId}:${Date.now()}` });
 

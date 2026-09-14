@@ -1,4 +1,4 @@
-﻿/** @type {import('tailwindcss').Config} */
+/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
@@ -67,7 +67,7 @@ module.exports = {
         "border-hairline":  "var(--hairline)",
       },
       fontFamily: {
-        display: ['"Playfair Display"', "Georgia", "serif"],
+        display: ['"Geist"', "system-ui", "-apple-system", "sans-serif"],
         body:    ['"Geist"', "-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "sans-serif"],
         mono:    ['"Geist Mono"', "ui-monospace", "monospace"],
       },

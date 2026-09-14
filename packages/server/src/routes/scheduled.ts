@@ -89,7 +89,7 @@ Return ONLY the SQL query, no explanation, no markdown formatting. End with a se
       // Call LLM API using fetch
       const apiKey = process.env.ANTHROPIC_API_KEY;
       const baseUrl = process.env.ANTHROPIC_BASE_URL || "https://api.anthropic.com";
-      const modelId = process.env.DATANOVA_MODEL || "claude-sonnet-4-6";
+      const modelId = process.env.DATANOVA_MODEL || "claude-sonnet-5";
 
       if (!apiKey) {
         return c.json({ error: "ANTHROPIC_API_KEY is not configured" }, 500);

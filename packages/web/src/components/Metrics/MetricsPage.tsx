@@ -12,6 +12,7 @@ import MetricForm from "./MetricForm";
 import DimensionForm from "./DimensionForm";
 import ModelForm from "./ModelForm";
 import EnumDictList from "./EnumDictList";
+import { toast } from "../../stores/toast";
 
 type TabKey = "metrics" | "dimensions" | "models" | "dictionary";
 
@@ -78,7 +79,7 @@ export default function MetricsPage() {
       const list = await semanticApi.listMetrics(dsId);
       setMetrics(list);
     } catch (err) {
-      console.error("Failed to load metrics:", err);
+      toast.error("加载指标失败", err instanceof Error ? err.message : undefined);
       setMetrics([]);
     } finally {
       setMetricsLoading(false);
@@ -93,7 +94,7 @@ export default function MetricsPage() {
       const list = await semanticApi.listDimensions(dsId);
       setDimensions(list);
     } catch (err) {
-      console.error("Failed to load dimensions:", err);
+      toast.error("加载维度失败", err instanceof Error ? err.message : undefined);
       setDimensions([]);
     } finally {
       setDimensionsLoading(false);
@@ -108,7 +109,7 @@ export default function MetricsPage() {
       const list = await semanticApi.listModels(dsId);
       setModels(list);
     } catch (err) {
-      console.error("Failed to load models:", err);
+      toast.error("加载模型失败", err instanceof Error ? err.message : undefined);
       setModels([]);
     } finally {
       setModelsLoading(false);

@@ -3,6 +3,7 @@ import { useAppStore } from "../../stores/app";
 import { querySkillApi, type QuerySkill } from "../../api/client";
 import SkillForm from "./SkillForm";
 import AIGenerateDialog from "./AIGenerateDialog";
+import { toast } from "../../stores/toast";
 
 export default function QuerySkillsPage() {
   const { selectedDatasourceId } = useAppStore();
@@ -59,7 +60,7 @@ export default function QuerySkillsPage() {
     try {
       await querySkillApi.toggle(dsId, id);
       loadSkills();
-    } catch (err) { console.error("Toggle failed:", err); }
+    } catch (err) { toast.error("切换失败", err instanceof Error ? err.message : undefined); }
   };
 
   // Delete skill

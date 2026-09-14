@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from "react";
+import { useConnectionStore, type ConnectionStatus } from "../stores/connection";
 
 interface UseWebSocketOptions {
   url: string;
@@ -40,8 +41,23 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
   onCloseRef.current = onClose;
   onErrorRef.current = onError;
 
+  const setStatus = useConnectionStore((s) => s.setStatus);
+  const setError = useConnectionStore((s) => s.setError);
+  const setAttempts = useConnectionStore((s) => s.setAttempts);
+  const registerReconnect = useConnectionStore((s) => s.registerReconnect);
+
+  const updateStatus = useCallback(
+    (status: ConnectionStatus) => {
+      setStatus(status);
+      if (status === "connected") setError(null);
+    },
+    [setStatus, setError]
+  );
+
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
+
+    updateStatus(reconnectCountRef.current > 0 ? "reconnecting" : "connecting");
 
     try {
       const ws = new WebSocket(url);
@@ -49,6 +65,8 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
       ws.onopen = () => {
         setIsConnected(true);
         reconnectCountRef.current = 0;
+        setAttempts(0);
+        updateStatus("connected");
         onOpenRef.current?.();
       };
 
@@ -68,19 +86,25 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
         // Auto-reconnect
         if (reconnectCountRef.current < maxReconnectAttempts) {
           reconnectCountRef.current++;
+          setAttempts(reconnectCountRef.current);
+          updateStatus("reconnecting");
           setTimeout(connect, reconnectInterval);
+        } else {
+          updateStatus("disconnected");
         }
       };
 
       ws.onerror = (event) => {
         onErrorRef.current?.(event);
+        setError("WebSocket 连接异常");
       };
 
       wsRef.current = ws;
     } catch {
-      // Connection failed
+      updateStatus("disconnected");
+      setError("WebSocket 创建失败");
     }
-  }, [url, reconnectInterval, maxReconnectAttempts]);
+  }, [url, reconnectInterval, maxReconnectAttempts, updateStatus, setError, setAttempts]);
 
   useEffect(() => {
     connect();
@@ -99,8 +123,15 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
   const reconnect = useCallback(() => {
     wsRef.current?.close();
     reconnectCountRef.current = 0;
+    setAttempts(0);
     connect();
-  }, [connect]);
+  }, [connect, setAttempts]);
+
+  // 把 reconnect 注册到全局 store，供 ConnectionBanner 调用
+  useEffect(() => {
+    registerReconnect(reconnect);
+    return () => registerReconnect(null);
+  }, [reconnect, registerReconnect]);
 
   return { isConnected, send, reconnect };
 }

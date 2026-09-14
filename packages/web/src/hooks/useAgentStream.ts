@@ -78,12 +78,47 @@ export interface ChatMessage {
   reportSections?: ReportSection[];
   sqlQueryHistoryId?: string;
   confirmAction?: ConfirmAction;
+  /** metric_dev tool outputs surfaced as rich cards */
+  metricDraft?: MetricDraftInfo;
+  dimensionDraft?: DimensionDraftInfo;
+  validationResult?: ValidationResultInfo;
 }
 
 export interface TableData {
   columns: string[];
   rows: Record<string, unknown>[];
   executionTime?: number;
+}
+
+/** Enriched details emitted by create_metric_draft tool (for MetricCard rendering) */
+export interface MetricDraftInfo {
+  metric_id: string;
+  metric_name: string;
+  display_name: string;
+  sql: string;
+  metric_type: string;
+  status: string;
+  validation_status?: string;
+  business_context?: string;
+  test_row_count?: number;
+}
+
+/** Enriched details emitted by create_dimension_draft tool (for DimensionCard rendering) */
+export interface DimensionDraftInfo {
+  dimension_id: string;
+  dimension_name: string;
+  display_name: string;
+  sql_expression: string;
+  data_type: string;
+  grain?: string | null;
+}
+
+/** Details emitted by validate_and_test_metric tool (for ValidationResult card rendering) */
+export interface ValidationResultInfo {
+  valid: boolean;
+  errors?: Array<{ step: string; message: string; suggestion?: string }>;
+  warnings?: string[];
+  test_row_count?: number;
 }
 
 export interface WsEvent {
@@ -124,7 +159,22 @@ export function useAgentStream({ send, onEvent }: UseAgentStreamOptions) {
     [send]
   );
 
-  return { initSession, sendMessage };
+  /**
+   * Send a structured confirm_response for a ConfirmActionCard (Problem 2).
+   * The server drives the confirm-state machine and re-triggers the agent turn
+   * so the save tools run automatically after confirmation.
+   */
+  const sendConfirmResponse = useCallback(
+    (conversationId: string, confirmId: string, decision: "confirmed" | "cancelled") => {
+      send({
+        type: "confirm_response",
+        payload: { conversationId, confirmId, decision },
+      });
+    },
+    [send]
+  );
+
+  return { initSession, sendMessage, sendConfirmResponse };
 }
 
 // ==================== Event Processing ====================
@@ -250,6 +300,39 @@ export function processWsEvent(
         }
       }
 
+      // Surface metric_dev tool outputs as rich cards
+      const mdDetails = ((event as any).details ?? (event.result as any)?.details) as Record<string, unknown> | undefined;
+      if (mdDetails && (mdDetails.created === true || mdDetails.valid !== undefined)) {
+        if (toolName === "create_metric_draft" && mdDetails.created) {
+          endUpdate.metricDraft = {
+            metric_id: mdDetails.metric_id as string,
+            metric_name: mdDetails.metric_name as string,
+            display_name: mdDetails.display_name as string,
+            sql: mdDetails.sql as string,
+            metric_type: mdDetails.metric_type as string,
+            status: mdDetails.status as string,
+            validation_status: mdDetails.validation_status as string | undefined,
+            business_context: mdDetails.business_context as string | undefined,
+          };
+        } else if (toolName === "create_dimension_draft" && mdDetails.created) {
+          endUpdate.dimensionDraft = {
+            dimension_id: mdDetails.dimension_id as string,
+            dimension_name: mdDetails.dimension_name as string,
+            display_name: mdDetails.display_name as string,
+            sql_expression: mdDetails.sql_expression as string,
+            data_type: mdDetails.data_type as string,
+            grain: (mdDetails.grain as string | null | undefined) ?? null,
+          };
+        } else if (toolName === "validate_and_test_metric") {
+          endUpdate.validationResult = {
+            valid: mdDetails.valid as boolean,
+            errors: mdDetails.errors as ValidationResultInfo["errors"],
+            warnings: (mdDetails.test_result as any)?.warnings as string[] | undefined,
+            test_row_count: (mdDetails.test_result as any)?.row_count as number | undefined,
+          };
+        }
+      }
+
       return { ...currentAssistantMessage, ...endUpdate };
     }
 
@@ -285,6 +368,39 @@ export function processWsEvent(
         }
         if (details.sqlQueryHistoryId) {
           update.sqlQueryHistoryId = details.sqlQueryHistoryId as string;
+        }
+      }
+
+      // Surface metric_dev tool outputs as rich cards (tool_result path)
+      const trDetails = event.details as Record<string, unknown> | undefined;
+      if (trDetails && (trDetails.created === true || trDetails.valid !== undefined)) {
+        if (trToolName === "create_metric_draft" && trDetails.created) {
+          update.metricDraft = {
+            metric_id: trDetails.metric_id as string,
+            metric_name: trDetails.metric_name as string,
+            display_name: trDetails.display_name as string,
+            sql: trDetails.sql as string,
+            metric_type: trDetails.metric_type as string,
+            status: trDetails.status as string,
+            validation_status: trDetails.validation_status as string | undefined,
+            business_context: trDetails.business_context as string | undefined,
+          };
+        } else if (trToolName === "create_dimension_draft" && trDetails.created) {
+          update.dimensionDraft = {
+            dimension_id: trDetails.dimension_id as string,
+            dimension_name: trDetails.dimension_name as string,
+            display_name: trDetails.display_name as string,
+            sql_expression: trDetails.sql_expression as string,
+            data_type: trDetails.data_type as string,
+            grain: (trDetails.grain as string | null | undefined) ?? null,
+          };
+        } else if (trToolName === "validate_and_test_metric") {
+          update.validationResult = {
+            valid: trDetails.valid as boolean,
+            errors: trDetails.errors as ValidationResultInfo["errors"],
+            warnings: (trDetails.test_result as any)?.warnings as string[] | undefined,
+            test_row_count: (trDetails.test_result as any)?.row_count as number | undefined,
+          };
         }
       }
 

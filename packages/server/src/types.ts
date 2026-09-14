@@ -290,3 +290,29 @@ export interface SqlQueryHistory {
   intent_type?: string | null;         // 'new_query' | 'refine' | 'drill_down' | 'compare' | 'explain' | 'correction'
   created_at: string;
 }
+
+// Agent decision trace — structured recording of an agent interaction's tool chain,
+// thinking summary, and derived analytics for administrator observability.
+export interface AgentTrace {
+  id: string;
+  conversation_id: string;
+  message_id: string | null;             // associated assistant message id
+  datasource_id: string | null;
+  datasource_name: string;
+  user_question: string;                  // original user question
+  agent_type: string;                     // 'query' | 'metric_dev'
+  tool_sequence: string;                  // JSON: ["lookup_semantic_layer", "execute_sql", ...]
+  tool_details: string;      // JSON: [{turn, thinking, tool, args_summary, result_summary, is_error}] — per-turn decision steps
+  thinking_summary: string;               // first 2000 chars of concatenated thinking
+  decision_rationale: string;             // synthesized human-readable decision path: per-tool why + outcome chain
+  final_sql: string | null;               // last successful execute_sql SQL
+  total_tool_calls: number;
+  total_turns: number;                    // thinking step count
+  used_semantic_layer: number;            // 0 | 1
+  used_discover_schema: number;
+  used_examples: number;
+  used_skill: number;
+  self_corrected: number;                 // execute_sql failed then retried
+  duration_ms: number | null;             // agent_start → agent_end
+  created_at: string;
+}

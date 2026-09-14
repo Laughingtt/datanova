@@ -45,6 +45,8 @@ npx playwright test
 
 Note: E2E tests use Playwright's `webServer` config to auto-start the backend (`:3000`) and frontend (`:5173`). Set `reuseExistingServer: true` so already-running servers are reused.
 
+> **测试约定（前端端到端）**：前端端到端测试统一使用 `agent-browser` skill（基于 CDP 的无头浏览器自动化，命令链 `open <url>` → `snapshot -i` → `click/fill @eN` → `wait --text/--load` → `screenshot`），**不使用 Playwright/Puppeteer**。新测试一律走 agent-browser；Playwright 仅作为遗留 E2E（`e2e/*.spec.ts`）保留，不再新增。后续所有前端测试均遵循此约定。
+
 ## Architecture
 
 ### Data Flow (Hot Path)
@@ -103,6 +105,7 @@ DataNova uses a **Multi-Agent framework** built on `AgentRegistry` (agent-regist
 | `packages/server/src/store.ts` | SQLite CRUD — all tables: datasources, conversations, annotations, semantic layer, query skills, scheduled queries, query history, bookmarks |
 | `packages/server/src/routes/insights.ts` | Insights stats, top queries, SQL execution for BI dashboard |
 | `packages/server/src/routes/bookmarks.ts` | Query bookmark CRUD + execution |
+| `packages/server/src/routes/agent-traces.ts` | Agent trace CRUD + aggregated stats for observability (list, get, stats, datasource-scoped) |
 | `packages/server/src/routes/query-skills.ts` | Query skill CRUD + AI generation + preview |
 | `packages/server/src/agent/skill-formatter.ts` | QuerySkill → SKILL.md formatting and sync |
 | `packages/server/src/mysql/pool.ts` | MySQL connection pool management |
@@ -254,7 +257,7 @@ When using direct fetch, read the API key from `process.env.ANTHROPIC_API_KEY` o
 
 Zustand store (`stores/app.ts`) tracks: `view` (default: `"dashboard"`), `selectedDatasourceId`, `selectedDatasourceName`, `selectedConversationId`, `selectedMetricId`, `modelProvider`, `modelId`, `onboardingCompleted`, `activeChannel` (default: `"query"`), `channelSessions` (per-agent session tracking).
 
-AppView type: `"dashboard" | "chat" | "datasources" | "schemas" | "metrics" | "analysis" | "dictionary" | "queryHistory" | "querySkills" | "insights"`
+AppView type: `"dashboard" | "chat" | "datasources" | "schemas" | "metrics" | "analysis" | "dictionary" | "queryHistory" | "querySkills" | "insights" | "agentTraces"`
 
 ## Code Patterns
 
@@ -299,6 +302,9 @@ See `.env.example`:
 
 ## Important Notes
 
+- **Agent Observability (agent_traces)**: Every agent interaction is traced to the `agent_traces` table after `harness.prompt()` completes. The trace records: user question, agent_type, tool sequence, tool details (per-tool decision rationale + args/result summaries), thinking summary (first 2000 chars), **decision_rationale** (synthesized per-tool why + outcome chain narrative), final SQL, derived analytics (used_semantic_layer, used_discover_schema, used_examples, used_skill, self_corrected), total tool calls/turns, and duration. The `AgentTracesPage` (AppView: `"agentTraces"`) provides admin visibility with list+detail view, filter by self-correction/no-semantic-layer, aggregated stats (semantic layer hit rate, avg tool calls, self-correction rate, tool distribution), an expandable **decision chain timeline** (each tool node reveals its per-tool "why" rationale + args + outcome), and a **链路审计** button that calls `infer_agent_chain` to reconstruct the full decision chain. Thinking content is persisted in `messages.steps` (compacted from streaming deltas) so it survives page refresh.
+- **Tool-level rationale binding**: `accumulateStreamingState` buffers thinking deltas in `state.pendingThinking` and snapshots them into each `tool_call` step's `thinkingBefore` field at `tool_execution_start`. `extractTraceAnalytics` then writes that per-tool rationale into `tool_details[].thinking` (was 300-char turn-level; now 800-char tool-level, with turn thinking as fallback for legacy steps). This answers "每一步为什么调用这个工具".
+- **Chain Auditor Agent (`chain_auditor`)**: A 管理员审计 agent (registered in `agent-registration.ts`, harness factory `chain-auditor-harness.ts`, prompt `prompt-builder-chain-auditor.ts`) that does NOT query user databases. Its sole tool is `infer_agent_chain`, which loads a trace's per-tool rationale + outcomes and uses an LLM (Anthropic, DeepSeek fallback, or deterministic fallback when no key) to reconstruct the full decision chain as structured JSON (`chain_summary`, `decision_points[]`, `self_correction_analysis`, `chain_verdict`, `verdict_reason`, `improvement_suggestions[]`). This is the "管理员能否根据功能 Agent 追踪推断出 Agent 链路" capability. Also exposed as `POST /api/agent-traces/:id/infer-chain` for direct UI invocation. Tool implementation: `agent/tools/infer-agent-chain.ts` (exports `inferAgentChain` core + `createInferAgentChainTool` wrapper).
 - **Single WebSocket connection**: All conversations share one WS connection; switch via `init` message with `agentType` parameter
 - **Optimistic UI**: User messages appear immediately without server confirmation
 - **InMemorySessionRepo**: Agent conversation context lives in memory — lost on restart. Messages themselves are persisted to SQLite via `saveMessage()`/`listMessages()`.

@@ -35,4 +35,40 @@ describe("Agent Registry", () => {
   it("should throw for unknown agent", async () => {
     await expect(() => agentRegistry.createHarness("unknown", { datasourceId: "ds-123" })).rejects.toThrow("Agent not found");
   });
+
+  it("request_user_confirm returns terminate:true (Problem 2 mechanism guard)", async () => {
+    const tools = agentRegistry.getAgentTools("metric_dev");
+    const confirmTool = tools.find(t => t.name === "request_user_confirm");
+    expect(confirmTool).toBeDefined();
+
+    const result: any = await confirmTool!.execute("call-1", {
+      title: "保存指标草稿",
+      items: ["月度营收"],
+      action_type: "save_draft",
+    });
+
+    // The terminate flag halts the agent loop after this tool batch so the
+    // LLM cannot call a save tool in a subsequent batch before confirmation.
+    expect(result.terminate).toBe(true);
+    expect(result.details.confirmAction).toBeDefined();
+    expect(result.details.confirmAction.id).toMatch(/^confirm-/);
+    expect(result.details.confirmAction.title).toBe("保存指标草稿");
+    expect(result.details.confirmAction.actionType).toBe("save_draft");
+  });
+
+  it("save tools accept an optional conversation_id parameter (Problem 2/4)", () => {
+    const tools = agentRegistry.getAgentTools("metric_dev");
+    const metricTool = tools.find(t => t.name === "create_metric_draft");
+    const dimensionTool = tools.find(t => t.name === "create_dimension_draft");
+    const validateTool = tools.find(t => t.name === "validate_and_test_metric");
+
+    // TypeBox schemas expose properties as a plain object.
+    const metricProps = (metricTool!.parameters as any).properties;
+    const dimensionProps = (dimensionTool!.parameters as any).properties;
+    const validateProps = (validateTool!.parameters as any).properties;
+
+    expect(metricProps.conversation_id).toBeDefined();
+    expect(dimensionProps.conversation_id).toBeDefined();
+    expect(validateProps.conversation_id).toBeDefined();
+  });
 });

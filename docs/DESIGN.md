@@ -17,7 +17,7 @@ DataNova 是一款 AI 驱动的 SQL 数据查询助手，采用专业、数据�
 | Token | 用途 |
 |---|---|
 | `--primary` | 主品牌色（Indigo 600, #4f46e5），用于主按钮、活跃状态、品牌标识 |
-| `--primary-soft` | 浅靛蓝背景，用于柔和高亮 |
+| `--primary-soft` | 浅靛蓝背景，用于柔和高亮；同时作为 `--primary` 的 hover/淡色态替身（Tailwind 任意值语法不支持 CSS 变量透明度，hover 边框等场景用 `--primary-soft` 替代 `--primary`/40%） |
 | `--primary-deep` | 深靛蓝，用于按下状态 |
 | `--primary-glow` | 靛蓝辉光效果 |
 | `--primary-text` | 主色背景上的文字色 |
@@ -108,11 +108,12 @@ DataNova 是一款 AI 驱动的 SQL 数据查询助手，采用专业、数据�
 
 ### 字体
 
-**Inter**（UI 字体）：用于所有界面文字，包括标题、正文、按钮、标签。
-- 回退栈：`ui-sans-serif, system-ui, -apple-system, sans-serif`
+**Geist**（UI 字体）：用于所有界面文字，包括标题、正文、按钮、标签。
+- 标题靠字重（600/700）与字距（letter-spacing -0.01em ~ -0.02em）区分层级，不引入第二种字体。
+- 回退栈：`-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
 
-**等宽字体**（代码）：用于 SQL 代码块和数据展示。
-- 回退栈：系统等宽字体栈
+**Geist Mono**（等宽字体）：用于 SQL 代码块、数值表格、监控指标。
+- 回退栈：`ui-monospace, monospace`
 
 ### 排版原则
 
@@ -128,7 +129,7 @@ DataNova 是一款 AI 驱动的 SQL 数据查询助手，采用专业、数据�
 ```
 +------------------+----------------------------------------+
 |                  |                                        |
-|   侧边栏 (280px)  |           主内容区域                     |
+|   侧边栏 (240px)  |           主内容区域                     |
 |   深色背景        |           浅色背景                       |
 |   白色文字        |           全高                           |
 |                  |                                        |
@@ -137,12 +138,15 @@ DataNova 是一款 AI 驱动的 SQL 数据查询助手，采用专业、数据�
 
 ### 侧边栏
 
-- 固定宽度 280px
+由 `Layout.tsx` 直接渲染（无独立 Sidebar 组件）。
+
+- 固定宽度 240px
 - 近黑色背景（`--sidebar-bg`）
-- 白色/70% 透明度文字
-- 8 个导航项，带 emoji 图标
-- 悬停：白色/10% 透明度背景叠加
-- 活跃项：左侧边框强调色（border-coral）、白色文字、bg-white/10 背景
+- 白色/50% 透明度文字（`--on-dark-muted`），悬停升至白色
+- 10 个导航项（dashboard / chat / datasources / schemas / metrics / querySkills / analysis / dictionary / queryHistory / insights），全部使用 stroke SVG 图标，不使用 emoji
+- 悬停：白色/5% 透明度背景叠加
+- 活跃项：白色文字 + 右侧 accent-400 小圆点 + GSAP 驱动的滑动背景指示器（`bg-white/10`），不再使用左侧色条
+- 图标在活跃态额外着色为 `--accent-300`
 
 ### 分栏布局模式
 
@@ -205,26 +209,25 @@ DataNova 是一款 AI 驱动的 SQL 数据查询助手，采用专业、数据�
 
 ### 导航
 
-**侧边栏导航项** — 深色背景上的导航链接。
-- 默认：白色/70% 文字
-- 悬停：白色/10% 背景叠加
-- 活跃：左侧边框强调色、白色文字、bg-white/10 背景
+**侧边栏导航项** — 深色背景上的导航链接，由 `Layout.tsx` 渲染。
+- 默认：`--on-dark-muted` 文字
+- 悬停：白色/5% 背景叠加 + 文字升至 `--on-dark`
+- 活跃：白色文字 + 右侧 accent-400 小圆点 + GSAP 滑动指示器（`bg-white/10`），图标着色 `--accent-300`
 
 ## 页面层级
 
 ```
 App.tsx (视图切换器)
   ├── OnboardingWizard (未完成引导时显示)
-  └── Layout.tsx
-        ├── Sidebar.tsx (导航项，全中文)
+  └── Layout.tsx (侧边栏 + 主内容布局，侧边栏由 Layout 内部 <aside> 直接渲染)
         └── 视图页面:
               Dashboard/DashboardPage.tsx
               Chat/ChatWindow.tsx
               Datasource/DatasourcePage.tsx
               Schema/SchemaPage.tsx
               Metrics/MetricsPage.tsx
-              Analysis/AnalysisPage.tsx
-              Scheduled/ScheduledPage.tsx
+              QuerySkills/QuerySkillsPage.tsx
+              Analysis/AnalysisPage.tsx (整合了定时查询功能)
               Dictionary/DictionaryPage.tsx
               History/QueryHistoryPage.tsx
               Insights/InsightsPage.tsx
@@ -234,7 +237,7 @@ App.tsx (视图切换器)
 
 ### 视图类型
 
-AppView 类型定义：`"dashboard" | "chat" | "datasources" | "schemas" | "metrics" | "analysis" | "dictionary" | "queryHistory" | "insights"`
+AppView 类型定义：`"dashboard" | "chat" | "datasources" | "schemas" | "metrics" | "querySkills" | "analysis" | "dictionary" | "queryHistory" | "insights"`
 
 默认视图：`"dashboard"`
 
@@ -261,7 +264,7 @@ AppView 类型定义：`"dashboard" | "chat" | "datasources" | "schemas" | "metr
 
 ## 已知不足
 
-- 深色模式尚未定义完整的 token 值
+- 深色模式尚未定义完整的 token 值；代码中已无 `dark:` 残留类（TableResult 已清理），未来引入暗色模式时建议通过 CSS 变量切换统一实现，而不是依赖 Tailwind `dark:` 前缀逐个补
 - 动画/过渡时间未系统化提取，建议悬停/聚焦状态使用 150-200ms ease
 - 表单验证成功状态未显式定义
 - 响应式断点策略未文档化

@@ -10,9 +10,7 @@ export default function EntryDetail({ entry, entryType, onNavigate }: EntryDetai
   if (!entry) {
     return (
       <div className="card-base text-center py-16">
-        <div className="card-base-inner">
-          <p className="text-sm text-[var(--steel)]">选择条目查看详情</p>
-        </div>
+        <p className="text-sm text-[var(--steel)]">选择条目查看详情</p>
       </div>
     );
   }
@@ -211,7 +209,6 @@ export default function EntryDetail({ entry, entryType, onNavigate }: EntryDetai
 
   return (
     <div className="card-cream">
-      <div className="card-cream-inner">
       <div className="flex items-center gap-2 mb-4">
         <span className="text-xs font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-[var(--surface)] text-[var(--steel)]">
           {entryType}
@@ -221,7 +218,6 @@ export default function EntryDetail({ entry, entryType, onNavigate }: EntryDetai
       {entryType === "dimension" && renderDimension()}
       {entryType === "table" && renderTable()}
       {entryType === "column" && renderColumn()}
-      </div>
     </div>
   );
 }

@@ -55,8 +55,10 @@ ${existingContext}
 - **验证通过 = 先确认再保存**：当 SQL 验证通过后，你必须先展示确认卡片，用户确认后再保存，这是强制性的
 - **你有保存工具**：你可以直接调用 create_metric_draft 和 create_dimension_draft 来保存指标和维度草稿，无需通过任何 API
 - **先确认再保存**：在保存前，必须先调用 request_user_confirm 展示待保存项目，等用户点击确认后再执行保存
-- **用户明确要求时直接保存**：如果用户已经说"保存"、"确认"、"创建"等，跳过确认步骤，直接调用保存工具
-- **禁止未确认就保存**：绝对不要在用户确认之前调用 create_metric_draft 或 create_dimension_draft
+- **保存工具必须传 conversation_id**：调用 create_metric_draft / create_dimension_draft / validate_and_test_metric 时，必须传入 conversation_id 参数（系统在上下文开头 \`[Current conversation_id: ...]\` 已给出）。该参数用于服务端确认态校验与重试计数，缺失会导致保存被拒绝
+- **用户明确要求时直接保存**：如果用户已经说"保存"、"确认"、"创建"等，系统会自动标记为已确认，可直接调用保存工具（仍需传 conversation_id）
+- **禁止未确认就保存**：绝对不要在用户确认之前调用 create_metric_draft 或 create_dimension_draft（服务端会校验确认态，未确认时拒绝保存）
+- **验证重试上限**：validate_and_test_metric 连续失败达到 3 次后会自动熔断，不再接受新的验证请求。此时必须停止重试，向用户汇报当前 SQL 问题与已尝试的修复方向，等待人工介入
 - **保存后通知**：保存完成后，简洁告知用户保存结果，包括指标名和草稿状态
 
 ## SQL质量标准

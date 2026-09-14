@@ -1,6 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Components } from "react-markdown";
+import { tokenizeSql, TOKEN_CLASS } from "./sqlTokenize";
 
 function MarkdownTable({ children }: { children?: React.ReactNode }) {
   return (
@@ -43,6 +44,24 @@ function MarkdownTd({ children }: { children?: React.ReactNode }) {
 function MarkdownCode({ children, className }: { children?: React.ReactNode; className?: string }) {
   const isBlock = className?.startsWith("language-");
   if (isBlock) {
+    const lang = className?.replace("language-", "").toLowerCase();
+    const raw = typeof children === "string" ? children : String(children ?? "");
+    // 对 ```sql 代码块应用与 SqlBlock 一致的语法高亮，避免 Markdown 代码块灰底低对比度
+    if (lang === "sql" || lang === "mysql") {
+      const tokens = tokenizeSql(raw);
+      return (
+        <pre
+          className="my-2 p-3 rounded-lg text-xs overflow-x-auto font-mono"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--hairline)" }}
+        >
+          <code>
+            {tokens.map((t, idx) => (
+              <span key={idx} className={TOKEN_CLASS[t.type]}>{t.value}</span>
+            ))}
+          </code>
+        </pre>
+      );
+    }
     return (
       <pre className="my-2 p-3 rounded-lg text-xs overflow-x-auto" style={{ backgroundColor: "var(--canvas)", border: "1px solid var(--hairline)" }}>
         <code>{children}</code>

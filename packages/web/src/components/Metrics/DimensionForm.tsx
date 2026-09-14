@@ -153,7 +153,6 @@ export default function DimensionForm({
 
   return (
     <div className="card-base">
-      <div className="card-base-inner">
       <h3 className="font-display text-heading-4 text-[var(--ink)] mb-5">
         {isEdit ? "编辑维度" : "新增维度"}
       </h3>
@@ -419,7 +418,6 @@ export default function DimensionForm({
           )}
         </div>
       </form>
-      </div>
     </div>
   );
 }

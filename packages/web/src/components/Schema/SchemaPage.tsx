@@ -5,6 +5,7 @@ import QueryExamplesPanel from "./QueryExamplesPanel";
 import SchemaPromptPreview from "./SchemaPromptPreview";
 import { useAppStore } from "../../stores/app";
 import { schemasApi, datasourcesApi, type SchemaResponse } from "../../api/client";
+import { toast } from "../../stores/toast";
 
 type TabId = "annotate" | "auto-annotate" | "query-examples" | "prompt-preview";
 
@@ -40,7 +41,7 @@ export default function SchemaPage() {
       const result: SchemaResponse = await schemasApi.get(selectedDatasourceId);
       setTableNames(result.schema.tables.map((t) => t.table.name));
     } catch (err) {
-      console.error("Failed to load table names:", err);
+      toast.error("加载表列表失败", err instanceof Error ? err.message : undefined);
       setTableNames([]);
     } finally {
       setTablesLoading(false);
@@ -73,21 +74,17 @@ export default function SchemaPage() {
 
         {!selectedDatasourceId ? (
           <div className="card-cream text-center py-16">
-            <div className="card-cream-inner">
-              <p className="text-sm text-[var(--on-surface)]">请先选择数据源</p>
-              <p className="text-xs text-[var(--steel)] mt-2">
-                前往数据源页面选择一个数据源来标注其 Schema
-              </p>
-            </div>
+            <p className="text-sm text-[var(--on-surface)]">请先选择数据源</p>
+            <p className="text-xs text-[var(--steel)] mt-2">
+              前往数据源页面选择一个数据源来标注其 Schema
+            </p>
           </div>
         ) : datasourceNotFound ? (
           <div className="card-cream text-center py-16">
-            <div className="card-cream-inner">
-              <p className="text-sm text-[var(--on-surface)]">数据源连接已失效</p>
-              <p className="text-xs text-[var(--steel)] mt-2">
-                之前选择的数据源已被删除，请重新选择数据源
-              </p>
-            </div>
+            <p className="text-sm text-[var(--on-surface)]">数据源连接已失效</p>
+            <p className="text-xs text-[var(--steel)] mt-2">
+              之前选择的数据源已被删除，请重新选择数据源
+            </p>
           </div>
         ) : (
           <>

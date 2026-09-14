@@ -6,6 +6,9 @@ import {
   getQueryExecutionStats,
   getRecentSqlContext,
   listAutoQueryExamples,
+  createAgentTrace,
+  getAgentTrace,
+  listAgentTraces,
 } from "../store.js";
 
 const app = new Hono();
@@ -88,6 +91,50 @@ app.get("/auto-examples/:datasourceId", async (c) => {
   const dsId = c.req.param("datasourceId");
   const examples = listAutoQueryExamples(dsId);
   return c.json(examples);
+});
+
+// Create an agent_trace record directly (for testing the chain audit flow
+// without needing a live LLM/agent run). Accepts the full trace shape;
+// omitted fields default sensibly.
+app.post("/agent-traces", async (c) => {
+  const body = await c.req.json();
+  if (!body.conversation_id || !body.user_question) {
+    return c.json({ error: "conversation_id and user_question are required" }, 400);
+  }
+  const trace = createAgentTrace({
+    conversation_id: body.conversation_id,
+    message_id: body.message_id ?? null,
+    datasource_id: body.datasource_id ?? null,
+    datasource_name: body.datasource_name ?? "",
+    user_question: body.user_question,
+    agent_type: body.agent_type ?? "query",
+    tool_sequence: body.tool_sequence ?? JSON.stringify([]),
+    tool_details: body.tool_details ?? JSON.stringify([]),
+    thinking_summary: body.thinking_summary ?? "",
+    decision_rationale: body.decision_rationale ?? "",
+    final_sql: body.final_sql ?? null,
+    total_tool_calls: body.total_tool_calls ?? 0,
+    total_turns: body.total_turns ?? 0,
+    used_semantic_layer: body.used_semantic_layer ?? 0,
+    used_discover_schema: body.used_discover_schema ?? 0,
+    used_examples: body.used_examples ?? 0,
+    used_skill: body.used_skill ?? 0,
+    self_corrected: body.self_corrected ?? 0,
+    duration_ms: body.duration_ms ?? null,
+  });
+  return c.json(trace, 201);
+});
+
+// Get a single agent_trace by id (test mirror of the public route).
+app.get("/agent-traces/:id", (c) => {
+  const trace = getAgentTrace(c.req.param("id"));
+  if (!trace) return c.json({ error: "Not found" }, 404);
+  return c.json(trace);
+});
+
+// List agent_traces (test mirror).
+app.get("/agent-traces", (c) => {
+  return c.json(listAgentTraces({ limit: 100 }));
 });
 
 export default app;

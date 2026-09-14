@@ -3,6 +3,7 @@ import type { AgentTool } from "@earendil-works/pi-agent-core";
 import { createMetric, checkMetricNameConflict } from "../../store.js";
 import { validateSqlViaExplain } from "../../mysql/executor.js";
 import { normalizeSql } from "./sql-normalize.js";
+import { getPending, clear } from "../confirm-state.js";
 
 const CreateMetricDraftParams = Type.Object({
   datasource_id: Type.String({ description: "数据源ID" }),
@@ -20,6 +21,7 @@ const CreateMetricDraftParams = Type.Object({
   category: Type.Optional(Type.String({ description: "分类" })),
   default_sort: Type.Optional(Type.String({ description: "默认排序" })),
   agent_session_id: Type.Optional(Type.String({ description: "Agent会话ID" })),
+  conversation_id: Type.Optional(Type.String({ description: "当前会话ID，用于确认态校验(由系统上下文提供)" })),
 });
 
 type CreateMetricDraftParams = Static<typeof CreateMetricDraftParams>;
@@ -36,6 +38,18 @@ export function createCreateMetricDraftTool(): AgentTool<typeof CreateMetricDraf
       const p = params as CreateMetricDraftParams;
       // Normalize SQL — fix keyword粘连 (e.g. "revenueFROM" → "revenue FROM")
       const sql = normalizeSql(p.sql);
+
+      // 0. 确认态守卫 (Problem 2) — 未获得用户确认时拒绝保存。
+      // 仅当携带 conversation_id 时启用，向后兼容无该参数的旧调用路径。
+      if (p.conversation_id) {
+        const pending = getPending(p.conversation_id);
+        if (!pending || pending.status !== "confirmed") {
+          return {
+            content: [{ type: "text" as const, text: `⚠️ 尚未获得用户确认，无法保存指标草稿。请先调用 request_user_confirm 展示确认卡片，等待用户点击「确认保存」后再执行保存。\n（如用户已在消息中明确要求"保存"/"确认"，系统会自动标记为已确认。）` }],
+            details: { created: false, blocked: "not_confirmed" },
+          };
+        }
+      }
 
       // 1. 检查名称冲突
       const conflict = checkMetricNameConflict(p.datasource_id, p.name);
@@ -84,9 +98,25 @@ export function createCreateMetricDraftTool(): AgentTool<typeof CreateMetricDraf
           validation_result: JSON.stringify({ validated_at: new Date().toISOString() }),
         });
 
+        // 保存成功后清除确认态，避免同一确认被重复用于多次保存。
+        if (p.conversation_id) {
+          clear(p.conversation_id);
+        }
+
         return {
           content: [{ type: "text" as const, text: `✅ 指标草稿已创建: ${metric.display_name} (${metric.name})\n类型: ${metric.metric_type} | 状态: 草稿 | 验证: 通过\nSQL: ${metric.sql.substring(0, 100)}${metric.sql.length > 100 ? "..." : ""}\n\n请前往指标管理页面审核并发布。` }],
-          details: { created: true, metric_id: metric.id, metric_name: metric.name },
+          details: {
+            created: true,
+            metric_id: metric.id,
+            metric_name: metric.name,
+            // Enriched fields for Chat card rendering (MetricCard)
+            display_name: metric.display_name,
+            sql: metric.sql,
+            metric_type: metric.metric_type,
+            status: metric.status,
+            validation_status: metric.validation_status,
+            business_context: metric.business_context,
+          },
         };
       } catch (err) {
         return {

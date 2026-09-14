@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
+import { useCollapseAnimation } from "../../hooks/useGsapAnimations";
 
 // ==================== Types ====================
 
@@ -36,6 +37,8 @@ interface ResultSummaryCardProps {
 
 export default function ResultSummaryCard({ content }: ResultSummaryCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  useCollapseAnimation(contentRef, isExpanded);
 
   // P1-C8: Derive summary sections on render, don't store in state
   const sections = useMemo(() => parseSummarySections(content), [content]);
@@ -79,7 +82,7 @@ export default function ResultSummaryCard({ content }: ResultSummaryCardProps) {
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 flex items-center justify-between bg-[var(--cream-soft)] hover:bg-[var(--cream)] transition-colors"
+        className="w-full px-4 py-3 flex items-center justify-between bg-[var(--surface)] hover:bg-[var(--canvas)] transition-colors"
       >
         <span className="text-sm font-medium text-[var(--ink)] flex items-center gap-2">
           <span>📊</span>
@@ -108,28 +111,30 @@ export default function ResultSummaryCard({ content }: ResultSummaryCardProps) {
       )}
 
       {/* Other sections - collapsible */}
-      {isExpanded && otherSections.length > 0 && (
-        <div className="divide-y divide-[var(--hairline-soft)]">
-          {otherSections.map((section, index) => {
-            const colors = getSectionColor(section.type);
-            return (
-              <div key={index} className={`px-4 py-3 ${colors.bg} border-l-2 ${colors.border}`}>
-                <div className="flex items-start gap-2">
-                  <span className="text-sm">{section.icon}</span>
-                  <div>
-                    <span className={`text-xs font-mono uppercase tracking-wider ${colors.text}`}>
-                      {section.label}
-                    </span>
-                    <p className="text-sm text-[var(--ink)] mt-0.5 leading-relaxed">
-                      {section.content}
-                    </p>
+      <div ref={contentRef} style={isExpanded ? {} : { height: 0, overflow: "hidden", opacity: 0 }}>
+        {otherSections.length > 0 && (
+          <div className="divide-y divide-[var(--hairline-soft)]">
+            {otherSections.map((section, index) => {
+              const colors = getSectionColor(section.type);
+              return (
+                <div key={index} className={`px-4 py-3 ${colors.bg} border-l-2 ${colors.border}`}>
+                  <div className="flex items-start gap-2">
+                    <span className="text-sm">{section.icon}</span>
+                    <div>
+                      <span className={`text-xs font-mono uppercase tracking-wider ${colors.text}`}>
+                        {section.label}
+                      </span>
+                      <p className="text-sm text-[var(--ink)] mt-0.5 leading-relaxed">
+                        {section.content}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

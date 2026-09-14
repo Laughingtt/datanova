@@ -141,7 +141,6 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
 
   return (
     <div className="card-cream space-y-5">
-      <div className="card-cream-inner space-y-5">
       <h3 className="font-display text-heading-4 text-[var(--ink)]">
         {isEdit ? "编辑定时查询" : "新建定时查询"}
       </h3>
@@ -160,7 +159,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="例如：每日营收检查"
-          className="input-field"
+          className="w-full px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
         />
       </div>
 
@@ -172,7 +171,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="可选描述"
-          className="input-field"
+          className="w-full px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
         />
       </div>
 
@@ -192,7 +191,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
             onChange={(e) => setAiPrompt(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleGenerateSql(); } }}
             placeholder="例如：展示最近30天各地区每日营收"
-            className="input-field flex-1"
+            className="flex-1 px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
             disabled={generatingSql}
           />
           <button
@@ -217,7 +216,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
           onChange={(e) => setSql(e.target.value)}
           placeholder="SELECT ... FROM ..."
           rows={6}
-          className="input-field font-mono resize-y"
+          className="w-full px-3 py-2 text-sm font-mono bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)] resize-y"
         />
       </div>
 
@@ -229,7 +228,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
           value={cronExpression}
           onChange={(e) => setCronExpression(e.target.value)}
           placeholder="0 * * * *"
-          className="input-field font-mono"
+          className="w-full px-3 py-2 text-sm font-mono bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
         />
         <p className="text-xs text-[var(--primary-text)] mt-1">
           {describeCron(cronExpression)}
@@ -258,7 +257,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
         <select
           value={timezone}
           onChange={(e) => setTimezone(e.target.value)}
-          className="input-field"
+          className="w-full px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] focus:outline-none focus:border-[var(--primary)]"
         >
           {COMMON_TIMEZONES.map((tz) => (
             <option key={tz} value={tz}>{tz}</option>
@@ -286,7 +285,6 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
         >
           {saving ? "保存中..." : isEdit ? "更新" : "创建"}
         </button>
-      </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAppStore } from "../../stores/app";
 import {
   datasourcesApi,
@@ -12,6 +12,7 @@ import {
 import StatsBar from "./StatsBar";
 import ChartCard from "./ChartCard";
 import BookmarkDialog from "./BookmarkDialog";
+import { useEmptyStateEntrance, useButtonPress } from "../../hooks/useGsapAnimations";
 
 export default function InsightsPage() {
   const { selectedDatasourceId, setSelectedDatasource } = useAppStore();
@@ -22,6 +23,14 @@ export default function InsightsPage() {
   const [topQueries, setTopQueries] = useState<TopQueryItem[]>([]);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [showBookmarkDialog, setShowBookmarkDialog] = useState(false);
+  const emptyDsRef = useRef<HTMLDivElement>(null);
+  const emptyBmRef = useRef<HTMLDivElement>(null);
+  const emptyTqRef = useRef<HTMLDivElement>(null);
+  const addBmBtnRef = useRef<HTMLButtonElement>(null);
+  useEmptyStateEntrance(emptyDsRef, ".empty-icon", [currentDsId]);
+  useEmptyStateEntrance(emptyBmRef, ".empty-icon", [bookmarks.length]);
+  useEmptyStateEntrance(emptyTqRef, ".empty-icon", [topQueries.length]);
+  useButtonPress(addBmBtnRef);
 
   useEffect(() => {
     datasourcesApi.list().then(setDatasources).catch(() => {});
@@ -96,9 +105,9 @@ export default function InsightsPage() {
         </div>
 
         {!currentDsId ? (
-          <div className="flex items-center justify-center py-32">
+          <div ref={emptyDsRef} className="flex items-center justify-center py-32">
             <div className="text-center max-w-sm">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--primary-soft)] flex items-center justify-center">
+              <div className="empty-icon w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--primary-soft)] flex items-center justify-center">
                 <svg className="w-8 h-8 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
@@ -161,6 +170,7 @@ export default function InsightsPage() {
                   <span className="text-xs text-[var(--stone)]">({bookmarks.length})</span>
                 </div>
                 <button
+                  ref={addBmBtnRef}
                   onClick={() => setShowBookmarkDialog(true)}
                   className="btn-ghost text-xs"
                 >
@@ -171,8 +181,8 @@ export default function InsightsPage() {
                 </button>
               </div>
               {bookmarks.length === 0 ? (
-                <div className="text-center py-10 card-base">
-                  <svg className="w-10 h-10 mx-auto text-[var(--stone)] mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                <div ref={emptyBmRef} className="text-center py-10 card-base">
+                  <svg className="empty-icon w-10 h-10 mx-auto text-[var(--stone)] mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                   </svg>
                   <p className="text-xs text-[var(--steel)]">暂无收藏报表</p>
@@ -204,8 +214,8 @@ export default function InsightsPage() {
                 <span className="text-xs text-[var(--stone)]">({topQueries.length})</span>
               </div>
               {topQueries.length === 0 && !statsLoading ? (
-                <div className="text-center py-10 card-base">
-                  <svg className="w-10 h-10 mx-auto text-[var(--stone)] mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                <div ref={emptyTqRef} className="text-center py-10 card-base">
+                  <svg className="empty-icon w-10 h-10 mx-auto text-[var(--stone)] mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                   </svg>
                   <p className="text-xs text-[var(--steel)]">暂无热门查询</p>

@@ -2,11 +2,18 @@ import { Type, type Static } from "@sinclair/typebox";
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import { validateSqlViaExplain, executeSql } from "../../mysql/executor.js";
 import { normalizeSql } from "./sql-normalize.js";
+import {
+  getValidationFailures,
+  incrementValidationFailures,
+  resetValidationFailures,
+  MAX_VALIDATION_FAILURES,
+} from "../confirm-state.js";
 
 const ValidateAndTestMetricParams = Type.Object({
   datasource_id: Type.String({ description: "数据源ID" }),
   sql: Type.String({ description: "待验证的SQL语句" }),
   metric_type: Type.String({ description: "指标类型: atomic | derived | compound" }),
+  conversation_id: Type.Optional(Type.String({ description: "当前会话ID，用于重试次数计数(由系统上下文提供)" })),
 });
 
 type ValidateAndTestMetricParams = Static<typeof ValidateAndTestMetricParams>;
@@ -47,6 +54,26 @@ export function createValidateAndTestMetricTool(): AgentTool<typeof ValidateAndT
       const errors: ValidationError[] = [];
       const warnings: string[] = [];
 
+      // Problem 4 — 代码级重试熔断：连续失败达上限后拒绝再次验证，
+      // 阻止无界重试。仅当携带 conversation_id 时启用（向后兼容）。
+      if (typedParams.conversation_id) {
+        const failures = getValidationFailures(typedParams.conversation_id);
+        if (failures >= MAX_VALIDATION_FAILURES) {
+          const blockedResult: ValidationResult = {
+            valid: false,
+            errors: [{
+              step: "重试熔断",
+              message: `已达到最大验证重试次数(${MAX_VALIDATION_FAILURES})，不再继续自动修复。`,
+              suggestion: "请停止重试，向用户汇报当前SQL的问题与已尝试的修复方向，等待人工介入或用户提供新思路。",
+            }],
+          };
+          return {
+            content: [{ type: "text", text: `❌ 已达最大重试次数(${MAX_VALIDATION_FAILURES})，停止自动修复。\n请向用户汇报当前问题并等待人工介入，不要再次调用 validate_and_test_metric。\n${JSON.stringify(blockedResult, null, 2)}` }],
+            details: blockedResult,
+          };
+        }
+      }
+
       // Step 1: 语法验证
       const explainResult = await validateSqlViaExplain(typedParams.datasource_id, sql);
       if (!explainResult.valid) {
@@ -56,6 +83,7 @@ export function createValidateAndTestMetricTool(): AgentTool<typeof ValidateAndT
           suggestion: "请检查SQL语法，确保表名、字段名、函数名正确",
         });
         const result: ValidationResult = { valid: false, errors };
+        if (typedParams.conversation_id) incrementValidationFailures(typedParams.conversation_id);
         return {
           content: [{ type: "text", text: `SQL验证失败:\n${JSON.stringify(result, null, 2)}` }],
           details: result,
@@ -91,6 +119,7 @@ export function createValidateAndTestMetricTool(): AgentTool<typeof ValidateAndT
           suggestion: "请检查SQL逻辑，可能是字段名错误或JOIN条件有误",
         });
         const result: ValidationResult = { valid: false, errors };
+        if (typedParams.conversation_id) incrementValidationFailures(typedParams.conversation_id);
         return {
           content: [{ type: "text", text: `SQL执行失败:\n${JSON.stringify(result, null, 2)}` }],
           details: result,
@@ -136,6 +165,11 @@ export function createValidateAndTestMetricTool(): AgentTool<typeof ValidateAndT
           warnings,
         },
       };
+
+      // 验证成功 → 重置连续失败计数（Problem 4）。
+      if (typedParams.conversation_id && result.valid) {
+        resetValidationFailures(typedParams.conversation_id);
+      }
 
       const summary = errors.length === 0
         ? `✅ 验证通过！返回${rowCount}行数据${warnings.length > 0 ? `，${warnings.length}个警告` : ""}`

@@ -22,7 +22,7 @@
 ```
 App.tsx
   └─ Layout.tsx（侧边栏 + 主内容区）
-       ├─ Sidebar.tsx           ← 导航侧边栏 (8 nav items: 数据概览/对话/数据源/Schema标注/指标管理/自助分析/数据字典/SQL历史)
+       ├─ 侧边栏导航（Layout 内联渲染，10 nav items: 数据概览/智能对话/数据源/Schema标注/指标管理/查询技能/自助分析/语义层目录/SQL历史/数据洞察，全 stroke SVG 图标 + GSAP 滑动指示器）
        └─ 主内容区（按 view 切换）：
             ├─ DashboardPage.tsx       ← 数据概览 (默认视图)
             │

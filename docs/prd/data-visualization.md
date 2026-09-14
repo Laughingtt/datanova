@@ -1,5 +1,16 @@
 # PRD: DataNova 数据可视化
 
+> **实现状态：已实现（Phase 1 核心能力全部完成）**
+>
+> 本文档原为功能规划，下列内容已落地到代码：
+> - 图表库：Recharts **^3.8.1**（非原估的 2.x，3.x 原生支持 React 19）
+> - 数据流改造：`execute-sql.ts` 返回 `columns` + `rows`，经 `chat-handler.ts` 转发，`useAgentStream.ts` 填充 `tableData`
+> - 图表推断：`packages/web/src/utils/chart-inference.ts`（6 种图表 + KPI 卡片）
+> - 图表渲染：`packages/web/src/components/ChartRenderers.tsx`（共享渲染层）+ `packages/web/src/components/Chat/ChartView.tsx`（切换 + 自动推断）
+> - 消息集成：`MessageItem.tsx` 中表格/图表 Tab 切换
+>
+> 下文保留原始需求与设计说明，作为功能背景与设计依据；第 7 节的"实施计划"已转为"实现说明"。
+
 ## 1. 背景与目标
 
 ### 1.1 现状

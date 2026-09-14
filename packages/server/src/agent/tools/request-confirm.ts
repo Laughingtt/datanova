@@ -45,6 +45,13 @@ export function createRequestUserConfirmTool(): AgentTool<typeof RequestConfirmP
             actionType: p.action_type || "save_draft",
           },
         },
+        // Mechanism-level guard (Problem 2): halt the agent loop after this
+        // tool batch so the LLM cannot call create_metric_draft /
+        // create_dimension_draft in a *subsequent* batch of the same turn
+        // before the user has confirmed. This is defense-in-depth alongside
+        // the server-side confirm-state that the save tools check — `terminate`
+        // alone cannot stop a parallel save in the same batch, hence both.
+        terminate: true,
       };
     },
   };

@@ -1,0 +1,13 @@
+node_modules/
+**/dist/
+**/build/
+**/coverage/
+**/playwright-report/
+**/test-results/
+**/*.d.ts
+**/*.d.ts.map
+packages/web/src/vite-env.d.ts
+public/
+data/
+scripts/post-commit-doc-update.sh
+scripts/test-ws-*.mjs

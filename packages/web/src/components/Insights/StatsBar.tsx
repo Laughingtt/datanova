@@ -1,3 +1,5 @@
+import { useRef } from "react";
+import { useCountUp, useStaggerEntrance } from "../../hooks/useGsapAnimations";
 import type { InsightsStatsResponse } from "../../api/client";
 
 interface StatsBarProps {
@@ -6,13 +8,20 @@ interface StatsBarProps {
 }
 
 export default function StatsBar({ stats, loading }: StatsBarProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const queriesRef = useRef<HTMLDivElement>(null);
+  const successRef = useRef<HTMLDivElement>(null);
+
+  useCountUp(queriesRef, stats?.totalQueries ?? 0);
+  useCountUp(successRef, stats?.successRate ?? 0, { suffix: "%" });
+  useStaggerEntrance(containerRef, ".stat-card", [stats]);
   if (loading) {
     return (
-      <div className="grid grid-cols-3 gap-5 mb-8">
+      <div ref={containerRef} className="grid grid-cols-3 gap-5 mb-8">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="stat-card animate-pulse">
-            <div className="h-4 bg-[var(--hairline)] rounded w-24 mb-3" />
-            <div className="h-8 bg-[var(--hairline)] rounded w-16 mb-1" />
+          <div key={i} className="stat-card">
+            <div className="h-4 bg-[var(--hairline)] rounded w-24 mb-3 shimmer-bg" />
+            <div className="h-8 bg-[var(--hairline)] rounded w-16 mb-1 shimmer-bg" />
           </div>
         ))}
       </div>
@@ -22,8 +31,8 @@ export default function StatsBar({ stats, loading }: StatsBarProps) {
   if (!stats) return null;
 
   return (
-    <div className="grid grid-cols-3 gap-5 mb-8">
-      <div className="stat-card animate-in">
+    <div ref={containerRef} className="grid grid-cols-3 gap-5 mb-8">
+      <div className="stat-card">
         <div className="flex items-start justify-between mb-3">
           <div className="w-10 h-10 rounded-lg bg-[var(--primary-soft)] flex items-center justify-center">
             <svg className="w-5 h-5 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -31,13 +40,11 @@ export default function StatsBar({ stats, loading }: StatsBarProps) {
             </svg>
           </div>
         </div>
-        <div className="text-2xl font-semibold text-[var(--ink)] tracking-tight font-body">
-          {stats.totalQueries.toLocaleString()}
-        </div>
+        <div ref={queriesRef} className="text-2xl font-semibold text-[var(--ink)] tracking-tight font-body">0</div>
         <div className="text-xs text-[var(--steel)] mt-1">总查询次数</div>
       </div>
 
-      <div className="stat-card animate-in delay-1">
+      <div className="stat-card">
         <div className="flex items-start justify-between mb-3">
           <div className="w-10 h-10 rounded-lg bg-[var(--success-soft)] flex items-center justify-center">
             <svg className="w-5 h-5 text-[var(--success)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -48,13 +55,11 @@ export default function StatsBar({ stats, loading }: StatsBarProps) {
             {stats.avgExecutionTimeMs}ms 平均
           </span>
         </div>
-        <div className="text-2xl font-semibold text-[var(--ink)] tracking-tight font-body">
-          {stats.successRate}%
-        </div>
+        <div ref={successRef} className="text-2xl font-semibold text-[var(--ink)] tracking-tight font-body">0%</div>
         <div className="text-xs text-[var(--steel)] mt-1">查询成功率</div>
       </div>
 
-      <div className="stat-card animate-in delay-2">
+      <div className="stat-card">
         <div className="flex items-start justify-between mb-3">
           <div className="w-10 h-10 rounded-lg bg-[var(--warning-soft)] flex items-center justify-center">
             <svg className="w-5 h-5 text-[var(--highlight)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

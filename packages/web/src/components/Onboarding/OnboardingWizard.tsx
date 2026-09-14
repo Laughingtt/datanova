@@ -1,7 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAppStore } from "../../stores/app";
 import { datasourcesApi, type Datasource } from "../../api/client";
 import WizardStep from "./WizardStep";
+import { gsap } from "gsap";
+import { useGSAP } from "@gsap/react";
+import { EASE, DUR, prefersReducedMotion } from "../../utils/gsap-presets";
+
+gsap.registerPlugin(useGSAP);
 
 const TOTAL_STEPS = 4;
 
@@ -35,6 +40,21 @@ export default function OnboardingWizard() {
   const [datasources, setDatasources] = useState<Datasource[]>([]);
   const [selectedDsId, setSelectedDsId] = useState(selectedDatasourceId ?? "");
   const [discovered, setDiscovered] = useState(false);
+
+  const stepContainerRef = useRef<HTMLDivElement>(null);
+  const prevStep = useRef(currentStep);
+
+  useGSAP(() => {
+    if (!stepContainerRef.current || prefersReducedMotion()) return;
+    if (prevStep.current === currentStep) return;
+    const direction = currentStep > prevStep.current ? 1 : -1;
+    prevStep.current = currentStep;
+    gsap.fromTo(
+      stepContainerRef.current,
+      { autoAlpha: 0, x: direction * 30 },
+      { autoAlpha: 1, x: 0, duration: DUR.normal, ease: EASE.snappy, clearProps: "autoAlpha,x" }
+    );
+  }, { scope: stepContainerRef, dependencies: [currentStep] });
 
   useEffect(() => {
     datasourcesApi.list().then(setDatasources).catch(() => {});
@@ -76,7 +96,7 @@ export default function OnboardingWizard() {
   if (!showWizard) return null;
 
   return (
-    <div className="p-6 bg-gradient-to-b from-[var(--cream-soft)] to-[var(--canvas)] border-b border-[var(--hairline)]">
+    <div className="p-6 bg-gradient-to-b from-[var(--surface)] to-[var(--canvas)] border-b border-[var(--hairline)]">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-display text-heading-4 text-[var(--ink)]">🚀 设置向导</h3>
@@ -88,6 +108,7 @@ export default function OnboardingWizard() {
           </button>
         </div>
 
+        <div ref={stepContainerRef}>
         {/* Step 1: Connect */}
         <WizardStep
           step={1} totalSteps={TOTAL_STEPS}
@@ -205,6 +226,7 @@ export default function OnboardingWizard() {
             </div>
           </div>
         </WizardStep>
+        </div>
       </div>
     </div>
   );

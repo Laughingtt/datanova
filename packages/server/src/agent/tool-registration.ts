@@ -10,6 +10,7 @@ import { createCheckMetricConflictTool } from "./tools/check-metric-conflict.js"
 import { createCreateMetricDraftTool } from "./tools/create-metric-draft.js";
 import { createCreateDimensionDraftTool } from "./tools/create-dimension-draft.js";
 import { createRequestUserConfirmTool } from "./tools/request-confirm.js";
+import { createInferAgentChainTool } from "./tools/infer-agent-chain.js";
 import { loadAllSkills } from "./skill-manager.js";
 
 export function registerAllTools(registry: AgentRegistry): void {
@@ -28,4 +29,7 @@ export function registerAllTools(registry: AgentRegistry): void {
   registry.registerTool(createCreateMetricDraftTool());
   registry.registerTool(createCreateDimensionDraftTool());
   registry.registerTool(createRequestUserConfirmTool());
+
+  // 管理员审计工具 — 供 chain_auditor Agent 反推功能 Agent 的决策链路
+  registry.registerTool(createInferAgentChainTool());
 }

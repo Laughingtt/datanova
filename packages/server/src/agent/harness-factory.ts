@@ -1,5 +1,6 @@
 import { AgentHarness, InMemorySessionRepo, type Skill, type AgentTool, type ExecutionEnv } from "@earendil-works/pi-agent-core";
-import { getModel, getEnvApiKey } from "@earendil-works/pi-ai";
+import { getEnvApiKey } from "@earendil-works/pi-ai";
+import { resolveModel } from "./model-provider.js";
 import { createDiscoverSchemaTool } from "./tools/discover-schema.js";
 import { createExecuteSqlTool } from "./tools/execute-sql.js";
 import { createAiAnnotateSchemaTool } from "./tools/ai-annotate-schema.js";
@@ -55,9 +56,9 @@ export async function createHarness(options: CreateHarnessOptions): Promise<Agen
   const session = await sessionRepo.create({ id: options.conversationId });
 
   // Get model
-  const provider = options.modelProvider ?? "anthropic";
-  const modelId = options.modelId ?? "claude-sonnet-4-20250514";
-  const model = getModel(provider as "anthropic", modelId as "claude-sonnet-4-20250514");
+  const provider = options.modelProvider ?? process.env.DATANOVA_PROVIDER ?? "anthropic";
+  const modelId = options.modelId ?? process.env.DATANOVA_MODEL ?? "claude-sonnet-5";
+  const model = resolveModel(provider, modelId);
 
   // Create harness — API key is resolved automatically by pi-ai from
   // environment variables (ANTHROPIC_API_KEY, OPENAI_API_KEY, etc.)

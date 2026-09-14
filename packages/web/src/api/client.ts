@@ -251,6 +251,48 @@ export const healthApi = {
   check: () => request<{ status: string; version: string }>("/api/health"),
 };
 
+// ==================== Result Export ====================
+
+export type ExportFormat = "csv" | "tsv" | "json" | "xlsx";
+
+/**
+ * Trigger a browser download for a result set rendered to the chosen format.
+ *
+ * Uses an invisible <iframe> rather than a link click so that the JSON/CSV
+ * blob is *not* navigated-to in the current tab (which would change the URL
+ * and pollute history). The server stamps the filename with a timestamp, so
+ * the caller only supplies a base.
+ */
+export async function downloadExport(
+  format: ExportFormat,
+  columns: string[],
+  rows: Record<string, unknown>[],
+  filenameBase: string
+): Promise<void> {
+  const res = await fetch(`/api/exports/${format}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ columns, rows, filename: filenameBase }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(body.error || `HTTP ${res.status}`);
+  }
+  const blob = await res.blob();
+  const cd = res.headers.get("Content-Disposition") || "";
+  const m = /filename="([^"]+)"/.exec(cd);
+  const filename = m ? m[1] : `${filenameBase}.${format}`;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 // ==================== Semantic Layer ====================
 
 export interface SemanticMetric {
@@ -677,3 +719,100 @@ export const querySkillApi = {
       body: JSON.stringify(data),
     }),
 };
+
+// ==================== Agent Traces (Observability) ====================
+
+export interface AgentTraceItem {
+  id: string;
+  conversation_id: string;
+  message_id: string | null;
+  datasource_id: string | null;
+  datasource_name: string;
+  user_question: string;
+  agent_type: string;
+  tool_sequence: string;    // JSON array of tool names
+  tool_details: string;     // JSON array of {turn, thinking, tool, args_summary, result_summary, is_error}
+  thinking_summary: string;
+  decision_rationale: string;
+  final_sql: string | null;
+  total_tool_calls: number;
+  total_turns: number;
+  used_semantic_layer: number;   // 0 | 1
+  used_discover_schema: number;
+  used_examples: number;
+  used_skill: number;
+  self_corrected: number;
+  duration_ms: number | null;
+  created_at: string;
+}
+
+export interface AgentTraceStats {
+  totalTraces: number;
+  semanticLayerHitRate: number;
+  avgToolCalls: number;
+  selfCorrectionRate: number;
+  avgDurationMs: number;
+  toolDistribution: Array<{ tool: string; count: number }>;
+  dailyTrend: Array<{ date: string; count: number }>;
+}
+
+export interface AgentTraceListParams {
+  datasourceId?: string;
+  selfCorrected?: boolean;
+  noSemanticLayer?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
+  limit?: number;
+}
+
+export const agentTraceApi = {
+  list: (params?: AgentTraceListParams) => {
+    const qs = new URLSearchParams();
+    if (params?.datasourceId) qs.set("datasourceId", params.datasourceId);
+    if (params?.selfCorrected) qs.set("selfCorrected", "1");
+    if (params?.noSemanticLayer) qs.set("noSemanticLayer", "1");
+    if (params?.dateFrom) qs.set("dateFrom", params.dateFrom);
+    if (params?.dateTo) qs.set("dateTo", params.dateTo);
+    if (params?.limit) qs.set("limit", String(params.limit));
+    const query = qs.toString();
+    return request<AgentTraceItem[]>(`/api/agent-traces${query ? `?${query}` : ""}`);
+  },
+  get: (id: string) =>
+    request<AgentTraceItem>(`/api/agent-traces/${id}`),
+  stats: (datasourceId?: string) => {
+    const params = datasourceId ? `?datasourceId=${datasourceId}` : "";
+    return request<AgentTraceStats>(`/api/agent-traces/stats${params}`);
+  },
+  inferChain: (id: string, focus?: string) =>
+    request<AgentChainInference>(`/api/agent-traces/${id}/infer-chain`, {
+      method: "POST",
+      body: JSON.stringify({ focus }),
+    }),
+};
+
+export interface AgentChainDecisionPoint {
+  step: number;
+  tool: string;
+  rationale: string;
+  expected: string;
+  actual: string;
+  drove_next?: string;
+}
+
+export interface AgentChainInference {
+  reconstructed: boolean;
+  reason?: string;
+  trace_id?: string;
+  step_count?: number;
+  llm_model?: string;
+  isError?: boolean;
+  text?: string;
+  chain?: {
+    chain_summary: string;
+    decision_points: AgentChainDecisionPoint[];
+    self_correction_analysis: string;
+    chain_verdict: string;
+    verdict_reason: string;
+    improvement_suggestions: string[];
+  };
+}

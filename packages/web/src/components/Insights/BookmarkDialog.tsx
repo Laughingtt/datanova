@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { bookmarksApi } from "../../api/client";
+import { useModalAnimation } from "../../hooks/useGsapAnimations";
 
 interface BookmarkDialogProps {
   dsId: string;
@@ -13,6 +14,12 @@ export default function BookmarkDialog({ dsId, onClose, onCreated }: BookmarkDia
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const { open, close } = useModalAnimation(overlayRef, contentRef, onClose);
+
+  useEffect(() => { open(); }, [open]);
+
   const handleSave = async () => {
     if (!title.trim() || !sql.trim()) return;
     setSaving(true);
@@ -20,7 +27,7 @@ export default function BookmarkDialog({ dsId, onClose, onCreated }: BookmarkDia
     try {
       await bookmarksApi.create(dsId, { title: title.trim(), sql: sql.trim() });
       onCreated();
-      onClose();
+      close();
     } catch (err: any) {
       setError(err.message || "保存失败");
     } finally {
@@ -30,8 +37,8 @@ export default function BookmarkDialog({ dsId, onClose, onCreated }: BookmarkDia
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-[520px] max-w-[90vw] bg-[var(--surface)] rounded-2xl shadow-2xl animate-in">
+      <div ref={overlayRef} className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={close} />
+      <div ref={contentRef} className="relative w-[520px] max-w-[90vw] bg-[var(--surface)] rounded-2xl shadow-2xl">
         <div className="sunset-stripe rounded-t-2xl" />
         <div className="p-6">
           <h2 className="font-display text-lg text-[var(--ink)] mb-1">添加收藏报表</h2>
@@ -67,7 +74,7 @@ export default function BookmarkDialog({ dsId, onClose, onCreated }: BookmarkDia
           )}
 
           <div className="flex items-center justify-end gap-3 mt-5">
-            <button onClick={onClose} className="btn-secondary text-xs">取消</button>
+            <button onClick={close} className="btn-secondary text-xs">取消</button>
             <button
               onClick={handleSave}
               disabled={saving || !title.trim() || !sql.trim()}

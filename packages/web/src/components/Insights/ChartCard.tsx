@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { insightsApi, bookmarksApi, type Bookmark, type AnalysisResult } from "../../api/client";
 import { inferChartType } from "../../utils/chart-inference";
+import { useCollapseAnimation, useButtonPress } from "../../hooks/useGsapAnimations";
 import ChartView from "../Chat/ChartView";
 import TableResult from "../Chat/TableResult";
 
@@ -28,6 +29,10 @@ export default function ChartCard({
   const [loading, setLoading] = useState(true);
   const [bookmarking, setBookmarking] = useState(false);
   const [showSql, setShowSql] = useState(false);
+  const sqlRef = useRef<HTMLDivElement>(null);
+  const bookmarkBtnRef = useRef<HTMLButtonElement>(null);
+  useCollapseAnimation(sqlRef, showSql);
+  useButtonPress(bookmarkBtnRef);
 
   useEffect(() => {
     let cancelled = false;
@@ -97,6 +102,7 @@ export default function ChartCard({
             </svg>
           </button>
           <button
+            ref={bookmarkBtnRef}
             onClick={handleBookmark}
             disabled={bookmarking}
             title={isBookmarked ? "取消收藏" : "收藏此查询"}
@@ -114,13 +120,13 @@ export default function ChartCard({
       </div>
 
       {/* Expandable SQL block */}
-      {showSql && (
+      <div ref={sqlRef} style={showSql ? {} : { height: 0, overflow: "hidden", opacity: 0 }}>
         <div className="px-5 py-3 bg-[var(--canvas)] border-b border-[var(--hairline-soft)]">
           <pre className="text-xs font-mono text-[var(--charcoal)] whitespace-pre-wrap overflow-x-auto max-h-32">
             {sql}
           </pre>
         </div>
-      )}
+      </div>
 
       {/* Card body */}
       <div className="p-5">

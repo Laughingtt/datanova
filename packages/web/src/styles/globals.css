@@ -71,11 +71,10 @@
   --assistant-bg:   #ffffff;
   --assistant-border:#e2e8f0;
 
-  /* --- Shadows (cool-tinted, premium depth) --- */
-  --shadow-1:       0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
-  --shadow-2:       0 4px 6px -1px rgba(15,23,42,0.08), 0 2px 4px -2px rgba(15,23,42,0.05);
-  --shadow-3:       0 12px 24px -4px rgba(15,23,42,0.12), 0 4px 8px -2px rgba(15,23,42,0.06);
-  --shadow-card:    0 0 0 1px rgba(15,23,42,0.03), 0 2px 4px rgba(15,23,42,0.04), 0 12px 24px rgba(15,23,42,0.06);
+  /* --- Shadows (cool-tinted) --- */
+  --shadow-1:       0 1px 2px rgba(15,23,42,0.04);
+  --shadow-2:       0 4px 12px rgba(15,23,42,0.06);
+  --shadow-3:       0 12px 24px -4px rgba(15,23,42,0.10);
   --shadow-glow:    0 0 0 3px rgba(79,70,229,0.12);
 
   /* --- Radius --- */
@@ -83,21 +82,11 @@
   --radius-md:      8px;
   --radius-lg:      12px;
   --radius-xl:      16px;
-  --radius-2xl:     20px;
-  --radius-3xl:     28px;
 
-  /* --- Transitions (premium spring curves) --- */
-  --ease-spring:        cubic-bezier(0.32, 0.72, 0, 1);
-  --ease-out-expo:      cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out-soft:   cubic-bezier(0.65, 0, 0.35, 1);
-  --transition-fast:    150ms var(--ease-in-out-soft);
-  --transition-base:    250ms var(--ease-out-expo);
-  --transition-slow:    400ms var(--ease-spring);
-
-  /* --- Glass (frosted effects) --- */
-  --glass-bg:       rgba(255,255,255,0.72);
-  --glass-border:   rgba(255,255,255,0.18);
-  --glass-blur:     16px;
+  /* --- Transitions --- */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ==================== Base ==================== */
@@ -113,8 +102,8 @@
     font-variant-numeric: tabular-nums;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', Georgia, serif;
-    font-weight: 500;
+    font-family: 'Geist', system-ui, -apple-system, sans-serif;
+    font-weight: 600;
     letter-spacing: -0.02em;
   }
   ::selection {
@@ -139,11 +128,11 @@
   /* ---- Buttons ---- */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2
-           px-6 py-2.5 rounded-full text-sm font-medium;
+           px-4 py-2 rounded-lg text-sm font-medium
+           transition-all duration-200;
     background: var(--primary);
     color: var(--on-dark);
     box-shadow: 0 1px 2px rgba(79,70,229,0.2);
-    transition: all 300ms var(--ease-out-expo);
   }
   .btn-primary:hover {
     background: var(--primary-deep);
@@ -151,7 +140,7 @@
     transform: translateY(-1px);
   }
   .btn-primary:active {
-    transform: translateY(0) scale(0.97);
+    transform: translateY(0) scale(0.98);
     box-shadow: 0 1px 2px rgba(79,70,229,0.2);
   }
   .btn-primary:disabled {
@@ -164,40 +153,36 @@
 
   .btn-dark {
     @apply inline-flex items-center justify-center gap-2
-           px-6 py-2.5 rounded-full text-sm font-medium;
+           px-4 py-2 rounded-lg text-sm font-medium
+           transition-all duration-200;
     background: var(--ink);
     color: var(--on-dark);
-    transition: all 300ms var(--ease-out-expo);
   }
   .btn-dark:hover {
     background: var(--charcoal);
     transform: translateY(-1px);
   }
-  .btn-dark:active { transform: translateY(0) scale(0.97); }
+  .btn-dark:active { transform: translateY(0) scale(0.98); }
 
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2
-           px-6 py-2.5 rounded-full text-sm font-medium;
+           px-4 py-2 rounded-lg text-sm font-medium
+           transition-all duration-200;
     background: var(--surface);
     color: var(--ink);
-    box-shadow: 0 0 0 1px rgba(15,23,42,0.05), var(--shadow-1);
-    transition: all 300ms var(--ease-out-expo);
+    border: 1px solid var(--hairline-strong);
   }
   .btn-secondary:hover {
     background: var(--canvas);
-    box-shadow: 0 0 0 1px rgba(15,23,42,0.08), var(--shadow-2);
-    transform: translateY(-1px);
+    border-color: var(--steel);
   }
-  .btn-secondary:active {
-    transform: scale(0.97);
-    box-shadow: 0 0 0 1px rgba(15,23,42,0.05);
-  }
+  .btn-secondary:active { transform: scale(0.98); }
 
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-1.5
-           px-3 py-1.5 rounded-lg text-sm font-medium;
+           px-3 py-1.5 rounded-lg text-sm font-medium
+           transition-all duration-200;
     color: var(--slate);
-    transition: all 200ms var(--ease-in-out-soft);
   }
   .btn-ghost:hover {
     color: var(--ink);
@@ -206,42 +191,25 @@
 
   .btn-danger {
     @apply inline-flex items-center justify-center gap-1.5
-           px-3 py-1.5 rounded-lg text-sm font-medium;
+           px-3 py-1.5 rounded-lg text-sm font-medium
+           transition-all duration-200;
     color: var(--error);
-    transition: all 200ms var(--ease-in-out-soft);
   }
   .btn-danger:hover { background: var(--error-soft); }
 
-  /* ---- Cards (Double-Bezel Architecture) ---- */
+  /* ---- Cards ---- */
   .card-base {
-    @apply rounded-2xl p-1.5;
-    background: rgba(15,23,42,0.03);
-    border: 1px solid rgba(15,23,42,0.06);
-    box-shadow: var(--shadow-card);
-    transition: box-shadow 400ms var(--ease-spring), transform 400ms var(--ease-spring);
-  }
-  .card-base:hover {
-    box-shadow: 0 0 0 1px rgba(15,23,42,0.04), 0 4px 8px rgba(15,23,42,0.06), 0 16px 32px rgba(15,23,42,0.08);
-    transform: translateY(-2px);
-  }
-
-  .card-base-inner {
-    @apply rounded-[calc(1rem-0.375rem)] p-6;
+    @apply rounded-xl p-6;
     background: var(--surface);
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.6);
+    border: 1px solid var(--hairline-soft);
+    box-shadow: var(--shadow-1);
   }
 
   .card-cream {
-    @apply rounded-2xl p-1.5;
-    background: linear-gradient(135deg, rgba(79,70,229,0.06) 0%, rgba(99,102,241,0.04) 100%);
-    border: 1px solid rgba(79,70,229,0.08);
-    box-shadow: var(--shadow-card);
-  }
-  .card-cream-inner {
-    @apply rounded-[calc(1rem-0.375rem)] p-8;
+    @apply rounded-xl p-8;
     background: var(--primary-soft);
     color: var(--on-surface);
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.5);
+    border: 1px solid var(--accent-100);
   }
 
   /* ---- Chat bubbles ---- */
@@ -249,62 +217,49 @@
     @apply px-4 py-2.5 rounded-2xl;
     background: var(--user-bubble);
     color: var(--user-text);
-    box-shadow: 0 2px 8px rgba(79,70,229,0.18);
+    box-shadow: var(--shadow-1);
     border-bottom-right-radius: 6px;
   }
 
   .bubble-assistant {
     @apply px-4 py-3 rounded-2xl;
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-2);
+    background: var(--assistant-bg);
+    border: 1px solid var(--assistant-border);
+    box-shadow: var(--shadow-1);
     border-bottom-left-radius: 6px;
   }
 
-  /* ---- Input (Recessed/Inset feel) ---- */
+  /* ---- Input ---- */
   .input-field {
     @apply w-full px-3 py-2.5 rounded-lg text-sm;
-    background: var(--canvas);
+    background: var(--surface);
     color: var(--ink);
-    border: 1px solid var(--hairline);
-    box-shadow: inset 0 1px 2px rgba(15,23,42,0.04);
-    transition: border-color 200ms var(--ease-in-out-soft), box-shadow 200ms var(--ease-in-out-soft);
+    border: 1px solid var(--hairline-strong);
+    transition: border-color 150ms, box-shadow 150ms;
   }
   .input-field::placeholder { color: var(--stone); }
   .input-field:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: var(--shadow-glow), inset 0 1px 2px rgba(15,23,42,0.02);
+    box-shadow: var(--shadow-glow);
   }
 
   .input-well {
-    @apply rounded-2xl p-1.5;
-    background: rgba(15,23,42,0.03);
-    border: 1px solid rgba(15,23,42,0.06);
-    box-shadow: var(--shadow-card);
-    transition: all 300ms var(--ease-out-expo);
+    @apply rounded-xl;
+    background: var(--surface);
+    border: 1px solid var(--hairline-strong);
+    box-shadow: var(--shadow-2);
+    transition: all 200ms;
   }
   .input-well:focus-within {
     border-color: var(--primary);
-    box-shadow: var(--shadow-glow), var(--shadow-card);
-  }
-  .input-well-inner {
-    @apply rounded-[calc(1rem-0.375rem)];
-    background: var(--surface);
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.6);
+    box-shadow: var(--shadow-glow), var(--shadow-2);
   }
 
   /* ---- Labels ---- */
   .label-mono {
     @apply block mb-1.5 text-xs font-mono uppercase tracking-wider font-medium;
     color: var(--steel);
-  }
-
-  /* ---- Eyebrow tag (decorative pre-heading) ---- */
-  .eyebrow-tag {
-    @apply inline-flex items-center rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-medium mb-3;
   }
 
   /* ---- Accent stripe (brand signature) ---- */
@@ -319,31 +274,17 @@
     );
   }
 
-  /* ---- Glass panel ---- */
-  .glass-panel {
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-3);
-  }
-
   /* ---- Stat card (dashboard) ---- */
   .stat-card {
-    @apply rounded-2xl p-1.5;
-    background: rgba(15,23,42,0.03);
-    border: 1px solid rgba(15,23,42,0.06);
-    box-shadow: var(--shadow-card);
-    transition: box-shadow 400ms var(--ease-spring), transform 400ms var(--ease-spring);
-  }
-  .stat-card-inner {
-    @apply rounded-[calc(1rem-0.375rem)] p-5;
+    @apply rounded-xl p-5;
     background: var(--surface);
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.6);
+    border: 1px solid var(--hairline-soft);
+    box-shadow: var(--shadow-1);
+    transition: box-shadow 200ms, transform 200ms;
   }
   .stat-card:hover {
-    box-shadow: 0 0 0 1px rgba(15,23,42,0.04), 0 4px 8px rgba(15,23,42,0.06), 0 16px 32px rgba(15,23,42,0.08);
-    transform: translateY(-2px);
+    box-shadow: var(--shadow-2);
+    transform: translateY(-1px);
   }
 }
 
@@ -351,61 +292,79 @@
 @layer utilities {
   .text-caption { font-size: 0.8125rem; line-height: 1.4; }
   .text-micro   { font-size: 0.6875rem; line-height: 1.4; }
-  .font-display { font-family: 'Playfair Display', Georgia, serif; }
+  .font-display { font-family: 'Geist', system-ui, -apple-system, sans-serif; font-weight: 600; letter-spacing: -0.02em; }
   .font-body    { font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
   .font-mono    { font-family: 'Geist Mono', ui-monospace, monospace; }
 
-  /* Staggered animation helpers */
+  /* Staggered animation helpers (GSAP-driven, these are initial states only) */
+  .gsap-hidden {
+    /* GSAP will animate from this state */
+    visibility: hidden;
+    opacity: 0;
+  }
+
+  /* Shimmer skeleton background */
+  .shimmer-bg {
+    background: linear-gradient(
+      90deg,
+      var(--hairline-soft) 25%,
+      var(--hairline) 50%,
+      var(--hairline-soft) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  /* 入场动画类，配合 GSAP hook 使用；DashboardPage 由 useStaggerEntrance 接管，不再使用 */
   .animate-in {
-    animation: fadeSlideIn 0.5s var(--ease-spring) forwards;
+    animation: fadeSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     opacity: 0;
   }
   .delay-1 { animation-delay: 80ms; }
   .delay-2 { animation-delay: 160ms; }
   .delay-3 { animation-delay: 240ms; }
   .delay-4 { animation-delay: 320ms; }
-
-  /* Premium animation utilities */
-  .animate-scale-in {
-    animation: scaleIn 0.4s var(--ease-spring) forwards;
-    opacity: 0;
-  }
-  .animate-slide-up {
-    animation: slideUp 0.6s var(--ease-spring) forwards;
-    opacity: 0;
-  }
-  .animate-fade-in {
-    animation: fadeIn 0.4s var(--ease-in-out-soft) forwards;
-    opacity: 0;
-  }
-  .skeleton-shimmer {
-    background: linear-gradient(90deg, var(--canvas) 25%, var(--surface) 50%, var(--canvas) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
 }
 
 @keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
 }
 
 @keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-bg { animation: none; }
+  .animate-in { animation: none; opacity: 1; }
+}
+
+/* ==================== Toast ==================== */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+.toast-enter {
+  animation: toastIn 200ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast-enter { animation: none; }
+}
+
+/* ==================== Dialog backdrop ==================== */
+@keyframes dialogBackdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes dialogPanelIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+.dialog-backdrop-enter { animation: dialogBackdropIn 150ms ease-out both; }
+.dialog-panel-enter    { animation: dialogPanelIn    200ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .dialog-backdrop-enter,
+  .dialog-panel-enter { animation: none; }
 }

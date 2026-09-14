@@ -25,6 +25,9 @@ import {
   mergePieData,
 } from "../utils/chart-inference";
 
+const CHART_ANIMATION_DURATION = 800;
+const CHART_ANIMATION_EASING = "ease-out";
+
 const GRID_COLOR = "#e2e8f0";
 const AXIS_COLOR = "#64748b";
 const TOOLTIP_BG = "#ffffff";
@@ -62,7 +65,7 @@ export function BarChartRenderer({ data, config }: { data: TableData; config: Ch
         <Tooltip contentStyle={tooltipStyle} />
         {config.yColumns.length > 1 && <Legend />}
         {config.yColumns.map((col, i) => (
-          <Bar key={col} dataKey={col} fill={CHART_COLORS[i % CHART_COLORS.length]} radius={[4, 4, 0, 0]} maxBarSize={48} />
+          <Bar key={col} dataKey={col} fill={CHART_COLORS[i % CHART_COLORS.length]} radius={[4, 4, 0, 0]} maxBarSize={48} animationDuration={CHART_ANIMATION_DURATION} animationEasing={CHART_ANIMATION_EASING} />
         ))}
       </RechartsBar>
     </ResponsiveContainer>
@@ -79,7 +82,7 @@ export function LineChartRenderer({ data, config }: { data: TableData; config: C
         <Tooltip contentStyle={tooltipStyle} />
         {config.yColumns.length > 1 && <Legend />}
         {config.yColumns.map((col, i) => (
-          <Line key={col} type="monotone" dataKey={col} stroke={CHART_COLORS[i % CHART_COLORS.length]} strokeWidth={2} dot={{ r: 3, fill: CHART_COLORS[i % CHART_COLORS.length] }} activeDot={{ r: 5 }} />
+          <Line key={col} type="monotone" dataKey={col} stroke={CHART_COLORS[i % CHART_COLORS.length]} strokeWidth={2} dot={{ r: 3, fill: CHART_COLORS[i % CHART_COLORS.length] }} activeDot={{ r: 5 }} animationDuration={CHART_ANIMATION_DURATION} animationEasing={CHART_ANIMATION_EASING} />
         ))}
       </RechartsLine>
     </ResponsiveContainer>
@@ -96,7 +99,7 @@ export function AreaChartRenderer({ data, config }: { data: TableData; config: C
         <Tooltip contentStyle={tooltipStyle} />
         {config.yColumns.length > 1 && <Legend />}
         {config.yColumns.map((col, i) => (
-          <Area key={col} type="monotone" dataKey={col} stroke={CHART_COLORS[i % CHART_COLORS.length]} fill={CHART_COLORS[i % CHART_COLORS.length]} fillOpacity={0.2} strokeWidth={2} />
+          <Area key={col} type="monotone" dataKey={col} stroke={CHART_COLORS[i % CHART_COLORS.length]} fill={CHART_COLORS[i % CHART_COLORS.length]} fillOpacity={0.2} strokeWidth={2} animationDuration={CHART_ANIMATION_DURATION} animationEasing={CHART_ANIMATION_EASING} />
         ))}
       </RechartsArea>
     </ResponsiveContainer>
@@ -111,7 +114,7 @@ export function PieChartRenderer({ data, config }: { data: TableData; config: Ch
   return (
     <ResponsiveContainer width="100%" height={300}>
       <RechartsPie margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-        <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2} dataKey="value" nameKey="name" label={renderLabel} labelLine={{ stroke: AXIS_COLOR, strokeWidth: 1 }}>
+        <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2} dataKey="value" nameKey="name" label={renderLabel} labelLine={{ stroke: AXIS_COLOR, strokeWidth: 1 }} animationDuration={CHART_ANIMATION_DURATION} animationEasing={CHART_ANIMATION_EASING}>
           {pieData.map((_, i) => (
             <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="#fff" strokeWidth={2} />
           ))}
@@ -133,7 +136,7 @@ export function ScatterChartRenderer({ data, config }: { data: TableData; config
         <YAxis dataKey="y" name={config.yColumns[0]} tick={{ fill: AXIS_COLOR, fontSize: 11 }} />
         <ZAxis range={[30, 30]} />
         <Tooltip contentStyle={tooltipStyle} formatter={(value: unknown, name: unknown) => [Number(value).toFixed(2), String(name)]} labelFormatter={() => ""} />
-        <Scatter data={scatterData} fill={CHART_COLORS[0]} />
+        <Scatter data={scatterData} fill={CHART_COLORS[0]} animationDuration={CHART_ANIMATION_DURATION} animationEasing={CHART_ANIMATION_EASING} />
       </RechartsScatter>
     </ResponsiveContainer>
   );

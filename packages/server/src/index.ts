@@ -19,6 +19,8 @@ import { createDictionaryRoutes } from "./routes/dictionary.js";
 import { createInsightsRoutes } from "./routes/insights.js";
 import { createBookmarkRoutes } from "./routes/bookmarks.js";
 import { createQuerySkillRoutes } from "./routes/query-skills.js";
+import { createAgentTraceRoutes } from "./routes/agent-traces.js";
+import { createExportRoutes } from "./routes/exports.js";
 import { startScheduler, stopScheduler } from "./scheduler.js";
 import testHelpersRoutes from "./routes/test-helpers.js";
 import { initAgentFramework } from "./agent/agent-registration.js";
@@ -78,6 +80,8 @@ app.route("/", createDictionaryRoutes());
 app.route("/", createInsightsRoutes());
 app.route("/", createBookmarkRoutes());
 app.route("/", createQuerySkillRoutes());
+app.route("/", createAgentTraceRoutes());
+app.route("/", createExportRoutes());
 
 // Test helpers (non-production only)
 app.route("/api/test", testHelpersRoutes);

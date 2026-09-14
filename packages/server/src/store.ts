@@ -2,7 +2,7 @@ import * as crypto from "node:crypto";
 import Database from "better-sqlite3";
 import { DB_PATH } from "./config.js";
 import { normalizeSql } from "./agent/tools/sql-normalize.js";
-import type { Datasource, SchemaAnnotation, Conversation, StoredMessage, TableQueryExample, QueryFeedback, QueryExample, SemanticMetric, SemanticDimension, SemanticModel, ScheduledQuery, QueryAlert, QueryExecutionHistory, SqlQueryHistory, QueryBookmark, QuerySkill } from "./types.js";
+import type { Datasource, SchemaAnnotation, Conversation, StoredMessage, TableQueryExample, QueryFeedback, QueryExample, SemanticMetric, SemanticDimension, SemanticModel, ScheduledQuery, QueryAlert, QueryExecutionHistory, SqlQueryHistory, QueryBookmark, QuerySkill, AgentTrace } from "./types.js";
 
 let db: Database.Database | null = null;
 
@@ -356,11 +356,6 @@ function initTables(database: Database.Database): void {
     database.exec(`ALTER TABLE semantic_dimensions ADD COLUMN agent_session_id TEXT`);
   }
 
-  // P2-2: Clear old test data (sql_expression-based metrics are incompatible with new sql field)
-  database.exec(`DELETE FROM semantic_metrics`);
-  database.exec(`DELETE FROM semantic_dimensions`);
-  database.exec(`DELETE FROM semantic_models`);
-
   // Migration: Add parent_query_id, correction_round, intent_type to sql_query_history
   try {
     database.exec(`ALTER TABLE sql_query_history ADD COLUMN parent_query_id TEXT`);
@@ -447,6 +442,48 @@ function initTables(database: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_query_skill_domain
     ON query_skill(datasource_id, domain)
   `);
+
+  // Agent traces — structured recording of agent decision paths for observability
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS agent_traces (
+      id TEXT PRIMARY KEY,
+      conversation_id TEXT NOT NULL,
+      message_id TEXT,
+      datasource_id TEXT,
+      datasource_name TEXT NOT NULL DEFAULT '',
+      user_question TEXT NOT NULL DEFAULT '',
+      agent_type TEXT NOT NULL DEFAULT 'query',
+      tool_sequence TEXT NOT NULL DEFAULT '[]',
+      tool_details TEXT NOT NULL DEFAULT '[]',
+      thinking_summary TEXT NOT NULL DEFAULT '',
+      decision_rationale TEXT NOT NULL DEFAULT '',
+      final_sql TEXT,
+      total_tool_calls INTEGER NOT NULL DEFAULT 0,
+      total_turns INTEGER NOT NULL DEFAULT 0,
+      used_semantic_layer INTEGER NOT NULL DEFAULT 0,
+      used_discover_schema INTEGER NOT NULL DEFAULT 0,
+      used_examples INTEGER NOT NULL DEFAULT 0,
+      used_skill INTEGER NOT NULL DEFAULT 0,
+      self_corrected INTEGER NOT NULL DEFAULT 0,
+      duration_ms INTEGER,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (datasource_id) REFERENCES datasources(id) ON DELETE CASCADE
+    )
+  `);
+  database.exec(`
+    CREATE INDEX IF NOT EXISTS idx_agent_traces_ds
+    ON agent_traces(datasource_id, created_at DESC)
+  `);
+  database.exec(`
+    CREATE INDEX IF NOT EXISTS idx_agent_traces_conv
+    ON agent_traces(conversation_id)
+  `);
+
+  // Migration: add decision_rationale column to existing agent_traces tables.
+  const traceColumns = database.prepare("PRAGMA table_info(agent_traces)").all() as Array<{name: string}>;
+  if (!traceColumns.some(c => c.name === "decision_rationale")) {
+    try { database.exec(`ALTER TABLE agent_traces ADD COLUMN decision_rationale TEXT NOT NULL DEFAULT ''`); } catch {}
+  }
 
 }
 
@@ -1103,6 +1140,15 @@ export function checkMetricDisplayNameConflict(datasourceId: string, displayName
   ).all(datasourceId, displayName) as SemanticMetric[];
 }
 
+// ==================== Dimension Conflict Checks (Problem 3) ====================
+
+export function checkDimensionNameConflict(datasourceId: string, name: string): SemanticDimension | null {
+  const row = getDb().prepare(
+    "SELECT * FROM semantic_dimensions WHERE datasource_id = ? AND name = ?"
+  ).get(datasourceId, name) as SemanticDimension | undefined;
+  return row ?? null;
+}
+
 // ==================== Semantic Dimensions CRUD ====================
 
 export function listDimensions(datasourceId: string): SemanticDimension[] {
@@ -1559,6 +1605,181 @@ export function listQuerySkillDomains(datasourceId: string): string[] {
     ORDER BY domain
   `).all(datasourceId) as { domain: string }[];
   return rows.map(r => r.domain);
+}
+
+// ==================== Agent Trace CRUD ====================
+
+export function createAgentTrace(input: Omit<AgentTrace, "id" | "created_at">): AgentTrace {
+  const id = generateId();
+  getDb().prepare(`
+    INSERT INTO agent_traces (
+      id, conversation_id, message_id, datasource_id, datasource_name,
+      user_question, agent_type, tool_sequence, tool_details, thinking_summary,
+      decision_rationale, final_sql, total_tool_calls, total_turns,
+      used_semantic_layer, used_discover_schema, used_examples, used_skill,
+      self_corrected, duration_ms
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    id,
+    input.conversation_id,
+    input.message_id ?? null,
+    input.datasource_id ?? null,
+    input.datasource_name,
+    input.user_question,
+    input.agent_type,
+    input.tool_sequence,
+    input.tool_details,
+    input.thinking_summary,
+    input.decision_rationale,
+    input.final_sql ?? null,
+    input.total_tool_calls,
+    input.total_turns,
+    input.used_semantic_layer,
+    input.used_discover_schema,
+    input.used_examples,
+    input.used_skill,
+    input.self_corrected,
+    input.duration_ms ?? null,
+  );
+  return getDb().prepare(`SELECT * FROM agent_traces WHERE id = ?`).get(id) as AgentTrace;
+}
+
+export function listAgentTraces(options: {
+  datasourceId?: string;
+  agentType?: string;
+  selfCorrected?: boolean;
+  noSemanticLayer?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
+  limit?: number;
+  offset?: number;
+}): AgentTrace[] {
+  const conditions: string[] = [];
+  const values: unknown[] = [];
+
+  if (options.datasourceId) {
+    conditions.push("datasource_id = ?");
+    values.push(options.datasourceId);
+  }
+  if (options.agentType) {
+    conditions.push("agent_type = ?");
+    values.push(options.agentType);
+  }
+  if (options.selfCorrected) {
+    conditions.push("self_corrected = 1");
+  }
+  if (options.noSemanticLayer) {
+    conditions.push("used_semantic_layer = 0");
+  }
+  if (options.dateFrom) {
+    conditions.push("created_at >= ?");
+    values.push(options.dateFrom);
+  }
+  if (options.dateTo) {
+    conditions.push("created_at <= ?");
+    values.push(options.dateTo + "T23:59:59");
+  }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const limit = options.limit ?? 50;
+  const offset = options.offset ?? 0;
+
+  return getDb().prepare(`
+    SELECT * FROM agent_traces ${where}
+    ORDER BY created_at DESC
+    LIMIT ? OFFSET ?
+  `).all(...values, limit, offset) as AgentTrace[];
+}
+
+export function getAgentTrace(id: string): AgentTrace | undefined {
+  return getDb().prepare(`SELECT * FROM agent_traces WHERE id = ?`).get(id) as AgentTrace | undefined;
+}
+
+export interface AgentTraceStats {
+  totalTraces: number;
+  semanticLayerHitRate: number;
+  avgToolCalls: number;
+  selfCorrectionRate: number;
+  avgDurationMs: number;
+  toolDistribution: Array<{ tool: string; count: number }>;
+  dailyTrend: Array<{ date: string; count: number }>;
+}
+
+export function getAgentTraceStats(datasourceId?: string): AgentTraceStats {
+  const db = getDb();
+  const dsFilter = datasourceId ? "WHERE datasource_id = ?" : "";
+  const dsAndFilter = datasourceId ? "WHERE datasource_id = ? AND" : "WHERE";
+  const dsParams = datasourceId ? [datasourceId] : [];
+
+  // Total traces
+  const totalRow = db.prepare(`SELECT COUNT(*) AS cnt FROM agent_traces ${dsFilter}`).get(...dsParams) as { cnt: number };
+  const totalTraces = totalRow.cnt;
+
+  if (totalTraces === 0) {
+    return {
+      totalTraces: 0,
+      semanticLayerHitRate: 0,
+      avgToolCalls: 0,
+      selfCorrectionRate: 0,
+      avgDurationMs: 0,
+      toolDistribution: [],
+      dailyTrend: [],
+    };
+  }
+
+  // Semantic layer hit rate
+  const slRow = db.prepare(`SELECT COUNT(*) AS cnt FROM agent_traces ${dsAndFilter} used_semantic_layer = 1`).get(...dsParams) as { cnt: number };
+  const semanticLayerHitRate = Math.round((slRow.cnt / totalTraces) * 1000) / 10;
+
+  // Average tool calls
+  const avgRow = db.prepare(`SELECT AVG(total_tool_calls) AS avg FROM agent_traces ${dsFilter}`).get(...dsParams) as { avg: number | null };
+  const avgToolCalls = avgRow.avg ? Math.round(avgRow.avg * 10) / 10 : 0;
+
+  // Self-correction rate
+  const scRow = db.prepare(`SELECT COUNT(*) AS cnt FROM agent_traces ${dsAndFilter} self_corrected = 1`).get(...dsParams) as { cnt: number };
+  const selfCorrectionRate = Math.round((scRow.cnt / totalTraces) * 1000) / 10;
+
+  // Average duration
+  const durRow = db.prepare(`SELECT AVG(duration_ms) AS avg FROM agent_traces ${dsAndFilter} duration_ms IS NOT NULL`).get(...dsParams) as { avg: number | null };
+  const avgDurationMs = durRow.avg ? Math.round(durRow.avg) : 0;
+
+  // Tool distribution — parse tool_sequence JSON and count
+  const traceRows = db.prepare(`SELECT tool_sequence FROM agent_traces ${dsFilter}`).all(...dsParams) as { tool_sequence: string }[];
+  const toolCounts = new Map<string, number>();
+  for (const row of traceRows) {
+    try {
+      const tools = JSON.parse(row.tool_sequence) as string[];
+      for (const tool of tools) {
+        toolCounts.set(tool, (toolCounts.get(tool) ?? 0) + 1);
+      }
+    } catch { /* skip invalid JSON */ }
+  }
+  const toolDistribution = Array.from(toolCounts.entries())
+    .map(([tool, count]) => ({ tool, count }))
+    .sort((a, b) => b.count - a.count);
+
+  // Daily trend (last 7 days)
+  const dailyTrend: Array<{ date: string; count: number }> = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const countRow = db.prepare(`
+      SELECT COUNT(*) AS cnt FROM agent_traces
+      WHERE DATE(created_at) = ? ${datasourceId ? "AND datasource_id = ?" : ""}
+    `).get(dateStr, ...(datasourceId ? [datasourceId] : [])) as { cnt: number };
+    dailyTrend.push({ date: dateStr, count: countRow.cnt });
+  }
+
+  return {
+    totalTraces,
+    semanticLayerHitRate,
+    avgToolCalls,
+    selfCorrectionRate,
+    avgDurationMs,
+    toolDistribution,
+    dailyTrend,
+  };
 }
 
 // Close database connection

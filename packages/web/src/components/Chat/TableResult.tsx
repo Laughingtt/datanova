@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useRef } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -6,7 +6,8 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table";
 import type { TableData } from "../../hooks/useAgentStream";
-import * as XLSX from "xlsx";
+import ExportMenu from "./ExportMenu";
+import { useTableRowEntrance } from "../../hooks/useGsapAnimations";
 
 interface TableResultProps {
   data: TableData;
@@ -83,41 +84,7 @@ function isAnomalyHigh(value: unknown, stats: ColumnStats | null): boolean {
 
 // ==================== Main Component ====================
 
-function exportToExcel(data: TableData) {
-  const ws = XLSX.utils.json_to_sheet(data.rows, { header: data.columns });
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "查询结果");
-  const now = new Date();
-  const ts = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
-  XLSX.writeFile(wb, `查询结果_${ts}.xlsx`);
-}
-
-function downloadCSV(data: TableData) {
-  const escapeField = (v: unknown): string => {
-    const s = v === null || v === undefined ? "" : String(v);
-    if (s.includes(",") || s.includes('"') || s.includes("\n") || s.includes("\r")) {
-      return `"${s.replace(/"/g, '""')}"`;
-    }
-    return s;
-  };
-  const header = data.columns.map(escapeField).join(",");
-  const body = data.rows.map((row) => data.columns.map((col) => escapeField(row[col])).join(",")).join("\n");
-  const csv = "﻿" + header + "\n" + body;
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  const now = new Date();
-  const ts = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
-  a.href = url;
-  a.download = `查询结果_${ts}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
 export default function TableResult({ data }: TableResultProps) {
-  const handleExport = useCallback(() => {
-    exportToExcel(data);
-  }, [data]);
 
   // Detect date-like column and numeric columns
   const { dateColumn, numericColumns } = useMemo(() => {
@@ -183,10 +150,12 @@ export default function TableResult({ data }: TableResultProps) {
             const isHigh = isAnomalyHigh(val, stats);
             return (
               <div
-                className="flex items-center gap-1 px-1 -mx-1 rounded bg-red-100 dark:bg-red-900/30"
+                className="flex items-center gap-1 px-1 -mx-1 rounded bg-red-100"
                 title={`此值相比该列其他值异常${isHigh ? "偏高" : "偏低"}`}
               >
-                <span className="text-red-600 dark:text-red-400 shrink-0">⚠️</span>
+                <svg className="w-3.5 h-3.5 text-red-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
                 <span>{displayValue}</span>
               </div>
             );
@@ -218,8 +187,8 @@ export default function TableResult({ data }: TableResultProps) {
             const { pct, direction } = change;
             const isUp = direction === "up";
             const colorClass = isUp
-              ? "text-green-600 dark:text-green-400"
-              : "text-red-600 dark:text-red-400";
+              ? "text-green-600"
+              : "text-red-600";
             const arrow = isUp ? "↑" : "↓";
 
             return (
@@ -243,26 +212,16 @@ export default function TableResult({ data }: TableResultProps) {
     getCoreRowModel: getCoreRowModel(),
   });
 
+  const tbodyRef = useRef<HTMLTableSectionElement>(null);
+  useTableRowEntrance(tbodyRef, "tr", [data]);
+
   return (
     <div className="my-3 overflow-x-auto border border-[var(--hairline)] rounded-xl shadow-sm">
       <div className="px-3 py-1.5 bg-[var(--canvas)] text-xs text-[var(--steel)] border-b border-[var(--hairline)]">
         <div className="flex items-center justify-between">
           <span>{data.rows.length} 行{data.executionTime !== undefined ? ` · ${data.executionTime}ms` : ""}</span>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => downloadCSV(data)}
-              className="text-[var(--primary)] hover:underline font-medium flex items-center gap-1"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              导出 CSV
-            </button>
-            <button
-              onClick={handleExport}
-              className="text-[var(--primary)] hover:underline font-medium flex items-center gap-1"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              导出 Excel
-            </button>
+            <ExportMenu data={data} filenameBase="查询结果" />
           </div>
         </div>
       </div>
@@ -288,7 +247,7 @@ export default function TableResult({ data }: TableResultProps) {
             </tr>
           ))}
         </thead>
-        <tbody>
+        <tbody ref={tbodyRef}>
           {table.getRowModel().rows.map((row, i) => (
             <tr
               key={row.id}

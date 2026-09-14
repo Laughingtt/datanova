@@ -66,12 +66,10 @@ export default function AIAnnotationReview({
   if (annotations.length === 0) {
     return (
       <div className="card-cream text-center py-12">
-        <div className="card-cream-inner">
-          <p className="text-sm text-[var(--on-cream)]">暂无草稿标注</p>
-          <p className="text-xs text-[var(--slate)] mt-2">
-            使用 AI 自动标注来生成草稿标注
-          </p>
-        </div>
+        <p className="text-sm text-[var(--on-cream)]">暂无草稿标注</p>
+        <p className="text-xs text-[var(--slate)] mt-2">
+          使用 AI 自动标注来生成草稿标注
+        </p>
       </div>
     );
   }
@@ -88,7 +86,6 @@ export default function AIAnnotationReview({
             key={ann.id}
             className="card-base border-l-2 border-l-[var(--sunshine-500)]"
           >
-            <div className="card-base-inner">
             {/* Header */}
             <div className="flex items-center gap-2 mb-2">
               <span className="label-mono inline">
@@ -202,7 +199,6 @@ export default function AIAnnotationReview({
                 </button>
               </div>
             )}
-            </div>
           </div>
         );
       })}

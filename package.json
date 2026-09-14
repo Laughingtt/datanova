@@ -7,11 +7,22 @@
   "scripts": {
     "dev:server": "npm run dev --workspace=packages/server",
     "dev:web": "npm run dev --workspace=packages/web",
-    "build": "npm run build --workspace=packages/server && npm run build --workspace=packages/web"
+    "build": "npm run build --workspace=packages/server && npm run build --workspace=packages/web",
+    "lint": "eslint . --ext .ts,.tsx,.cjs",
+    "lint:fix": "eslint . --ext .ts,.tsx,.cjs --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,cjs,mjs,json,md,yml,yaml}\" --ignore-path .prettierignore",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,cjs,mjs,json,md,yml,yaml}\" --ignore-path .prettierignore",
+    "typecheck": "npm run build --workspace=packages/server -- --noEmit && npm run build --workspace=packages/web -- --noEmit",
+    "test": "npm run --workspace=packages/server test",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "@types/ws": "^8.18.1",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.1",
+    "prettier": "^3.9.6",
     "ws": "^8.21.0"
   },
   "allowScripts": {

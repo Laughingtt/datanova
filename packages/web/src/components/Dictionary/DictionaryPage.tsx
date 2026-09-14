@@ -4,6 +4,7 @@ import { dictionaryApi, type RecentChanges } from "../../api/client";
 import EntryDetail from "./EntryDetail";
 import BrowseTree from "./BrowseTree";
 import RelationshipDiagram from "./RelationshipDiagram";
+import { toast } from "../../stores/toast";
 
 interface SearchResult {
   metrics: Array<{ id: string; name: string; display_name: string; description?: string; type: string }>;
@@ -34,7 +35,7 @@ export default function DictionaryPage() {
       const data = await dictionaryApi.recentChanges(selectedDatasourceId);
       setRecentChanges(data);
     } catch (err) {
-      console.error("Failed to load recent changes:", err);
+      toast.error("加载最近变更失败", err instanceof Error ? err.message : undefined);
     } finally {
       setLoadingRecent(false);
     }
@@ -50,7 +51,7 @@ export default function DictionaryPage() {
       const r = await dictionaryApi.search(selectedDatasourceId, query.trim());
       setResults(r as SearchResult);
     } catch (err) {
-      console.error("Dictionary search failed:", err);
+      toast.error("搜索失败", err instanceof Error ? err.message : undefined);
       setResults(null);
     } finally {
       setSearching(false);
@@ -148,9 +149,7 @@ export default function DictionaryPage() {
                 <EntryDetail entry={selectedEntry.item} entryType={selectedEntry.type} onNavigate={handleNavigate} />
               ) : (
                 <div className="card-base text-center py-16">
-                  <div className="card-base-inner">
-                    <p className="text-sm text-[var(--steel)]">选择条目查看详情</p>
-                  </div>
+                  <p className="text-sm text-[var(--steel)]">选择条目查看详情</p>
                 </div>
               )}
             </div>
@@ -179,9 +178,7 @@ export default function DictionaryPage() {
                 {results ? (
                   totalCount === 0 ? (
                     <div className="card-base text-center py-12">
-                      <div className="card-base-inner">
-                        <p className="text-sm text-[var(--steel)]">未找到结果："{query}"</p>
-                      </div>
+                      <p className="text-sm text-[var(--steel)]">未找到结果："{query}"</p>
                     </div>
                   ) : (
                     <div className="space-y-6">
@@ -249,10 +246,8 @@ export default function DictionaryPage() {
                             <div className="space-y-1.5">
                               {recentChanges.annotations.map((ann: any, idx: number) => (
                                 <div key={ann.id ?? idx} className="card-base px-4 py-2.5">
-                                  <div className="card-base-inner">
-                                    <p className="text-sm text-[var(--ink)]">{ann.annotation}</p>
-                                    <p className="text-xs text-[var(--steel)] mt-0.5">{ann.table_name}{ann.field_name ? `.${ann.field_name}` : ""}</p>
-                                  </div>
+                                  <p className="text-sm text-[var(--ink)]">{ann.annotation}</p>
+                                  <p className="text-xs text-[var(--steel)] mt-0.5">{ann.table_name}{ann.field_name ? `.${ann.field_name}` : ""}</p>
                                 </div>
                               ))}
                             </div>
@@ -264,10 +259,8 @@ export default function DictionaryPage() {
                             <div className="space-y-1.5">
                               {recentChanges.metrics.map((m: any, idx: number) => (
                                 <div key={m.id ?? idx} className="card-base px-4 py-2.5">
-                                  <div className="card-base-inner">
-                                    <p className="text-sm font-medium text-[var(--ink)]">{m.display_name || m.name}</p>
-                                    {m.description && <p className="text-xs text-[var(--steel)] mt-0.5">{m.description}</p>}
-                                  </div>
+                                  <p className="text-sm font-medium text-[var(--ink)]">{m.display_name || m.name}</p>
+                                  {m.description && <p className="text-xs text-[var(--steel)] mt-0.5">{m.description}</p>}
                                 </div>
                               ))}
                             </div>
@@ -279,10 +272,8 @@ export default function DictionaryPage() {
                             <div className="space-y-1.5">
                               {recentChanges.dimensions.map((d: any, idx: number) => (
                                 <div key={d.id ?? idx} className="card-base px-4 py-2.5">
-                                  <div className="card-base-inner">
-                                    <p className="text-sm font-medium text-[var(--ink)]">{d.display_name || d.name}</p>
-                                    {d.data_type && <span className="text-xs font-mono text-[var(--steel)]">{d.data_type}</span>}
-                                  </div>
+                                  <p className="text-sm font-medium text-[var(--ink)]">{d.display_name || d.name}</p>
+                                  {d.data_type && <span className="text-xs font-mono text-[var(--steel)]">{d.data_type}</span>}
                                 </div>
                               ))}
                             </div>
@@ -307,9 +298,7 @@ export default function DictionaryPage() {
                   <EntryDetail entry={selectedEntry.item} entryType={selectedEntry.type} onNavigate={handleNavigate} />
                 ) : (
                   <div className="card-base text-center py-16">
-                    <div className="card-base-inner">
-                      <p className="text-sm text-[var(--steel)]">选择条目查看详情</p>
-                    </div>
+                    <p className="text-sm text-[var(--steel)]">选择条目查看详情</p>
                   </div>
                 )}
               </div>
