@@ -258,18 +258,15 @@ export default function MetricsPage() {
 
   return (
     <div className="h-full flex flex-col bg-[var(--canvas)]">
-      {/* Sunset stripe top accent */}
-      <div className="sunset-stripe" />
-
       <div className="flex-1 flex flex-col min-h-0">
         {/* Header */}
         <div className="px-8 pt-8 pb-4">
           <div className="flex items-end justify-between mb-6">
             <div>
-              <h2 className="font-display text-heading-2 text-[var(--ink)]">
+              <h2 className="text-2xl font-semibold text-[var(--foreground)]">
                 指标管理
               </h2>
-              <p className="text-body-sm text-[var(--slate)] mt-1">
+              <p className="text-sm text-[var(--muted-foreground)] mt-1">
                 定义业务指标、维度和语义模型，提升 AI 查询准确度
               </p>
             </div>
@@ -280,7 +277,7 @@ export default function MetricsPage() {
                     setActiveChannel("metric_dev");
                     setView("chat");
                   }}
-                  className="btn-primary inline-flex items-center gap-1.5"
+                  className="btn-secondary inline-flex items-center gap-1.5"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/></svg>
                   {metricDevEntry.label}
@@ -289,7 +286,7 @@ export default function MetricsPage() {
               <button
                 onClick={handleAiSuggest}
                 disabled={aiSuggesting}
-                className="btn-primary inline-flex items-center gap-1.5"
+                className="btn-secondary inline-flex items-center gap-1.5"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/></svg>
                 {aiSuggesting ? "分析中..." : "AI 推荐指标"}
@@ -317,14 +314,14 @@ export default function MetricsPage() {
               </button>
             </div>
             {showTableSelector && tableNames.length > 0 && (
-              <div className="mt-4 p-4 rounded-xl border border-[var(--hairline)] bg-[var(--surface)] shadow-[var(--shadow-1)]">
+              <div className="mt-4 p-4 rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-xs)]">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-medium text-[var(--ink)]">
                     选择用于 AI 推荐的表（不选则全局推荐）
                   </span>
                   <button
                     onClick={() => setSelectedTables([])}
-                    className="text-xs text-[var(--primary)] hover:underline"
+                    className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
                   >
                     清除选择
                   </button>
@@ -345,8 +342,8 @@ export default function MetricsPage() {
                         }
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 ${
                           isSelected
-                            ? "bg-[var(--primary)] text-white shadow-sm"
-                            : "bg-[var(--canvas)] text-[var(--steel)] border border-[var(--hairline)] hover:border-[var(--primary)]/40 hover:text-[var(--ink)]"
+                            ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                            : "bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)] hover:bg-[var(--muted)]"
                         }`}
                       >
                         {name}
@@ -357,41 +354,40 @@ export default function MetricsPage() {
               </div>
             )}
             {aiSuggestError && (
-              <div className="mt-3 px-3 py-2 rounded-lg border border-[var(--error)]/20 bg-[var(--error-soft)] text-[var(--error)] text-xs">
+              <div className="mt-3 px-3 py-2 rounded-lg border border-[color-mix(in_srgb,var(--error)_20%,transparent)] bg-[var(--error-soft)] text-[var(--error)] text-xs">
                 {aiSuggestError}
               </div>
             )}
             {aiSuggestSuccess && (
-              <div className="mt-3 px-3 py-2 rounded-lg border border-[var(--success)]/20 bg-[var(--success-soft)] text-[var(--success)] text-xs">
+              <div className="mt-3 px-3 py-2 rounded-lg border border-[color-mix(in_srgb,var(--success)_20%,transparent)] bg-[var(--success-soft)] text-[var(--success)] text-xs">
                 AI 推荐完成，新指标/维度/模型已创建为草稿
               </div>
             )}
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center gap-1 border-b border-[var(--hairline)]">
-            {tabs.map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setTab(t.key)}
-                className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                  tab === t.key
-                    ? "border-[var(--primary)] text-[var(--primary-text)]"
-                    : "border-transparent text-[var(--steel)] hover:text-[var(--ink)]"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
+          <div className="flex items-center justify-between gap-4">
+            <div className="tabs-track">
+              {tabs.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  className="tab-trigger"
+                  data-active={tab === t.key}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
 
             {/* Show deprecated toggle */}
-            <div className="ml-auto flex items-center gap-2 mb-1">
-              <label className="text-xs text-[var(--steel)] flex items-center gap-1.5 cursor-pointer">
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-[var(--muted-foreground)] flex items-center gap-1.5 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={showDeprecated}
                   onChange={(e) => setShowDeprecated(e.target.checked)}
-                  className="rounded border-[var(--hairline-strong)] text-[var(--primary)] focus:ring-[var(--primary)]"
+                  className="rounded border-[var(--input)] accent-[var(--primary)]"
                 />
                 显示已弃用
               </label>
@@ -424,9 +420,13 @@ export default function MetricsPage() {
               {tab === "metrics" && (
                 <>
                   {metricsLoading ? (
-                    <p className="text-sm text-[var(--steel)] py-4">加载中...</p>
+                    <div className="border border-dashed border-[var(--border)] rounded-xl p-8 text-center">
+                      <p className="text-sm text-[var(--muted-foreground)]">加载中...</p>
+                    </div>
                   ) : filteredMetrics.length === 0 ? (
-                    <p className="text-sm text-[var(--steel)] py-4">暂无指标定义</p>
+                    <div className="border border-dashed border-[var(--border)] rounded-xl p-8 text-center">
+                      <p className="text-sm text-[var(--muted-foreground)]">暂无指标定义</p>
+                    </div>
                   ) : (
                     filteredMetrics.map((m) => {
                       const badge = STATUS_BADGE[m.status] || STATUS_BADGE.draft;
@@ -437,8 +437,8 @@ export default function MetricsPage() {
                           onClick={() => setSelectedMetric(m)}
                           className={`w-full text-left px-3 py-2.5 rounded-md transition-colors ${
                             isSelected
-                              ? "bg-[var(--primary-soft)] border border-[var(--primary)]"
-                              : "hover:bg-[var(--surface)] border border-transparent"
+                              ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                              : "hover:bg-[var(--muted)]"
                           }`}
                         >
                           <div className="flex items-center justify-between">
@@ -446,10 +446,10 @@ export default function MetricsPage() {
                               {m.display_name || m.name}
                             </span>
                             <div className="flex items-center gap-1.5">
-                              <span className={`text-xs px-1.5 py-0.5 rounded ${
-                                m.metric_type === 'atomic' ? 'bg-blue-100 text-blue-700' :
-                                m.metric_type === 'derived' ? 'bg-green-100 text-green-700' :
-                                'bg-purple-100 text-purple-700'
+                              <span className={`badge-soft ${
+                                m.metric_type === 'atomic' ? 'bg-[var(--info-soft)] text-[var(--info)]' :
+                                m.metric_type === 'derived' ? 'bg-[var(--success-soft)] text-[var(--success)]' :
+                                'bg-[var(--accent)] text-[var(--primary-text)]'
                               }`}>
                                 {m.metric_type === 'atomic' ? '原子' :
                                  m.metric_type === 'derived' ? '衍生' : '复合'}
@@ -475,9 +475,13 @@ export default function MetricsPage() {
               {tab === "dimensions" && (
                 <>
                   {dimensionsLoading ? (
-                    <p className="text-sm text-[var(--steel)] py-4">加载中...</p>
+                    <div className="border border-dashed border-[var(--border)] rounded-xl p-8 text-center">
+                      <p className="text-sm text-[var(--muted-foreground)]">加载中...</p>
+                    </div>
                   ) : filteredDimensions.length === 0 ? (
-                    <p className="text-sm text-[var(--steel)] py-4">暂无维度定义</p>
+                    <div className="border border-dashed border-[var(--border)] rounded-xl p-8 text-center">
+                      <p className="text-sm text-[var(--muted-foreground)]">暂无维度定义</p>
+                    </div>
                   ) : (
                     filteredDimensions.map((d) => {
                       const dimBadge = STATUS_BADGE[d.status] || STATUS_BADGE.draft;
@@ -488,8 +492,8 @@ export default function MetricsPage() {
                           onClick={() => setSelectedDimension(d)}
                           className={`w-full text-left px-3 py-2.5 rounded-md transition-colors ${
                             isSelected
-                              ? "bg-[var(--primary-soft)] border border-[var(--primary)]"
-                              : "hover:bg-[var(--surface)] border border-transparent"
+                              ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                              : "hover:bg-[var(--muted)]"
                           }`}
                         >
                           <div className="flex items-center justify-between">
@@ -501,9 +505,9 @@ export default function MetricsPage() {
                             </span>
                             <div className="flex items-center gap-1.5">
                               {d.is_enum_dict && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">字典</span>
+                                <span className="badge-soft bg-[var(--warning-soft)] text-[var(--warning)]">字典</span>
                               )}
-                              <span className="text-xs text-[var(--steel)] bg-[var(--surface)] px-1.5 py-0.5 rounded">
+                              <span className="text-[11px] text-[var(--muted-foreground)] bg-[var(--muted)] px-1.5 py-0.5 rounded">
                                 {d.data_type}
                               </span>
                               <span className={`flex items-center gap-1 text-xs ${dimBadge.cls}`}>
@@ -525,9 +529,13 @@ export default function MetricsPage() {
               {tab === "models" && (
                 <>
                   {modelsLoading ? (
-                    <p className="text-sm text-[var(--steel)] py-4">加载中...</p>
+                    <div className="border border-dashed border-[var(--border)] rounded-xl p-8 text-center">
+                      <p className="text-sm text-[var(--muted-foreground)]">加载中...</p>
+                    </div>
                   ) : filteredModels.length === 0 ? (
-                    <p className="text-sm text-[var(--steel)] py-4">暂无模型定义</p>
+                    <div className="border border-dashed border-[var(--border)] rounded-xl p-8 text-center">
+                      <p className="text-sm text-[var(--muted-foreground)]">暂无模型定义</p>
+                    </div>
                   ) : (
                     filteredModels.map((m) => {
                       const badge = STATUS_BADGE[m.status] || STATUS_BADGE.draft;
@@ -538,8 +546,8 @@ export default function MetricsPage() {
                           onClick={() => setSelectedModel(m)}
                           className={`w-full text-left px-3 py-2.5 rounded-md transition-colors ${
                             isSelected
-                              ? "bg-[var(--primary-soft)] border border-[var(--primary)]"
-                              : "hover:bg-[var(--surface)] border border-transparent"
+                              ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                              : "hover:bg-[var(--muted)]"
                           }`}
                         >
                           <div className="flex items-center justify-between">
@@ -601,13 +609,12 @@ export default function MetricsPage() {
       </div>
       {/* AI Preview Modal */}
       {aiPreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--hairline)] w-full max-w-3xl mx-4 max-h-[85vh] flex flex-col">
-            <div className="sunset-stripe" />
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--hairline)]">
+        <div className="fixed inset-0 z-50 bg-[color-mix(in_srgb,var(--foreground)_10%,transparent)] backdrop-blur-[2px] flex items-center justify-center">
+          <div className="bg-[var(--popover)] rounded-xl ring-1 ring-[color-mix(in_srgb,var(--foreground)_10%,transparent)] shadow-[var(--shadow-3)] w-full max-w-3xl mx-4 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--border)]">
               <div>
-                <h3 className="font-display text-lg text-[var(--ink)]">AI 推荐结果</h3>
-                <p className="text-xs text-[var(--steel)] mt-0.5">选择要创建的项目，未选中的将被忽略</p>
+                <h3 className="text-base font-semibold text-[var(--foreground)]">AI 推荐结果</h3>
+                <p className="text-xs text-[var(--muted-foreground)] mt-0.5">选择要创建的项目，未选中的将被忽略</p>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -631,28 +638,28 @@ export default function MetricsPage() {
                 <button onClick={() => { setAiPreview(null); setSelectedSuggestions(new Set()); }} className="btn-ghost text-xs">关闭</button>
               </div>
             </div>
-            <div className="flex-1 min-h-0 overflow-auto custom-scrollbar p-6 space-y-6">
+            <div className="flex-1 min-h-0 overflow-auto custom-scrollbar px-5 py-4 space-y-6">
               {aiPreviewType === "semantic" && aiPreview.metrics && aiPreview.metrics.length > 0 && (
                 <div>
                   <h4 className="label-mono mb-3">推荐指标 ({aiPreview.metrics.length})</h4>
                   <div className="space-y-2">
                     {aiPreview.metrics.map((m: any, i: number) => (
-                      <label key={i} className={`flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${selectedSuggestions.has(i) ? "border-[var(--primary)] bg-[var(--primary-soft)]" : "border-[var(--hairline)] bg-[var(--canvas)] hover:border-[var(--primary)]/50"}`}>
-                        <input type="checkbox" checked={selectedSuggestions.has(i)} onChange={() => toggleSuggestion(i)} className="mt-1 rounded border-[var(--hairline-strong)] text-[var(--primary)] focus:ring-[var(--primary)]" />
+                      <label key={i} className={`flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${selectedSuggestions.has(i) ? "border-[var(--border)] bg-[var(--accent)]" : "border-[var(--border)] bg-[var(--card)] hover:bg-[color-mix(in_srgb,var(--muted)_60%,transparent)]"}`}>
+                        <input type="checkbox" checked={selectedSuggestions.has(i)} onChange={() => toggleSuggestion(i)} className="mt-1 rounded border-[var(--input)] accent-[var(--primary)]" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-[var(--ink)]">{m.display_name || m.name}</span>
                             <span className="text-[10px] text-[var(--stone)] font-mono">{m.name}</span>
-                            {m.metric_type && <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                                  m.metric_type === 'atomic' ? 'bg-blue-100 text-blue-700' :
-                                  m.metric_type === 'derived' ? 'bg-green-100 text-green-700' :
-                                  'bg-purple-100 text-purple-700'
+                            {m.metric_type && <span className={`badge-soft ${
+                                  m.metric_type === 'atomic' ? 'bg-[var(--info-soft)] text-[var(--info)]' :
+                                  m.metric_type === 'derived' ? 'bg-[var(--success-soft)] text-[var(--success)]' :
+                                  'bg-[var(--accent)] text-[var(--primary-text)]'
                                 }`}>{m.metric_type === 'atomic' ? '原子' : m.metric_type === 'derived' ? '衍生' : '复合'}</span>}
-	                            {m.unit && <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--accent-100)] text-[var(--primary-text)]">{m.unit}</span>}
+	                            {m.unit && <span className="badge-soft bg-[var(--accent)] text-[var(--primary-text)]">{m.unit}</span>}
 	                          </div>
 	                          {m.business_context && <p className="text-xs text-[var(--steel)] mt-0.5">{m.business_context}</p>}
 	                          {m.description && <p className="text-xs text-[var(--steel)] mt-0.5">{m.description}</p>}
-	                          <p className="text-xs font-mono text-[var(--charcoal)] mt-1 bg-[var(--canvas)] rounded px-2 py-1 inline-block">{m.sql || m.sql_expression}</p>
+	                          <p className="text-xs font-mono text-[var(--muted-foreground)] mt-1 bg-[var(--muted)] rounded px-2 py-1 inline-block">{m.sql || m.sql_expression}</p>
                         </div>
                       </label>
                     ))}
@@ -666,15 +673,15 @@ export default function MetricsPage() {
                     {aiPreview.dimensions.map((d: any, i: number) => {
                       const globalIdx = aiPreviewType === "semantic" ? (aiPreview.metrics?.length || 0) + i : i;
                       return (
-                        <label key={i} className={`flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${selectedSuggestions.has(globalIdx) ? "border-[var(--primary)] bg-[var(--primary-soft)]" : "border-[var(--hairline)] bg-[var(--canvas)] hover:border-[var(--primary)]/50"}`}>
-                          <input type="checkbox" checked={selectedSuggestions.has(globalIdx)} onChange={() => toggleSuggestion(globalIdx)} className="mt-1 rounded border-[var(--hairline-strong)] text-[var(--primary)] focus:ring-[var(--primary)]" />
+                        <label key={i} className={`flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${selectedSuggestions.has(globalIdx) ? "border-[var(--border)] bg-[var(--accent)]" : "border-[var(--border)] bg-[var(--card)] hover:bg-[color-mix(in_srgb,var(--muted)_60%,transparent)]"}`}>
+                          <input type="checkbox" checked={selectedSuggestions.has(globalIdx)} onChange={() => toggleSuggestion(globalIdx)} className="mt-1 rounded border-[var(--input)] accent-[var(--primary)]" />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium text-[var(--ink)]">{d.display_name || d.name}</span>
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--canvas)] text-[var(--steel)] border border-[var(--hairline)]">{d.data_type}</span>
+                              <span className="badge-soft bg-[var(--muted)] text-[var(--muted-foreground)]">{d.data_type}</span>
                             </div>
                             {d.description && <p className="text-xs text-[var(--steel)] mt-0.5">{d.description}</p>}
-                            <p className="text-xs font-mono text-[var(--charcoal)] mt-1">{d.sql_expression}</p>
+                            <p className="text-xs font-mono text-[var(--muted-foreground)] mt-1">{d.sql_expression}</p>
                           </div>
                         </label>
                       );
@@ -689,8 +696,8 @@ export default function MetricsPage() {
                     {aiPreview.models.map((mdl: any, i: number) => {
                       const globalIdx = (aiPreview.metrics?.length || 0) + (aiPreview.dimensions?.length || 0) + i;
                       return (
-                        <label key={i} className={`flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${selectedSuggestions.has(globalIdx) ? "border-[var(--primary)] bg-[var(--primary-soft)]" : "border-[var(--hairline)] bg-[var(--canvas)] hover:border-[var(--primary)]/50"}`}>
-                          <input type="checkbox" checked={selectedSuggestions.has(globalIdx)} onChange={() => toggleSuggestion(globalIdx)} className="mt-1 rounded border-[var(--hairline-strong)] text-[var(--primary)] focus:ring-[var(--primary)]" />
+                        <label key={i} className={`flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${selectedSuggestions.has(globalIdx) ? "border-[var(--border)] bg-[var(--accent)]" : "border-[var(--border)] bg-[var(--card)] hover:bg-[color-mix(in_srgb,var(--muted)_60%,transparent)]"}`}>
+                          <input type="checkbox" checked={selectedSuggestions.has(globalIdx)} onChange={() => toggleSuggestion(globalIdx)} className="mt-1 rounded border-[var(--input)] accent-[var(--primary)]" />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium text-[var(--ink)]">{mdl.name}</span>
@@ -705,8 +712,8 @@ export default function MetricsPage() {
                 </div>
               )}
             </div>
-            <div className="flex items-center justify-between px-6 py-4 border-t border-[var(--hairline)] bg-[var(--canvas)]">
-              <span className="text-xs text-[var(--steel)]">已选择 {selectedSuggestions.size} 项</span>
+            <div className="flex items-center justify-between px-5 py-3 border-t border-[var(--border)]">
+              <span className="text-xs text-[var(--muted-foreground)]">已选择 {selectedSuggestions.size} 项</span>
               <div className="flex items-center gap-3">
                 <button onClick={() => { setAiPreview(null); setSelectedSuggestions(new Set()); }} className="btn-ghost">放弃全部</button>
                 <button onClick={handleCreateFromPreview} disabled={creatingFromPreview || selectedSuggestions.size === 0} className="btn-primary disabled:opacity-40">
@@ -720,25 +727,25 @@ export default function MetricsPage() {
 
       {/* Bulk Import Modal */}
       {showBulkImport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-[var(--canvas)] rounded-lg shadow-xl border border-[var(--hairline)] w-full max-w-2xl mx-4 p-6">
-            <h3 className="font-display text-heading-4 text-[var(--ink)] mb-4">批量导入指标</h3>
-            <p className="text-xs text-[var(--slate)] mb-4">
-              提供 SQL、业务描述或文档内容，AI 将结合数据源表结构生成推荐指标和维度（草稿状态）
-            </p>
+        <div className="fixed inset-0 z-50 bg-[color-mix(in_srgb,var(--foreground)_10%,transparent)] backdrop-blur-[2px] flex items-center justify-center">
+          <div className="bg-[var(--popover)] rounded-xl ring-1 ring-[color-mix(in_srgb,var(--foreground)_10%,transparent)] shadow-[var(--shadow-3)] w-full max-w-2xl mx-4 flex flex-col">
+            <div className="px-5 py-3 border-b border-[var(--border)]">
+              <h3 className="text-base font-semibold text-[var(--foreground)]">批量导入指标</h3>
+              <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
+                提供 SQL、业务描述或文档内容，AI 将结合数据源表结构生成推荐指标和维度（草稿状态）
+              </p>
+            </div>
+            <div className="px-5 py-4">
             {/* Content type selector */}
-            <div className="flex gap-2 mb-3">
+            <div className="tabs-track mb-3">
               {(["description", "sql", "document"] as const).map((ct) => {
                 const labels: Record<string, string> = { description: "业务描述", sql: "SQL", document: "文档" };
                 return (
                   <button
                     key={ct}
                     onClick={() => setBulkContentType(ct)}
-                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                      bulkContentType === ct
-                        ? "bg-[var(--primary)] text-[var(--on-dark)]"
-                        : "bg-[var(--surface)] text-[var(--slate)] border border-[var(--hairline)]"
-                    }`}
+                    className="tab-trigger"
+                    data-active={bulkContentType === ct}
                   >
                     {labels[ct]}
                   </button>
@@ -747,7 +754,7 @@ export default function MetricsPage() {
             </div>
             {/* Content input */}
             <textarea
-              className="w-full h-48 px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder:text-[var(--stone)] resize-y font-mono"
+              className="input-field w-full h-48 py-2 resize-y font-mono"
               value={bulkContent}
               onChange={(e) => setBulkContent(e.target.value)}
               placeholder={
@@ -759,11 +766,12 @@ export default function MetricsPage() {
               }
             />
             {aiSuggestError && (
-              <div className="mt-3 p-2 rounded-md bg-[var(--error-soft)] text-[var(--error)] text-xs">
+              <div className="mt-3 p-3 rounded-lg bg-[var(--error-soft)] text-[var(--error)] text-xs">
                 {aiSuggestError}
               </div>
             )}
-            <div className="flex justify-end gap-3 mt-4">
+            </div>
+            <div className="flex justify-end gap-3 px-5 py-3 border-t border-[var(--border)]">
               <button
                 onClick={() => { setShowBulkImport(false); setBulkContent(""); setAiSuggestError(null); }}
                 className="btn-ghost"
@@ -773,7 +781,7 @@ export default function MetricsPage() {
               <button
                 onClick={handleBulkImport}
                 disabled={bulkImporting || !bulkContent.trim()}
-                className="btn-dark"
+                className="btn-primary"
               >
                 {bulkImporting ? "AI 分析中..." : "开始导入"}
               </button>

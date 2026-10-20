@@ -150,10 +150,10 @@ export default function TableResult({ data }: TableResultProps) {
             const isHigh = isAnomalyHigh(val, stats);
             return (
               <div
-                className="flex items-center gap-1 px-1 -mx-1 rounded bg-red-100"
+                className="flex items-center gap-1 px-1 -mx-1 rounded bg-[var(--error-soft)]"
                 title={`此值相比该列其他值异常${isHigh ? "偏高" : "偏低"}`}
               >
-                <svg className="w-3.5 h-3.5 text-red-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-3.5 h-3.5 text-[var(--error)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                 </svg>
                 <span>{displayValue}</span>
@@ -187,8 +187,8 @@ export default function TableResult({ data }: TableResultProps) {
             const { pct, direction } = change;
             const isUp = direction === "up";
             const colorClass = isUp
-              ? "text-green-600"
-              : "text-red-600";
+              ? "text-[var(--success)]"
+              : "text-[var(--error)]";
             const arrow = isUp ? "↑" : "↓";
 
             return (
@@ -216,8 +216,8 @@ export default function TableResult({ data }: TableResultProps) {
   useTableRowEntrance(tbodyRef, "tr", [data]);
 
   return (
-    <div className="my-3 overflow-x-auto border border-[var(--hairline)] rounded-xl shadow-sm">
-      <div className="px-3 py-1.5 bg-[var(--canvas)] text-xs text-[var(--steel)] border-b border-[var(--hairline)]">
+    <div className="my-3 overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--card)]">
+      <div className="px-3 py-1.5 bg-[color-mix(in_srgb,var(--muted)_60%,transparent)] text-xs font-medium text-[var(--muted-foreground)] border-b border-[var(--border)]">
         <div className="flex items-center justify-between">
           <span>{data.rows.length} 行{data.executionTime !== undefined ? ` · ${data.executionTime}ms` : ""}</span>
           <div className="flex items-center gap-3">
@@ -228,16 +228,14 @@ export default function TableResult({ data }: TableResultProps) {
       <table className="w-full text-sm">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id} className="bg-[var(--canvas)]">
+            <tr key={headerGroup.id} className="bg-[color-mix(in_srgb,var(--muted)_60%,transparent)]">
               {headerGroup.headers.map((header) => {
                 const isTrendCol = header.id.endsWith("_trend");
                 return (
                   <th
                     key={header.id}
-                    className={`px-3 py-2 text-left font-mono text-xs uppercase tracking-wider border-b border-[var(--hairline)] ${
-                      isTrendCol
-                        ? "text-[var(--steel)] bg-[var(--surface)] italic font-normal"
-                        : "text-[var(--steel)]"
+                    className={`px-3 py-2 text-left font-mono text-xs font-medium uppercase tracking-wider border-b border-[var(--border)] text-[var(--muted-foreground)] ${
+                      isTrendCol ? "bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] italic font-normal" : ""
                     }`}
                   >
                     {flexRender(header.column.columnDef.header, header.getContext())}
@@ -251,9 +249,9 @@ export default function TableResult({ data }: TableResultProps) {
           {table.getRowModel().rows.map((row, i) => (
             <tr
               key={row.id}
-              className={`border-b border-[var(--hairline-soft)] ${
-                i % 2 === 0 ? "bg-[var(--canvas)]" : "bg-[var(--surface)]"
-              } hover:bg-[var(--primary-soft)] transition-colors`}
+              className={`border-b border-[var(--border)] ${
+                i % 2 === 0 ? "bg-[var(--card)]" : "bg-[color-mix(in_srgb,var(--muted)_20%,transparent)]"
+              } hover:bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] transition-colors`}
             >
               {row.getVisibleCells().map((cell) => {
                 const isTrendCol = cell.column.id.endsWith("_trend");
@@ -262,8 +260,8 @@ export default function TableResult({ data }: TableResultProps) {
                     key={cell.id}
                     className={`px-3 py-2 font-mono text-xs ${
                       isTrendCol
-                        ? "text-[var(--steel)] bg-[var(--surface)]/50 w-24 min-w-[6rem]"
-                        : "text-[var(--charcoal)]"
+                        ? "text-[var(--muted-foreground)] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] w-24 min-w-[6rem]"
+                        : "text-[var(--foreground)]"
                     }`}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

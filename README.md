@@ -145,7 +145,6 @@ npm run dev:web      # 前端 http://localhost:5173
 | REST API + WebSocket | [docs/06-route-registration.md](docs/06-route-registration.md) |
 | 前端组件 | [docs/07-frontend-components.md](docs/07-frontend-components.md) |
 | 设计规范 | [docs/DESIGN.md](docs/DESIGN.md) |
-| Skills 编写指南 | [docs/skills-guide.md](docs/skills-guide.md) |
 
 ---
 

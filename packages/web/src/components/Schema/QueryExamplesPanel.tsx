@@ -92,10 +92,10 @@ export default function QueryExamplesPanel({ datasourceId, tables }: QueryExampl
 
       {/* Examples list */}
       {examplesLoading ? (
-        <p className="text-sm text-[var(--steel)]">加载中...</p>
+        <p className="text-sm text-[var(--muted-foreground)]">加载中...</p>
       ) : examples.length === 0 && !showForm ? (
-        <div className="card-cream text-center py-8">
-          <p className="text-sm text-[var(--on-cream)]">
+        <div className="rounded-xl border border-dashed border-[var(--border)] p-8 py-8 text-center">
+          <p className="text-sm text-[var(--foreground)]">
             {selectedTable} 暂无查询示例
           </p>
           <button
@@ -108,7 +108,7 @@ export default function QueryExamplesPanel({ datasourceId, tables }: QueryExampl
       ) : (
         <>
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-[var(--ink)]">
+            <h3 className="text-sm font-medium text-[var(--foreground)]">
               示例 ({examples.length})
             </h3>
             <button
@@ -124,10 +124,10 @@ export default function QueryExamplesPanel({ datasourceId, tables }: QueryExampl
               <div key={ex.id} className="card-base">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-[var(--ink)] font-medium">
+                    <p className="text-sm text-[var(--foreground)] font-medium">
                       {ex.question}
                     </p>
-                    <pre className="mt-1 text-xs font-mono text-[var(--slate)] whitespace-pre-wrap bg-[var(--surface)] rounded p-2 border border-[var(--hairline-soft)]">
+                    <pre className="mt-1 text-xs font-mono text-[var(--muted-foreground)] whitespace-pre-wrap bg-[var(--muted)] rounded-lg p-3">
                       {ex.sql}
                     </pre>
                   </div>
@@ -137,7 +137,7 @@ export default function QueryExamplesPanel({ datasourceId, tables }: QueryExampl
                       className={`btn-ghost text-xs px-2 py-1 ${
                         ex.is_verified
                           ? "text-[var(--success)]"
-                          : "text-[var(--stone)]"
+                          : "text-[var(--muted-foreground)]"
                       }`}
                       title={ex.is_verified ? "已验证 — 点击取消" : "未验证 — 点击确认"}
                     >

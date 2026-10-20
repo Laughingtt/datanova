@@ -62,15 +62,11 @@ function DataViewToggle({ tableData, isMarkdownTable }: { tableData: TableData; 
 
   return (
     <div className="my-3">
-      <div className="flex items-center gap-1 mb-2">
+      <div className="tabs-track mb-2">
         <button
           onClick={() => setTab("table")}
-          className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
-          style={{
-            backgroundColor: tab === "table" ? "var(--primary-soft)" : "transparent",
-            color: tab === "table" ? "var(--primary)" : "var(--steel)",
-            border: tab === "table" ? "1px solid var(--primary)" : "1px solid transparent",
-          }}
+          data-active={tab === "table"}
+          className="tab-trigger h-7 px-2.5 text-xs"
         >
           <svg className="w-3.5 h-3.5 inline -mt-0.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75H5.625m13.5 0H5.625M5.625 19.5V7.875C5.625 6.504 6.504 5.625 7.875 5.625h9.75c1.371 0 2.25.879 2.25 2.25v11.625" />
@@ -79,12 +75,8 @@ function DataViewToggle({ tableData, isMarkdownTable }: { tableData: TableData; 
         </button>
         <button
           onClick={() => setTab("chart")}
-          className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
-          style={{
-            backgroundColor: tab === "chart" ? "var(--primary-soft)" : "transparent",
-            color: tab === "chart" ? "var(--primary)" : "var(--steel)",
-            border: tab === "chart" ? "1px solid var(--primary)" : "1px solid transparent",
-          }}
+          data-active={tab === "chart"}
+          className="tab-trigger h-7 px-2.5 text-xs"
         >
           <svg className="w-3.5 h-3.5 inline -mt-0.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
@@ -143,13 +135,11 @@ export default function MessageItem({ message, conversationId, onConfirmAction, 
   }, [message.content, message.tableData]);
 
   return (
-    <div className={`msg-item px-6 py-4 ${isUser ? "flex justify-end" : ""}`}>
-      <div className={`max-w-3xl ${isUser ? "" : "w-full"}`}>
+    <div className={`msg-item px-4 py-3 ${isUser ? "flex justify-end" : ""}`}>
+      <div className={`mx-auto w-full max-w-3xl ${isUser ? "flex flex-col items-end" : ""}`}>
         {/* Role label */}
-        <div className="flex items-center gap-2 mb-1.5">
-          <span className={`text-xs font-body font-medium uppercase tracking-wider ${
-            isUser ? "text-[var(--primary-text)]" : "text-[var(--steel)]"
-          }`}>
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-medium text-[var(--muted-foreground)]">
             {isUser ? "你" : "DataNova"}
           </span>
           {message.isStreaming && (
@@ -159,7 +149,7 @@ export default function MessageItem({ message, conversationId, onConfirmAction, 
 
         {/* Follow-up context tag */}
         {message.followUpContext && (
-          <div className="mb-2 inline-flex items-center gap-1.5 px-2 py-1 bg-blue-50 border border-blue-200 rounded text-xs text-blue-600">
+          <div className="mb-2 inline-flex items-center gap-1.5 rounded-md bg-[var(--accent)] px-2 py-1 text-xs text-[var(--accent-foreground)]">
             <span>&#x1F4AC;</span><span>{message.followUpContext}</span>
           </div>
         )}

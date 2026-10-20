@@ -1,5 +1,7 @@
 # DataNova UX Optimization Plan — Semantic Layer, Schema, Dictionary
 
+> ⚠️ **Historical document.** This plan was authored before the open-source cleanup pass; some commands below reference tools (`playwright`, `docs/demo-data/employees-init.sql`) that were later removed. See `CHANGELOG.md` → `[Unreleased] → Removed` for the full list. Original instructions are preserved verbatim for historical accuracy.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Optimize the user onboarding flow, simplify semantic layer forms, improve AI annotation UX, and add browse mode to the data dictionary — enabling non-technical business users to efficiently input their database schema and business information into DataNova.

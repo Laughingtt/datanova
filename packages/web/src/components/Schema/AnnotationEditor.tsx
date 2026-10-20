@@ -50,9 +50,9 @@ export default function AnnotationEditor({ value, onSave, placeholder = "添加�
       <span
         onClick={() => { setDraft(value); setEditing(true); }}
         className="inline-block px-2 py-0.5 rounded-md
-                   bg-[var(--primary-soft)] border border-[var(--primary)]/30
-                   text-xs text-[var(--primary-text)] cursor-pointer
-                   hover:bg-[var(--primary)]/20 transition-colors"
+                   bg-[var(--accent)] border border-[color-mix(in_srgb,var(--primary)_30%,transparent)]
+                   text-xs text-[var(--accent-foreground)] cursor-pointer
+                   hover:bg-[var(--primary-soft)] transition-colors"
       >
         {value}
       </span>
@@ -63,9 +63,9 @@ export default function AnnotationEditor({ value, onSave, placeholder = "添加�
     <span
       onClick={() => { setDraft(""); setEditing(true); }}
       className="inline-block px-2 py-0.5 rounded-md
-                 border border-dashed border-[var(--hairline-strong)]
-                 text-xs text-[var(--stone)] cursor-pointer
-                 hover:border-[var(--steel)] hover:text-[var(--steel)] transition-colors"
+                 border border-dashed border-[var(--border)]
+                 text-xs text-[var(--muted-foreground)] cursor-pointer
+                 hover:border-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
     >
       {placeholder}
     </span>

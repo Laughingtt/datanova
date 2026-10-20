@@ -33,20 +33,20 @@ export default function SchemaPromptPreview({ datasourceId }: SchemaPromptPrevie
         >
           {loading ? "加载中..." : "加载预览"}
         </button>
-        <span className="text-xs text-[var(--steel)]">
+        <span className="text-xs text-[var(--muted-foreground)]">
           预览 Agent 查询时实际接收的 Schema 提示词（包含标注、值域、查询示例等）
         </span>
       </div>
 
       {error && (
-        <div className="p-3 rounded-md bg-[var(--error-soft)] text-[var(--error)] text-sm">
+        <div className="p-3 rounded-lg bg-[var(--error-soft)] text-[var(--error)] text-sm">
           {error}
         </div>
       )}
 
       {preview !== null && (
-        <pre className="rounded-lg p-4 text-xs font-mono leading-relaxed overflow-x-auto whitespace-pre-wrap
-                        bg-[var(--surface-code)] text-[var(--on-dark)] border border-[var(--surface-code)]">
+        <pre className="rounded-xl p-4 text-xs font-mono leading-relaxed overflow-x-auto whitespace-pre-wrap
+                        bg-[var(--muted)] text-[var(--foreground)] border border-[var(--border)]">
           {preview}
         </pre>
       )}

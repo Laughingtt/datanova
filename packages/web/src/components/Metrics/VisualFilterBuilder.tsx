@@ -72,15 +72,15 @@ export default function VisualFilterBuilder({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="label-mono mb-0">Filters</label>
+        <label className="label-mono mb-0">筛选条件</label>
         <button type="button" onClick={addCondition} className="btn-ghost text-xs">
-          + Add Filter
+          + 添加筛选
         </button>
       </div>
 
-      <div className="p-3 rounded-md border border-[var(--hairline-strong)] bg-[var(--canvas)] min-h-[44px]">
+      <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] min-h-[44px]">
         {conditions.length === 0 ? (
-          <p className="text-xs text-[var(--stone)]">No filters. Click "+ Add Filter" to add one.</p>
+          <p className="text-xs text-[var(--muted-foreground)]">暂无条件，点击「+ 添加筛选」新增。</p>
         ) : (
           <div className="space-y-2">
             {conditions.map((cond, index) => (
@@ -90,7 +90,7 @@ export default function VisualFilterBuilder({
                   value={cond.column}
                   onChange={(e) => updateCondition(index, "column", e.target.value)}
                 >
-                  <option value="">Select column...</option>
+                  <option value="">选择列…</option>
                   {columns.map(col => (
                     <option key={col} value={col}>{col}</option>
                   ))}
@@ -112,14 +112,14 @@ export default function VisualFilterBuilder({
                     className="input-field py-1.5 text-xs font-mono flex-1 min-w-0"
                     value={cond.value}
                     onChange={(e) => updateCondition(index, "value", e.target.value)}
-                    placeholder="value"
+                    placeholder="值"
                   />
                 )}
 
                 <button
                   type="button"
                   onClick={() => removeCondition(index)}
-                  className="text-[var(--error)] hover:opacity-80 text-xs px-1"
+                  className="text-[var(--error)] hover:bg-[var(--error-soft)] rounded-md text-xs p-1 transition-colors"
                 >
                   ✕
                 </button>

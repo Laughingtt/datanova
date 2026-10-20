@@ -106,7 +106,7 @@ export default function SchemaEnhancement({ datasourceId, tables }: SchemaEnhanc
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-sm font-medium text-[var(--ink)] mb-2">
+        <h3 className="text-sm font-medium text-[var(--foreground)] mb-2">
           选择要标注的表
         </h3>
         <div className="flex items-center gap-2 mb-3">
@@ -122,7 +122,7 @@ export default function SchemaEnhancement({ datasourceId, tables }: SchemaEnhanc
           value={tableSearch}
           onChange={(e) => setTableSearch(e.target.value)}
           placeholder="搜索表名..."
-          className="w-full px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)] mb-3"
+          className="input-field mb-3"
         />
         <div className="flex flex-wrap gap-2">
           {tables
@@ -131,10 +131,10 @@ export default function SchemaEnhancement({ datasourceId, tables }: SchemaEnhanc
             <button
               key={name}
               onClick={() => toggleTable(name)}
-              className={`inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              className={`inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium transition-colors border border-transparent ${
                 selectedTables.has(name)
-                  ? "bg-[var(--primary-soft)] border border-[var(--primary)]/30 text-[var(--primary-text)]"
-                  : "bg-[var(--surface)] border border-[var(--hairline)] text-[var(--steel)] hover:border-[var(--hairline-strong)]"
+                  ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                  : "bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
               }`}
             >
               {name}
@@ -161,7 +161,7 @@ export default function SchemaEnhancement({ datasourceId, tables }: SchemaEnhanc
       </button>
 
       {annotateError && (
-        <div className="p-3 rounded-md bg-[var(--error-soft)] text-[var(--error)] text-sm">
+        <div className="p-3 rounded-lg bg-[var(--error-soft)] text-[var(--error)] text-sm">
           {annotateError}
         </div>
       )}
@@ -169,7 +169,7 @@ export default function SchemaEnhancement({ datasourceId, tables }: SchemaEnhanc
       {draftAnnotations.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-[var(--ink)]">
+            <h3 className="text-sm font-medium text-[var(--foreground)]">
               草稿标注 ({draftAnnotations.length})
             </h3>
             <div className="flex items-center gap-2">

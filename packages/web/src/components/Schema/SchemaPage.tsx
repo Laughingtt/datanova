@@ -60,45 +60,39 @@ export default function SchemaPage() {
   ];
 
   return (
-    <div className="h-full overflow-auto bg-[var(--canvas)]">
-      {/* Sunset stripe top accent */}
-      <div className="sunset-stripe" />
-
+    <div className="h-full overflow-auto bg-[var(--background)]">
       <div className="max-w-5xl mx-auto px-8 py-10">
         <div className="mb-8">
-          <h2 className="font-display text-2xl text-[var(--ink)]">Schema 标注</h2>
-          <p className="text-sm text-[var(--steel)] mt-1">
+          <h2 className="text-2xl font-semibold text-[var(--foreground)]">Schema 标注</h2>
+          <p className="text-sm text-[var(--muted-foreground)] mt-1">
             为数据库 Schema 添加业务语义，提升 AI 查询准确度
           </p>
         </div>
 
         {!selectedDatasourceId ? (
-          <div className="card-cream text-center py-16">
-            <p className="text-sm text-[var(--on-surface)]">请先选择数据源</p>
-            <p className="text-xs text-[var(--steel)] mt-2">
+          <div className="rounded-xl border border-dashed border-[var(--border)] p-8 py-16 text-center">
+            <p className="text-sm text-[var(--foreground)]">请先选择数据源</p>
+            <p className="text-xs text-[var(--muted-foreground)] mt-2">
               前往数据源页面选择一个数据源来标注其 Schema
             </p>
           </div>
         ) : datasourceNotFound ? (
-          <div className="card-cream text-center py-16">
-            <p className="text-sm text-[var(--on-surface)]">数据源连接已失效</p>
-            <p className="text-xs text-[var(--steel)] mt-2">
+          <div className="rounded-xl border border-dashed border-[var(--border)] p-8 py-16 text-center">
+            <p className="text-sm text-[var(--foreground)]">数据源连接已失效</p>
+            <p className="text-xs text-[var(--muted-foreground)] mt-2">
               之前选择的数据源已被删除，请重新选择数据源
             </p>
           </div>
         ) : (
           <>
             {/* Tab bar */}
-            <div className="flex items-center gap-1 mb-6 border-b border-[var(--hairline)]">
+            <div className="tabs-track mb-6">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setMode(tab.id)}
-                  className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                    mode === tab.id
-                      ? "border-[var(--primary)] text-[var(--primary-text)]"
-                      : "border-transparent text-[var(--steel)] hover:text-[var(--ink)]"
-                  }`}
+                  data-active={mode === tab.id}
+                  className="tab-trigger"
                 >
                   {tab.label}
                 </button>
@@ -108,7 +102,7 @@ export default function SchemaPage() {
             {mode === "annotate" ? (
               <SchemaTree />
             ) : tablesLoading ? (
-              <p className="text-sm text-[var(--steel)]">加载中...</p>
+              <p className="text-sm text-[var(--muted-foreground)]">加载中...</p>
             ) : mode === "auto-annotate" ? (
               <SchemaEnhancement
                 datasourceId={selectedDatasourceId}

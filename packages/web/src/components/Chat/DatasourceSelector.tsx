@@ -36,18 +36,18 @@ export default function DatasourceSelector() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-[var(--hairline)]
-                   bg-[var(--canvas)] hover:bg-[var(--surface)] transition-colors
-                   text-sm text-[var(--ink)]"
+        className="flex items-center gap-2 h-8 rounded-lg border border-[var(--border)]
+                   bg-[var(--background)] px-2.5 hover:bg-[var(--muted)] transition-colors
+                   text-sm text-[var(--foreground)]"
       >
-        <svg className="w-4 h-4 text-[var(--steel)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg className="w-4 h-4 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h6m0 0l-3-3m3 3l-3 3M18 12h-6m0 0l3-3m-3 3l3 3M6.75 6.75h10.5v10.5H6.75V6.75z" />
         </svg>
-        <span className={`truncate max-w-[160px] ${currentDs ? "" : "text-[var(--stone)]"}`}>
+        <span className={`truncate max-w-[160px] ${currentDs ? "" : "text-[var(--muted-foreground)]"}`}>
           {currentDs ? currentDs.name : "选择数据源"}
         </span>
         <svg
-          className={`w-3.5 h-3.5 text-[var(--steel)] transition-transform ${open ? "rotate-180" : ""}`}
+          className={`w-3.5 h-3.5 text-[var(--muted-foreground)] transition-transform ${open ? "rotate-180" : ""}`}
           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -56,13 +56,13 @@ export default function DatasourceSelector() {
 
       <div ref={menuRef}
            className="absolute top-full right-0 mt-1 w-[320px] max-h-[400px] overflow-y-auto
-                      bg-[var(--canvas)] border border-[var(--hairline)]
-                      rounded-lg shadow-4 z-50 custom-scrollbar"
+                      rounded-lg border border-[var(--border)] bg-[var(--popover)]
+                      shadow-[var(--shadow-3)] p-1 z-50 custom-scrollbar"
            style={!open ? { visibility: "hidden", opacity: 0, pointerEvents: "none" } : undefined}>
           {datasources.length === 0 ? (
             <div className="p-4 text-center">
-              <p className="text-sm text-[var(--steel)]">暂无数据源</p>
-              <p className="text-xs text-[var(--stone)] mt-1">
+              <p className="text-sm text-[var(--muted-foreground)]">暂无数据源</p>
+              <p className="text-xs text-[var(--muted-foreground)] mt-1">
                 请前往数据源页面添加
               </p>
             </div>
@@ -71,15 +71,15 @@ export default function DatasourceSelector() {
               {/* "No datasource" option */}
               <button
                 onClick={() => { setSelectedDatasource(null, null); setOpen(false); }}
-                className={`w-full text-left px-3 py-2.5 flex items-center justify-between transition-colors ${
+                className={`w-full text-left px-2.5 py-2 rounded-md flex items-center justify-between transition-colors ${
                   !selectedDatasourceId
-                    ? "bg-[var(--primary-soft)] text-[var(--primary-text)]"
-                    : "hover:bg-[var(--surface)] text-[var(--stone)]"
+                    ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                    : "hover:bg-[var(--muted)] text-[var(--muted-foreground)]"
                 }`}
               >
                 <div>
                 <div className="text-sm">未选择数据源</div>
-                <div className="text-xs text-[var(--stone)] mt-0.5">AI 助手将列出可用数据源</div>
+                <div className="text-xs text-[var(--muted-foreground)] mt-0.5">AI 助手将列出可用数据源</div>
                 </div>
                 {!selectedDatasourceId && (
                   <svg className="w-4 h-4 text-[var(--primary)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -88,7 +88,7 @@ export default function DatasourceSelector() {
                 )}
               </button>
 
-              <div className="border-t border-[var(--hairline)]" />
+              <div className="border-t border-[var(--border)] my-1" />
 
               {/* Datasource options */}
               {datasources.map((ds) => {
@@ -97,15 +97,15 @@ export default function DatasourceSelector() {
                   <button
                     key={ds.id}
                     onClick={() => { setSelectedDatasource(ds.id, ds.name); setOpen(false); }}
-                    className={`w-full text-left px-3 py-2.5 flex items-center justify-between transition-colors ${
+                    className={`w-full text-left px-2.5 py-2 rounded-md flex items-center justify-between transition-colors ${
                       isSelected
-                        ? "bg-[var(--primary-soft)] text-[var(--primary-text)]"
-                        : "hover:bg-[var(--surface)] text-[var(--ink)]"
+                        ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                        : "hover:bg-[var(--muted)] text-[var(--foreground)]"
                     }`}
                   >
                     <div>
                       <div className="text-sm font-medium truncate">{ds.name}</div>
-                      <div className="text-xs text-[var(--steel)] font-mono mt-0.5">
+                      <div className="text-xs text-[var(--muted-foreground)] font-mono mt-0.5">
                         {ds.host}:{ds.port}/{ds.database}
                       </div>
                     </div>

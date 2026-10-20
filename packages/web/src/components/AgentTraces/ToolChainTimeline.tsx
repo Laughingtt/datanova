@@ -15,23 +15,23 @@ interface ToolChainTimelineProps {
   thinkingSummary?: string;
 }
 
-// Tool name → display label + color
+// Tool name → display label (neutral chip styling)
 const TOOL_META: Record<string, { label: string; color: string; bg: string }> = {
-  lookup_semantic_layer: { label: "语义层", color: "text-[var(--info)]", bg: "bg-[var(--info-soft)]" },
-  discover_schema: { label: "Schema发现", color: "text-[var(--accent-600)]", bg: "bg-[var(--accent-100)]" },
-  execute_sql: { label: "SQL执行", color: "text-[var(--success)]", bg: "bg-[var(--success-soft)]" },
-  lookup_examples: { label: "示例查询", color: "text-[var(--primary)]", bg: "bg-[var(--primary-soft)]" },
-  read_skill: { label: "查询技能", color: "text-[var(--warning)]", bg: "bg-[var(--warning-soft)]" },
-  ai_annotate_schema: { label: "AI标注", color: "text-[var(--accent-600)]", bg: "bg-[var(--accent-100)]" },
-  validate_and_test_metric: { label: "验证指标", color: "text-[var(--info)]", bg: "bg-[var(--info-soft)]" },
-  check_metric_conflict: { label: "冲突检查", color: "text-[var(--warning)]", bg: "bg-[var(--warning-soft)]" },
-  create_metric_draft: { label: "创建指标", color: "text-[var(--success)]", bg: "bg-[var(--success-soft)]" },
-  create_dimension_draft: { label: "创建维度", color: "text-[var(--success)]", bg: "bg-[var(--success-soft)]" },
-  request_user_confirm: { label: "用户确认", color: "text-[var(--primary)]", bg: "bg-[var(--primary-soft)]" },
+  lookup_semantic_layer: { label: "语义层", color: "text-[var(--muted-foreground)]", bg: "bg-[var(--muted)]" },
+  discover_schema: { label: "Schema发现", color: "text-[var(--muted-foreground)]", bg: "bg-[var(--muted)]" },
+  execute_sql: { label: "SQL执行", color: "text-[var(--muted-foreground)]", bg: "bg-[var(--muted)]" },
+  lookup_examples: { label: "示例查询", color: "text-[var(--muted-foreground)]", bg: "bg-[var(--muted)]" },
+  read_skill: { label: "查询技能", color: "text-[var(--muted-foreground)]", bg: "bg-[var(--muted)]" },
+  ai_annotate_schema: { label: "AI标注", color: "text-[var(--muted-foreground)]", bg: "bg-[var(--muted)]" },
+  validate_and_test_metric: { label: "验证指标", color: "text-[var(--muted-foreground)]", bg: "bg-[var(--muted)]" },
+  check_metric_conflict: { label: "冲突检查", color: "text-[var(--muted-foreground)]", bg: "bg-[var(--muted)]" },
+  create_metric_draft: { label: "创建指标", color: "text-[var(--muted-foreground)]", bg: "bg-[var(--muted)]" },
+  create_dimension_draft: { label: "创建维度", color: "text-[var(--muted-foreground)]", bg: "bg-[var(--muted)]" },
+  request_user_confirm: { label: "用户确认", color: "text-[var(--muted-foreground)]", bg: "bg-[var(--muted)]" },
 };
 
 function getToolMeta(tool: string) {
-  return TOOL_META[tool] ?? { label: tool, color: "text-[var(--steel)]", bg: "bg-[var(--surface)]" };
+  return TOOL_META[tool] ?? { label: tool, color: "text-[var(--muted-foreground)]", bg: "bg-[var(--muted)]" };
 }
 
 export default function ToolChainTimeline({ toolDetails, thinkingSummary }: ToolChainTimelineProps) {
@@ -51,7 +51,7 @@ export default function ToolChainTimeline({ toolDetails, thinkingSummary }: Tool
         <div className="mb-3">
           <button
             onClick={() => setThinkingExpanded(!thinkingExpanded)}
-            className="flex items-center gap-2 text-xs text-[var(--steel)] hover:text-[var(--ink)] transition-colors w-full text-left"
+            className="flex items-center gap-2 text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors w-full text-left"
           >
             <svg className={`w-3 h-3 transition-transform ${thinkingExpanded ? "rotate-90" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -60,7 +60,7 @@ export default function ToolChainTimeline({ toolDetails, thinkingSummary }: Tool
             <span className="text-[var(--stone)]">({thinkingSummary.length} 字)</span>
           </button>
           {thinkingExpanded && (
-            <div className="mt-2 ml-5 text-xs text-[var(--steel)] bg-[var(--surface-code)] rounded-lg p-3 whitespace-pre-wrap border border-[var(--hairline-soft)] max-h-[240px] overflow-y-auto custom-scrollbar">
+            <div className="mt-2 ml-5 text-xs text-[var(--muted-foreground)] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] rounded-lg p-3 whitespace-pre-wrap border border-[var(--border)] max-h-[240px] overflow-y-auto custom-scrollbar">
               {thinkingSummary}
             </div>
           )}
@@ -83,7 +83,7 @@ export default function ToolChainTimeline({ toolDetails, thinkingSummary }: Tool
               y1="0"
               x2="0.5"
               y2="100"
-              stroke="var(--hairline)"
+              stroke="var(--border)"
               strokeWidth="1"
               vectorEffect="non-scaling-stroke"
             />
@@ -118,7 +118,7 @@ export default function ToolChainTimeline({ toolDetails, thinkingSummary }: Tool
                       {step.is_error ? "✗ 失败" : step.result_summary === "pending" ? "…" : "✓"}
                     </span>
                     {hasRationale && (
-                      <span className="text-[10px] text-[var(--primary)] inline-flex items-center gap-0.5">
+                      <span className="text-[10px] text-[var(--muted-foreground)] inline-flex items-center gap-0.5">
                         <svg className={`w-2.5 h-2.5 transition-transform ${isOpen ? "rotate-90" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                         </svg>
@@ -132,7 +132,7 @@ export default function ToolChainTimeline({ toolDetails, thinkingSummary }: Tool
                     </div>
                   )}
                   {!isOpen && (
-                    <div className="mt-0.5 text-[10px] text-[var(--steel)] truncate max-w-[420px]">
+                    <div className="mt-0.5 text-[10px] text-[var(--muted-foreground)] truncate max-w-[420px]">
                       → {step.result_summary}
                     </div>
                   )}
@@ -141,19 +141,19 @@ export default function ToolChainTimeline({ toolDetails, thinkingSummary }: Tool
               {isOpen && (
                 <div className="ml-8 mb-2 space-y-2">
                   {hasRationale && (
-                    <div className="text-xs text-[var(--ink)] bg-[var(--primary-soft)] rounded-lg p-2.5 border border-[var(--hairline-soft)]">
-                      <div className="text-[10px] font-mono uppercase tracking-wider text-[var(--primary)] mb-1">抉择理由 · 为什么调用此工具</div>
+                    <div className="text-xs text-[var(--foreground)] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] rounded-lg p-2.5 border border-[var(--border)]">
+                      <div className="text-[10px] font-mono uppercase tracking-wider text-[var(--muted-foreground)] mb-1">抉择理由 · 为什么调用此工具</div>
                       <div className="whitespace-pre-wrap leading-relaxed">{step.thinking}</div>
                     </div>
                   )}
                   <div className="grid grid-cols-1 gap-1.5">
-                    <div className="text-[11px] bg-[var(--canvas)] rounded p-2 border border-[var(--hairline-soft)]">
+                    <div className="text-[11px] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] rounded p-2 border border-[var(--border)]">
                       <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--stone)]">输入参数　</span>
-                      <span className="font-mono text-[var(--steel)] break-all">{step.args_summary || "—"}</span>
+                      <span className="font-mono text-[var(--muted-foreground)] break-all">{step.args_summary || "—"}</span>
                     </div>
-                    <div className={`text-[11px] rounded p-2 border ${step.is_error ? "bg-[var(--error-soft)] border-[var(--error)]/30" : "bg-[var(--canvas)] border-[var(--hairline-soft)]"}`}>
+                    <div className={`text-[11px] rounded p-2 border ${step.is_error ? "bg-[var(--error-soft)] border-[color-mix(in_srgb,var(--error)_30%,transparent)]" : "bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] border-[var(--border)]"}`}>
                       <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--stone)]">执行结果　</span>
-                      <span className={step.is_error ? "text-[var(--error)]" : "text-[var(--steel)]"}>{step.result_summary}</span>
+                      <span className={step.is_error ? "text-[var(--error)]" : "text-[var(--muted-foreground)]"}>{step.result_summary}</span>
                     </div>
                   </div>
                 </div>

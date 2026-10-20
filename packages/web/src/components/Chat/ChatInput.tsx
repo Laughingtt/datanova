@@ -1,5 +1,4 @@
 ﻿import { useState, useRef, type KeyboardEvent } from "react";
-import { useButtonPress } from "../../hooks/useGsapAnimations";
 
 interface ChatInputProps {
   onSend: (text: string) => void;
@@ -10,8 +9,6 @@ interface ChatInputProps {
 export default function ChatInput({ onSend, onNewTopic, disabled }: ChatInputProps) {
   const [text, setText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const sendBtnRef = useRef<HTMLButtonElement>(null);
-  useButtonPress(sendBtnRef);
 
   const handleSubmit = () => {
     const trimmed = text.trim();
@@ -36,11 +33,14 @@ export default function ChatInput({ onSend, onNewTopic, disabled }: ChatInputPro
     }
   };
 
+  const canSend = !disabled && text.trim().length > 0;
+
   return (
-    <div className="border-t border-[var(--hairline)] bg-[var(--canvas)] p-4">
-      <div className="max-w-3xl mx-auto input-well flex items-end gap-2 px-4 py-3">
+    <div className="border-t border-[var(--border)] bg-[var(--background)] p-3">
+      <div className="max-w-3xl mx-auto input-well flex items-end gap-2 px-3 py-2">
         <textarea
           ref={textareaRef}
+          data-chat-input
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -48,17 +48,17 @@ export default function ChatInput({ onSend, onNewTopic, disabled }: ChatInputPro
           placeholder="输入你的问题，查询数据库…"
           disabled={disabled}
           rows={1}
-          className="flex-1 resize-none bg-transparent text-sm text-[var(--ink)] placeholder-[var(--stone)]
-                     focus:outline-none min-h-[24px] max-h-[200px] leading-relaxed font-body"
+          className="flex-1 resize-none bg-transparent text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]
+                     focus:outline-none min-h-[24px] max-h-[200px] py-1 leading-relaxed"
         />
         {onNewTopic && (
           <button
             onClick={onNewTopic}
             disabled={disabled}
-            className="shrink-0 h-8 px-3 flex items-center gap-1.5 rounded-lg
-                       bg-[var(--canvas)] border border-[var(--hairline-strong)] text-xs font-medium
-                       text-[var(--steel)] hover:text-[var(--ink)] hover:border-[var(--steel)] transition-all duration-200
-                       disabled:opacity-40 disabled:cursor-not-allowed"
+            className="shrink-0 inline-flex h-7 items-center gap-1.5 rounded-md border border-[var(--border)]
+                       bg-[var(--background)] px-2 text-xs font-medium text-[var(--muted-foreground)]
+                       transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]
+                       disabled:opacity-40 disabled:pointer-events-none"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -67,20 +67,20 @@ export default function ChatInput({ onSend, onNewTopic, disabled }: ChatInputPro
           </button>
         )}
         <button
-          ref={sendBtnRef}
           onClick={handleSubmit}
-          disabled={disabled || !text.trim()}
-          className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg
-                     bg-[var(--primary)] text-white text-sm font-medium
-                     hover:bg-[var(--primary-deep)] hover:shadow-md transition-colors duration-200
-                     disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
+          disabled={!canSend}
+          aria-label="发送"
+          className="shrink-0 inline-flex h-7 w-7 items-center justify-center rounded-md bg-[var(--primary)] text-white
+                     transition-all duration-150 hover:bg-[var(--primary-deep)] active:translate-y-px
+                     focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[color-mix(in_srgb,var(--ring)_40%,transparent)]
+                     disabled:opacity-40 disabled:pointer-events-none"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
           </svg>
         </button>
       </div>
-      <p className="text-[10px] text-[var(--stone)] text-center mt-2">
+      <p className="text-[11px] text-[var(--muted-foreground)] text-center mt-1.5">
         Enter 发送 · Shift+Enter 换行
       </p>
     </div>

@@ -93,13 +93,13 @@ export default function DictionaryPage() {
 
   if (!selectedDatasourceId) {
     return (
-      <div className="h-full flex items-center justify-center bg-[var(--canvas)]">
+      <div className="h-full flex items-center justify-center bg-[var(--background)]">
         <div className="text-center">
-          <svg className="w-12 h-12 mx-auto text-[var(--stone)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+          <svg className="w-12 h-12 mx-auto text-[var(--muted-foreground)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
-          <p className="text-sm text-[var(--steel)]">请先选择一个数据源</p>
-          <p className="text-xs text-[var(--stone)] mt-1">前往数据源页面选择一个数据源以浏览数据字典</p>
+          <p className="text-sm text-[var(--muted-foreground)]">请先选择一个数据源</p>
+          <p className="text-xs text-[var(--muted-foreground)] mt-1">前往数据源页面选择一个数据源以浏览数据字典</p>
         </div>
       </div>
     );
@@ -117,21 +117,16 @@ export default function DictionaryPage() {
     : 0;
 
   return (
-    <div className="h-full overflow-auto bg-[var(--canvas)]">
-      <div className="sunset-stripe" />
+    <div className="h-full overflow-auto bg-[var(--background)]">
       <div className="max-w-5xl mx-auto px-8 py-10">
         <div className="mb-8">
-          <h2 className="font-display text-2xl text-[var(--ink)]">语义层目录</h2>
-          <p className="text-sm text-[var(--steel)] mt-1">浏览和搜索语义层中的指标、维度、表、字段</p>
+          <h2 className="text-2xl font-semibold text-[var(--foreground)]">语义层目录</h2>
+          <p className="text-sm text-[var(--muted-foreground)] mt-1">浏览和搜索语义层中的指标、维度、表、字段</p>
         </div>
 
-        <div className="flex items-center gap-1 mb-6 border-b border-[var(--hairline)]">
-          <button onClick={() => setMode("search")} className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
-            mode === "search" ? "border-[var(--primary)] text-[var(--primary-text)]" : "border-transparent text-[var(--steel)] hover:text-[var(--ink)]"
-          }`}>搜索</button>
-          <button onClick={() => setMode("browse")} className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
-            mode === "browse" ? "border-[var(--primary)] text-[var(--primary-text)]" : "border-transparent text-[var(--steel)] hover:text-[var(--ink)]"
-          }`}>浏览</button>
+        <div className="tabs-track mb-6">
+          <button onClick={() => setMode("search")} data-active={mode === "search"} className="tab-trigger">搜索</button>
+          <button onClick={() => setMode("browse")} data-active={mode === "browse"} className="tab-trigger">浏览</button>
         </div>
 
         {mode === "browse" && (
@@ -148,8 +143,8 @@ export default function DictionaryPage() {
               {selectedEntry ? (
                 <EntryDetail entry={selectedEntry.item} entryType={selectedEntry.type} onNavigate={handleNavigate} />
               ) : (
-                <div className="card-base text-center py-16">
-                  <p className="text-sm text-[var(--steel)]">选择条目查看详情</p>
+                <div className="rounded-xl border border-dashed border-[var(--border)] p-8 py-16 text-center">
+                  <p className="text-sm text-[var(--muted-foreground)]">选择条目查看详情</p>
                 </div>
               )}
             </div>
@@ -160,12 +155,12 @@ export default function DictionaryPage() {
           <>
             <div className="flex items-center gap-3 mb-8">
               <div className="flex-1 relative">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--stone)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={handleKeyDown}
                   placeholder="搜索指标、表、字段、业务术语…"
-                  className="w-full pl-10 pr-4 py-2.5 text-sm bg-[var(--surface)] border border-[var(--hairline-strong)] rounded-lg text-[var(--ink)] placeholder-[var(--stone)] focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-glow)] transition-all"
+                  className="input-field pl-10"
                 />
               </div>
               <button onClick={handleSearch} disabled={searching || !query.trim()} className="btn-primary">
@@ -177,19 +172,19 @@ export default function DictionaryPage() {
               <div className="flex-1 min-w-0">
                 {results ? (
                   totalCount === 0 ? (
-                    <div className="card-base text-center py-12">
-                      <p className="text-sm text-[var(--steel)]">未找到结果："{query}"</p>
+                    <div className="rounded-xl border border-dashed border-[var(--border)] p-8 py-12 text-center">
+                      <p className="text-sm text-[var(--muted-foreground)]">未找到结果："{query}"</p>
                     </div>
                   ) : (
-                    <div className="space-y-6">
+                    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-2 space-y-6">
                       {resultGroups.map(({ key, label, type }) => {
                         const items = results[key];
                         if (!items || items.length === 0) return null;
                         return (
                           <div key={key}>
-                            <h3 className="text-sm font-medium text-[var(--ink)] mb-2 flex items-center gap-2">
+                            <h3 className="text-sm font-medium text-[var(--foreground)] mb-2 flex items-center gap-2">
                               {label}
-                              <span className="text-[10px] text-[var(--steel)] bg-[var(--canvas)] px-1.5 py-0.5 rounded-full border border-[var(--hairline-soft)]">
+                              <span className="text-[10px] text-[var(--muted-foreground)] bg-[var(--muted)] px-1.5 py-0.5 rounded-full">
                                 {items.length}
                               </span>
                             </h3>
@@ -204,24 +199,24 @@ export default function DictionaryPage() {
                                 );
                                 return (
                                   <button key={itemKey} onClick={() => setSelectedEntry({ type, item })}
-                                    className={`w-full text-left px-4 py-2.5 rounded-lg border transition-all duration-200 ${
+                                    className={`w-full text-left px-2.5 py-2 rounded-md border border-transparent transition-colors ${
                                       isSelected
-                                        ? "border-[var(--primary)] bg-[var(--primary-soft)]"
-                                        : "border-[var(--hairline-soft)] hover:border-[var(--primary)] bg-[var(--surface)]"
+                                        ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                                        : "hover:bg-[var(--muted)]"
                                     }`}
                                   >
                                     <div className="flex items-center gap-2">
-                                      <span className="text-sm font-medium text-[var(--ink)]">
+                                      <span className="text-sm font-medium text-[var(--foreground)]">
                                         {item.display_name || item.table_name || item.field_name}
                                       </span>
                                       {item.name !== item.display_name && item.display_name && (
-                                        <span className="text-xs font-mono text-[var(--steel)]">({item.name})</span>
+                                        <span className="text-xs font-mono text-[var(--muted-foreground)]">({item.name})</span>
                                       )}
                                     </div>
-                                    {item.description && <p className="text-xs text-[var(--steel)] mt-0.5 truncate">{item.description}</p>}
-                                    {item.annotation && <p className="text-xs text-[var(--steel)] mt-0.5 truncate">{item.annotation}</p>}
-                                    {item.type && <span className="text-xs font-mono text-[var(--stone)] mt-0.5 inline-block">{item.type}</span>}
-                                    {item.table_name && type === "column" && <span className="text-xs font-mono text-[var(--stone)]">{item.table_name}.</span>}
+                                    {item.description && <p className="text-xs text-[var(--muted-foreground)] mt-0.5 truncate">{item.description}</p>}
+                                    {item.annotation && <p className="text-xs text-[var(--muted-foreground)] mt-0.5 truncate">{item.annotation}</p>}
+                                    {item.type && <span className="text-xs font-mono text-[var(--muted-foreground)] mt-0.5 inline-block">{item.type}</span>}
+                                    {item.table_name && type === "column" && <span className="text-xs font-mono text-[var(--muted-foreground)]">{item.table_name}.</span>}
                                   </button>
                                 );
                               })}
@@ -233,10 +228,10 @@ export default function DictionaryPage() {
                   )
                 ) : (
                   <div>
-                    <h3 className="text-sm font-medium text-[var(--ink)] mb-3">最近更新</h3>
+                    <h3 className="text-sm font-medium text-[var(--foreground)] mb-3">最近更新</h3>
                     {loadingRecent ? (
                       <div className="flex items-center justify-center py-8">
-                        <div className="w-5 h-5 border-2 border-[var(--accent-300)] border-t-[var(--primary)] rounded-full animate-spin" />
+                        <div className="w-5 h-5 border-2 border-[var(--border)] border-t-[var(--primary)] rounded-full animate-spin" />
                       </div>
                     ) : recentChanges ? (
                       <div className="space-y-4">
@@ -246,8 +241,8 @@ export default function DictionaryPage() {
                             <div className="space-y-1.5">
                               {recentChanges.annotations.map((ann: any, idx: number) => (
                                 <div key={ann.id ?? idx} className="card-base px-4 py-2.5">
-                                  <p className="text-sm text-[var(--ink)]">{ann.annotation}</p>
-                                  <p className="text-xs text-[var(--steel)] mt-0.5">{ann.table_name}{ann.field_name ? `.${ann.field_name}` : ""}</p>
+                                  <p className="text-sm text-[var(--foreground)]">{ann.annotation}</p>
+                                  <p className="text-xs text-[var(--muted-foreground)] mt-0.5">{ann.table_name}{ann.field_name ? `.${ann.field_name}` : ""}</p>
                                 </div>
                               ))}
                             </div>
@@ -259,8 +254,8 @@ export default function DictionaryPage() {
                             <div className="space-y-1.5">
                               {recentChanges.metrics.map((m: any, idx: number) => (
                                 <div key={m.id ?? idx} className="card-base px-4 py-2.5">
-                                  <p className="text-sm font-medium text-[var(--ink)]">{m.display_name || m.name}</p>
-                                  {m.description && <p className="text-xs text-[var(--steel)] mt-0.5">{m.description}</p>}
+                                  <p className="text-sm font-medium text-[var(--foreground)]">{m.display_name || m.name}</p>
+                                  {m.description && <p className="text-xs text-[var(--muted-foreground)] mt-0.5">{m.description}</p>}
                                 </div>
                               ))}
                             </div>
@@ -272,21 +267,21 @@ export default function DictionaryPage() {
                             <div className="space-y-1.5">
                               {recentChanges.dimensions.map((d: any, idx: number) => (
                                 <div key={d.id ?? idx} className="card-base px-4 py-2.5">
-                                  <p className="text-sm font-medium text-[var(--ink)]">{d.display_name || d.name}</p>
-                                  {d.data_type && <span className="text-xs font-mono text-[var(--steel)]">{d.data_type}</span>}
+                                  <p className="text-sm font-medium text-[var(--foreground)]">{d.display_name || d.name}</p>
+                                  {d.data_type && <span className="text-xs font-mono text-[var(--muted-foreground)]">{d.data_type}</span>}
                                 </div>
                               ))}
                             </div>
                           </div>
                         )}
                         {!recentChanges.annotations?.length && !recentChanges.metrics?.length && !recentChanges.dimensions?.length && (
-                          <p className="text-sm text-[var(--steel)]">暂无最近更新</p>
+                          <p className="text-sm text-[var(--muted-foreground)]">暂无最近更新</p>
                         )}
                       </div>
                     ) : !query && (
-                      <div className="text-center text-[var(--steel)] text-sm mt-10">
+                      <div className="text-center text-[var(--muted-foreground)] text-sm mt-10">
                         <p>输入关键词搜索数据字典</p>
-                        <p className="text-xs mt-2 text-[var(--stone)]">可搜索指标、维度、表、字段的名称和业务描述</p>
+                        <p className="text-xs mt-2 text-[var(--muted-foreground)]">可搜索指标、维度、表、字段的名称和业务描述</p>
                       </div>
                     )}
                   </div>
@@ -297,8 +292,8 @@ export default function DictionaryPage() {
                 {selectedEntry ? (
                   <EntryDetail entry={selectedEntry.item} entryType={selectedEntry.type} onNavigate={handleNavigate} />
                 ) : (
-                  <div className="card-base text-center py-16">
-                    <p className="text-sm text-[var(--steel)]">选择条目查看详情</p>
+                  <div className="rounded-xl border border-dashed border-[var(--border)] p-8 py-16 text-center">
+                    <p className="text-sm text-[var(--muted-foreground)]">选择条目查看详情</p>
                   </div>
                 )}
               </div>

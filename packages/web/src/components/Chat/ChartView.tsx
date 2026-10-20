@@ -60,26 +60,25 @@ export default function ChartView({ data }: ChartViewProps) {
   };
 
   return (
-    <div className="my-3 rounded-xl shadow-sm overflow-hidden" style={{ border: "1px solid var(--hairline)", backgroundColor: "var(--surface)" }}>
-      <div className="flex items-center gap-1 px-3 py-2 overflow-x-auto" style={{ borderBottom: "1px solid var(--hairline)", backgroundColor: "var(--canvas)" }}>
-        {inference.available.map((ct) => (
-          <button
-            key={ct}
-            onClick={() => setChartType(ct)}
-            className="px-2.5 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap"
-            style={{
-              backgroundColor: chartType === ct ? "var(--primary)" : "transparent",
-              color: chartType === ct ? "#fff" : "var(--steel)",
-            }}
-          >
-            {CHART_TYPE_LABELS[ct]}
-          </button>
-        ))}
+    <div className="my-3 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-xs)]">
+      <div className="flex items-center gap-1 overflow-x-auto border-b border-[var(--border)] px-3 py-2">
+        <div className="tabs-track">
+          {inference.available.map((ct) => (
+            <button
+              key={ct}
+              onClick={() => setChartType(ct)}
+              data-active={chartType === ct}
+              className="tab-trigger h-7 px-2.5 text-xs"
+            >
+              {CHART_TYPE_LABELS[ct]}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="px-2 py-3">
         {renderChart()}
         {truncated && (
-          <p className="text-xs mt-2 text-center" style={{ color: "var(--steel)" }}>
+          <p className="mt-2 text-center text-xs text-[var(--muted-foreground)]">
             {"仅展示前 100 条数据"}
           </p>
         )}

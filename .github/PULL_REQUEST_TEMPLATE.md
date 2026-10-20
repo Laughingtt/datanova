@@ -34,9 +34,9 @@ Fixes #
 <!-- Describe the tests you ran and how to reproduce. -->
 
 - [ ] Unit tests added/updated (`npm test`)
-- [ ] E2E test added/updated (`npx playwright test`)
+- [ ] End-to-end test added/updated (via agent-browser skill)
 - [ ] Manually tested locally
-- [ ] Manually tested with the demo dataset (`docs/demo-data/employees-init.sql`)
+- [ ] Manually tested with a real MySQL datasource
 
 **How to test:**
 

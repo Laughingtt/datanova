@@ -58,51 +58,51 @@ export default function ResultSummaryCard({ content }: ResultSummaryCardProps) {
         };
       case "trend":
         return {
-          bg: "bg-[var(--primary-soft)]",
+          bg: "bg-[var(--accent)]",
           border: "border-[var(--primary)]",
           text: "text-[var(--primary-text)]",
         };
       case "result":
         return {
-          bg: "bg-[var(--surface)]",
-          border: "border-[var(--hairline)]",
-          text: "text-[var(--ink)]",
+          bg: "bg-[var(--card)]",
+          border: "border-[var(--border)]",
+          text: "text-[var(--foreground)]",
         };
       default:
         return {
-          bg: "bg-[var(--surface)]",
-          border: "border-[var(--hairline)]",
-          text: "text-[var(--ink)]",
+          bg: "bg-[var(--card)]",
+          border: "border-[var(--border)]",
+          text: "text-[var(--foreground)]",
         };
     }
   };
 
   return (
-    <div className="my-3 rounded-lg overflow-hidden border border-[var(--hairline)] bg-[var(--canvas)]">
+    <div className="my-3 rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-xs)]">
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 flex items-center justify-between bg-[var(--surface)] hover:bg-[var(--canvas)] transition-colors"
+        className="w-full px-4 py-3 flex items-center justify-between bg-[var(--card)] hover:bg-[var(--muted)] transition-colors"
       >
-        <span className="text-sm font-medium text-[var(--ink)] flex items-center gap-2">
+        <span className="text-sm font-medium text-[var(--foreground)] flex items-center gap-2">
           <span>📊</span>
           <span>查询总结</span>
         </span>
-        <span className={`text-xs text-[var(--steel)] transition-transform ${isExpanded ? "rotate-180" : ""}`}>
+        <span className={`text-xs text-[var(--muted-foreground)] transition-transform ${isExpanded ? "rotate-180" : ""}`}>
           ▼
         </span>
       </button>
 
       {/* Key finding - always visible */}
       {keyFinding && (
-        <div className="px-4 py-3 border-b border-[var(--hairline-soft)]">
+        <div className="px-4 py-3 border-b border-[var(--border)]">
           <div className="flex items-start gap-2">
             <span className="text-sm">{keyFinding.icon}</span>
             <div>
-              <span className="text-xs font-mono uppercase tracking-wider text-[var(--steel)]">
+              <span className="text-xs font-mono uppercase tracking-wider text-[var(--muted-foreground)]">
                 {keyFinding.label}
               </span>
-              <p className="text-sm text-[var(--ink)] mt-0.5 leading-relaxed">
+              <p className="text-sm text-[var(--foreground)] mt-0.5 leading-relaxed">
                 {keyFinding.content}
               </p>
             </div>
@@ -113,7 +113,7 @@ export default function ResultSummaryCard({ content }: ResultSummaryCardProps) {
       {/* Other sections - collapsible */}
       <div ref={contentRef} style={isExpanded ? {} : { height: 0, overflow: "hidden", opacity: 0 }}>
         {otherSections.length > 0 && (
-          <div className="divide-y divide-[var(--hairline-soft)]">
+          <div className="divide-y divide-[var(--border)]">
             {otherSections.map((section, index) => {
               const colors = getSectionColor(section.type);
               return (
@@ -124,7 +124,7 @@ export default function ResultSummaryCard({ content }: ResultSummaryCardProps) {
                       <span className={`text-xs font-mono uppercase tracking-wider ${colors.text}`}>
                         {section.label}
                       </span>
-                      <p className="text-sm text-[var(--ink)] mt-0.5 leading-relaxed">
+                      <p className="text-sm text-[var(--foreground)] mt-0.5 leading-relaxed">
                         {section.content}
                       </p>
                     </div>

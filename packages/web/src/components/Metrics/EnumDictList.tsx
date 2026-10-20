@@ -76,8 +76,8 @@ export default function EnumDictList({ datasourceId }: EnumDictListProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="w-5 h-5 border-2 border-[var(--accent-300)] border-t-[var(--primary)] rounded-full animate-spin" />
+      <div className="border border-dashed border-[var(--border)] rounded-xl p-8 text-center">
+        <div className="w-5 h-5 mx-auto border-2 border-[var(--border)] border-t-[var(--primary)] rounded-full animate-spin" />
       </div>
     );
   }
@@ -94,7 +94,7 @@ export default function EnumDictList({ datasourceId }: EnumDictListProps) {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex items-center gap-2">
+      <div className="tabs-track">
         {(["all", "dimension", "annotation"] as const).map((f) => {
           const labels: Record<string, string> = { all: "全部", dimension: "维度", annotation: "Schema 标注" };
           const count = f === "all" ? entries.length : entries.filter(e => e.source === f).length;
@@ -102,11 +102,8 @@ export default function EnumDictList({ datasourceId }: EnumDictListProps) {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                filter === f
-                  ? "bg-[var(--primary)] text-white"
-                  : "bg-[var(--canvas)] text-[var(--steel)] border border-[var(--hairline)] hover:border-[var(--primary)]/40"
-              }`}
+              className="tab-trigger"
+              data-active={filter === f}
             >
               {labels[f]} ({count})
             </button>
@@ -116,11 +113,13 @@ export default function EnumDictList({ datasourceId }: EnumDictListProps) {
 
       {/* Empty state */}
       {filtered.length === 0 && (
-        <div className="card-base text-center py-12">
-          <svg className="w-10 h-10 mx-auto text-[var(--stone)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-          </svg>
-          <p className="text-sm text-[var(--steel)]">
+        <div className="border border-dashed border-[var(--border)] rounded-xl p-8 text-center">
+          <div className="size-10 rounded-lg bg-[var(--muted)] mx-auto mb-3 flex items-center justify-center">
+            <svg className="w-5 h-5 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
+          </div>
+          <p className="text-sm text-[var(--muted-foreground)]">
             {entries.length === 0
               ? "暂无枚举值字典，请先在维度中设置可选值"
               : "当前筛选条件下无匹配项"}
@@ -140,10 +139,10 @@ export default function EnumDictList({ datasourceId }: EnumDictListProps) {
               {/* Header */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className={`text-[10px] font-mono uppercase px-1.5 py-0.5 rounded ${
+                  <span className={`badge-soft font-mono uppercase ${
                     entry.source === "dimension"
-                      ? "bg-blue-100 text-blue-700"
-                      : "bg-amber-100 text-amber-700"
+                      ? "bg-[var(--info-soft)] text-[var(--info)]"
+                      : "bg-[var(--accent)] text-[var(--primary-text)]"
                   }`}>
                     {entry.source === "dimension" ? "维度" : "标注"}
                   </span>
@@ -159,7 +158,7 @@ export default function EnumDictList({ datasourceId }: EnumDictListProps) {
                     </span>
                   )}
                   {entry.data_type && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--surface)] text-[var(--steel)]">
+                    <span className="badge-soft font-mono bg-[var(--muted)] text-[var(--muted-foreground)]">
                       {entry.data_type}
                     </span>
                   )}
@@ -167,7 +166,7 @@ export default function EnumDictList({ datasourceId }: EnumDictListProps) {
                 {!isEditing && (
                   <button
                     onClick={() => startEdit(entry)}
-                    className="text-xs text-[var(--primary)] hover:underline"
+                    className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
                   >
                     编辑
                   </button>
@@ -179,15 +178,15 @@ export default function EnumDictList({ datasourceId }: EnumDictListProps) {
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-[var(--hairline)]">
-                        <th className="text-left py-1.5 px-2 font-mono text-[var(--steel)] w-1/3">存储值</th>
-                        <th className="text-left py-1.5 px-2 font-mono text-[var(--steel)] w-1/3">显示值</th>
-                        <th className="text-left py-1.5 px-2 font-mono text-[var(--steel)]">预览</th>
+                      <tr className="bg-[color-mix(in_srgb,var(--muted)_60%,transparent)] border-b border-[var(--border)]">
+                        <th className="text-left py-1.5 px-2 text-xs font-medium font-mono text-[var(--muted-foreground)] w-1/3">存储值</th>
+                        <th className="text-left py-1.5 px-2 text-xs font-medium font-mono text-[var(--muted-foreground)] w-1/3">显示值</th>
+                        <th className="text-left py-1.5 px-2 text-xs font-medium font-mono text-[var(--muted-foreground)]">预览</th>
                       </tr>
                     </thead>
                     <tbody>
                       {entry.values.map((v, i) => (
-                        <tr key={i} className="border-b border-[var(--hairline-soft)] last:border-0">
+                        <tr key={i} className="border-b border-[var(--border)] hover:bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] last:border-0">
                           <td className="py-1.5 px-2 font-mono text-[var(--ink)]">{v.key}</td>
                           <td className="py-1.5 px-2 text-[var(--ink)]">{v.value}</td>
                           <td className="py-1.5 px-2 text-[var(--steel)]">
@@ -241,7 +240,7 @@ export default function EnumDictList({ datasourceId }: EnumDictListProps) {
                   </div>
                   <button
                     onClick={addPair}
-                    className="text-xs text-[var(--primary)] hover:underline inline-flex items-center gap-1"
+                    className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] inline-flex items-center gap-1"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -249,7 +248,7 @@ export default function EnumDictList({ datasourceId }: EnumDictListProps) {
                     添加映射
                   </button>
                   <div className="flex items-center gap-2 pt-1">
-                    <button onClick={saveEdit} disabled={saving} className="btn-dark text-xs">
+                    <button onClick={saveEdit} disabled={saving} className="btn-primary text-xs">
                       {saving ? "保存中..." : "保存"}
                     </button>
                     <button onClick={cancelEdit} className="btn-ghost text-xs">

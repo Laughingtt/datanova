@@ -55,7 +55,7 @@ export default function DatasourceForm({ datasource, onSave, onCancel }: Datasou
       </h3>
 
       {error && (
-        <div className="p-3 rounded-lg bg-[var(--error-soft)] text-[var(--error)] text-sm border border-[var(--error)]/20">
+        <div className="p-3 rounded-lg bg-[var(--error-soft)] text-[var(--error)] text-sm border border-[color-mix(in_srgb,var(--error)_20%,transparent)]">
           {error}
         </div>
       )}

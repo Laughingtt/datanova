@@ -78,8 +78,8 @@ export default function FeedbackButtons({
 
   if (submitted) {
     return (
-      <div className="my-3 px-4 py-2 rounded-lg bg-[var(--success-soft)] border border-[var(--success)]">
-        <p className="text-sm text-[var(--success)] flex items-center gap-2">
+      <div className="my-3 px-4 py-2 rounded-xl bg-[var(--success-soft)] text-[var(--success)]">
+        <p className="text-sm flex items-center gap-2">
           <span>✓</span>
           <span>感谢反馈！</span>
         </p>
@@ -88,14 +88,18 @@ export default function FeedbackButtons({
   }
 
   return (
-    <div ref={containerRef} className="my-3 px-4 py-3 rounded-lg bg-[var(--surface)] border border-[var(--hairline)]">
+    <div ref={containerRef} className="my-3 px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-xs)]">
       <div className="flex items-center justify-between">
         {/* Feedback buttons */}
         <div className="flex items-center gap-3">
-          <span className="text-xs text-[var(--steel)]">这个回答有帮助吗？</span>
+          <span className="text-xs text-[var(--muted-foreground)]">这个回答有帮助吗？</span>
           <button
             onClick={(e) => { bounceClick(e); handleRatingClick("positive"); }}
-            className={`transition-transform hover:scale-110 ${rating === "positive" ? "opacity-100" : "opacity-60 hover:opacity-100"}`}
+            className={`h-8 rounded-lg px-2 transition-colors ${
+              rating === "positive"
+                ? "text-[var(--primary)] bg-[var(--accent)]"
+                : "text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
+            }`}
             title="有帮助"
             aria-label="有帮助"
           >
@@ -105,7 +109,11 @@ export default function FeedbackButtons({
           </button>
           <button
             onClick={(e) => { bounceClick(e); handleRatingClick("negative"); }}
-            className={`transition-transform hover:scale-110 ${rating === "negative" ? "opacity-100" : "opacity-60 hover:opacity-100"}`}
+            className={`h-8 rounded-lg px-2 transition-colors ${
+              rating === "negative"
+                ? "text-[var(--primary)] bg-[var(--accent)]"
+                : "text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
+            }`}
             title="没帮助"
             aria-label="没帮助"
           >
@@ -129,8 +137,8 @@ export default function FeedbackButtons({
 
       {/* Negative feedback form */}
       {showFeedbackForm && (
-        <div className="mt-3 pt-3 border-t border-[var(--hairline-soft)]">
-          <p className="text-xs text-[var(--steel)] mb-2">请告诉我们问题所在：</p>
+        <div className="mt-3 pt-3 border-t border-[var(--border)]">
+          <p className="text-xs text-[var(--muted-foreground)] mb-2">请告诉我们问题所在：</p>
 
           {/* Issue type selection */}
           <div className="flex flex-wrap gap-2 mb-3">
@@ -140,8 +148,8 @@ export default function FeedbackButtons({
                 onClick={() => setSelectedIssue(issue.value)}
                 className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                   selectedIssue === issue.value
-                    ? "bg-[var(--primary)] text-[var(--on-dark)]"
-                    : "bg-[var(--canvas)] border border-[var(--hairline)] text-[var(--slate)] hover:border-[var(--primary)]"
+                    ? "bg-[var(--accent)] text-[var(--accent-foreground)] border border-[var(--primary)]"
+                    : "bg-[var(--background)] border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
                 }`}
               >
                 {issue.label}

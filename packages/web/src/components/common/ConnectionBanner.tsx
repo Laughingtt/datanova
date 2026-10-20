@@ -18,10 +18,10 @@ export default function ConnectionBanner() {
     <div
       role="status"
       aria-live="polite"
-      className={`flex items-center justify-center gap-2 px-4 py-1.5 text-xs font-medium border-b ${
+      className={`flex items-center justify-center gap-2 px-4 py-1.5 text-xs font-medium border-b border-[var(--border)] ${
         isDisconnected
-          ? "bg-[var(--error-soft)] text-[var(--error)] border-[var(--error)]/20"
-          : "bg-[var(--warning-soft)] text-[var(--warning)] border-[var(--warning)]/20"
+          ? "bg-[var(--error-soft)] text-[var(--error)]"
+          : "bg-[var(--warning-soft)] text-[var(--warning)]"
       }`}
     >
       <span className="relative flex">
@@ -45,7 +45,7 @@ export default function ConnectionBanner() {
       {isDisconnected && (
         <button
           onClick={reconnect}
-          className="ml-2 px-2 py-0.5 rounded text-[var(--error)] border border-[var(--error)]/30 hover:bg-[var(--error)] hover:text-white transition-colors"
+          className="btn-ghost text-xs ml-2"
         >
           重连
         </button>

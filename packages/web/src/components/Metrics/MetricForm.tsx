@@ -160,7 +160,7 @@ export default function MetricForm({
 
   return (
     <div className="card-base">
-      <h3 className="font-display text-heading-4 text-[var(--ink)] mb-5">
+      <h3 className="text-base font-semibold text-[var(--foreground)] mb-5">
         {isEdit ? "编辑指标" : "新增指标"}
       </h3>
 
@@ -210,18 +210,15 @@ export default function MetricForm({
         {/* Metric Type */}
         <div>
           <label className="label-mono">指标类型</label>
-          <div className="flex gap-2">
+          <div className="tabs-track">
             {[
               { value: 'atomic', label: '原子指标', desc: '单表聚合' },
               { value: 'derived', label: '衍生指标', desc: '比率/差值' },
               { value: 'compound', label: '复合指标', desc: '窗口函数/CTE' },
             ].map(t => (
               <button key={t.value} type="button"
-                className={`px-3 py-1.5 rounded text-sm border transition-colors ${
-                  metricType === t.value
-                    ? 'border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary-text)]'
-                    : 'border-[var(--hairline)] text-[var(--steel)]'
-                }`}
+                className="tab-trigger"
+                data-active={metricType === t.value}
                 onClick={() => setMetricType(t.value as "atomic" | "derived" | "compound")}
               >
                 {t.label}
@@ -295,7 +292,7 @@ export default function MetricForm({
         {/* Dimensions multi-select */}
         <div>
           <label className="label-mono">维度</label>
-          <div className="flex flex-wrap gap-2 p-3 rounded-md border border-[var(--hairline-strong)] bg-[var(--canvas)] min-h-[44px]">
+          <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-[var(--input)] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] min-h-[44px]">
             {dimensions.length === 0 ? (
               <span className="text-xs text-[var(--stone)]">暂无可用维度</span>
             ) : (
@@ -308,8 +305,8 @@ export default function MetricForm({
                     onClick={() => toggleDimension(d.name)}
                     className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                       isSelected
-                        ? "bg-[var(--primary)] text-[var(--on-dark)]"
-                        : "bg-[var(--surface)] text-[var(--slate)] border border-[var(--hairline)]"
+                        ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                        : "bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)] hover:bg-[var(--muted)]"
                     }`}
                   >
                     {d.display_name || d.name}
@@ -383,7 +380,7 @@ export default function MetricForm({
         {/* Status */}
         <div>
           <label className="label-mono">状态</label>
-          <div className="flex gap-3">
+          <div className="tabs-track">
             {(["draft", "published", "deprecated"] as const).map((s) => {
               const badge = {
                 draft: { dot: "bg-[var(--warning)]", label: "草稿" },
@@ -395,11 +392,8 @@ export default function MetricForm({
                   key={s}
                   type="button"
                   onClick={() => setStatus(s)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm border transition-colors ${
-                    status === s
-                      ? "border-[var(--primary)] bg-[var(--primary-soft)]"
-                      : "border-[var(--hairline)] text-[var(--steel)]"
-                  }`}
+                  className="tab-trigger"
+                  data-active={status === s}
                 >
                   <span className={`w-2 h-2 rounded-full ${badge.dot}`} />
                   {badge.label}
@@ -411,7 +405,7 @@ export default function MetricForm({
 
         {/* Actions */}
         <div className="flex items-center gap-3 pt-2">
-          <button type="submit" className="btn-dark" disabled={saving}>
+          <button type="submit" className="btn-primary" disabled={saving}>
             {saving ? "保存中..." : isEdit ? "更新" : "创建"}
           </button>
           {isEdit && (
@@ -439,7 +433,7 @@ export default function MetricForm({
 
       {/* Test result preview */}
       {(testResult || testError) && (
-        <div className="mt-5 border-t border-[var(--hairline)] pt-4">
+        <div className="mt-5 border-t border-[var(--border)] pt-4">
           <h4 className="label-mono mb-2">测试结果</h4>
           {testError && (
             <div className="p-3 rounded-md bg-[var(--error-soft)] text-[var(--error)] text-sm">
@@ -447,7 +441,7 @@ export default function MetricForm({
             </div>
           )}
           {testResult && (
-            <div className="p-3 rounded-md bg-[var(--surface)] border border-[var(--hairline)]">
+            <div className="p-3 rounded-lg bg-[var(--surface)] border border-[var(--border)]">
               {testResult.rows && (
                 <p className="text-xs text-[var(--steel)] mb-2">
                   {testResult.rows.length} 行返回
@@ -458,9 +452,9 @@ export default function MetricForm({
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-[var(--hairline)]">
+                      <tr className="bg-[color-mix(in_srgb,var(--muted)_60%,transparent)] border-b border-[var(--border)]">
                         {Object.keys(testResult.rows[0]).map((col: string) => (
-                          <th key={col} className="text-left py-1.5 px-2 font-mono text-[var(--steel)]">
+                          <th key={col} className="text-left py-1.5 px-2 text-xs font-medium font-mono text-[var(--muted-foreground)]">
                             {col}
                           </th>
                         ))}
@@ -468,7 +462,7 @@ export default function MetricForm({
                     </thead>
                     <tbody>
                       {testResult.rows.slice(0, 5).map((row: Record<string, unknown>, i: number) => (
-                        <tr key={i} className="border-b border-[var(--hairline-soft)]">
+                        <tr key={i} className="border-b border-[var(--border)] hover:bg-[color-mix(in_srgb,var(--muted)_40%,transparent)]">
                           {Object.values(row).map((val, j) => (
                             <td key={j} className="py-1.5 px-2 text-[var(--ink)]">
                               {String(val ?? "NULL")}
@@ -479,7 +473,7 @@ export default function MetricForm({
                     </tbody>
                   </table>
                   {testResult.rows.length > 5 && (
-                    <p className="text-xs text-[var(--steel)] mt-1">
+                    <p className="text-xs text-[var(--muted-foreground)] mt-1">
                       ... and {testResult.rows.length - 5} 更多行
                     </p>
                   )}

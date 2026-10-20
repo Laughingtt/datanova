@@ -310,7 +310,8 @@ See `.env.example`:
 - **New routes use factory pattern**: `createSemanticRoutes()`, `createScheduledRoutes()`, `createDictionaryRoutes()`, `createInsightsRoutes()`, `createBookmarkRoutes()`, `createQuerySkillRoutes()` return Hono instances registered at `"/"` root
 - **Insights page**: Available as an AppView (`"insights"`) but has no sidebar nav entry — accessible programmatically only
 - **AnalysisPage integrates scheduled query functionality**: The separate `ScheduledPage.tsx` exists but is not rendered in `App.tsx`
-- **Design docs in `docs/`**: Contains architecture docs, design specs, and optimization plans (e.g., `docs/superpowers/specs/` for feature specs, `docs/analysis/` for optimization analysis)
+- **Design docs in `docs/`**: Architecture docs (`docs/01..07-*.md`), design specs (`docs/DESIGN.md`), and historical specs and plans under `docs/superpowers/{specs,plans}/`
+- **Frontend design system**: `design.md` at the repo root is the single source of truth for fonts, colors, backgrounds, radius/shadows, components, motion, and page layout — read it before any frontend styling work. Tokens live in `packages/web/src/styles/globals.css`; New API (shadcn base-nova) visual language.
 - **Multi-Agent framework**: `AgentRegistry` manages agent definitions and tool pools. `initAgentFramework()` is called at startup. New agents are registered in `agent-registration.ts`.
 - **Metric Dev Agent workflow** (10步, 含所有内部处理细节):
   1. `check_metric_conflict(dsId, name, display_name?)` — `checkMetricNameConflict()` (SELECT WHERE name=?) → 同名→error; `checkMetricDisplayNameConflict()` (SELECT WHERE display_name=?) → 同显示名→warning; deprecated指标建议覆盖

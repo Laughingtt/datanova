@@ -36,25 +36,25 @@ export default function AttributionView({ sections }: AttributionViewProps) {
   if (sections.length === 0) return null;
 
   const colorMap: Record<string, string> = {
-    fact: "border-green-200 bg-green-50",
-    dimension: "border-blue-200 bg-blue-50",
-    root_cause: "border-orange-200 bg-orange-50",
-    action: "border-purple-200 bg-purple-50",
+    fact: "border-l-[var(--success)] bg-[var(--success-soft)]",
+    dimension: "border-l-[var(--info)] bg-[var(--info-soft)]",
+    root_cause: "border-l-[var(--warning)] bg-[var(--warning-soft)]",
+    action: "border-l-[var(--primary)] bg-[var(--accent)]",
   };
 
   return (
-    <div className="my-3 border border-[var(--hairline)] rounded-lg overflow-hidden">
-      <div className="px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-[var(--hairline)]">
-        <span className="text-sm font-medium text-[var(--ink)]">🎯 归因分析</span>
+    <div className="my-3 rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-xs)] overflow-hidden">
+      <div className="px-4 py-3 bg-[color-mix(in_srgb,var(--muted)_50%,transparent)] border-b border-[var(--border)]">
+        <span className="text-sm font-medium text-[var(--foreground)]">🎯 归因分析</span>
       </div>
-      <div className="divide-y divide-[var(--hairline)]">
+      <div className="divide-y divide-[var(--border)]">
         {sections.map((section, idx) => (
           <div key={idx} className={`px-4 py-3 border-l-4 ${colorMap[section.type] ?? ""}`}>
             <div className="flex items-center gap-2 mb-1">
               <span>{section.icon}</span>
-              <span className="text-sm font-medium text-[var(--ink)]">{section.label}</span>
+              <span className="text-sm font-medium text-[var(--foreground)]">{section.label}</span>
             </div>
-            <p className="text-sm text-[var(--ink)] leading-relaxed whitespace-pre-wrap">{section.content}</p>
+            <p className="text-sm text-[var(--foreground)] leading-relaxed whitespace-pre-wrap">{section.content}</p>
           </div>
         ))}
       </div>

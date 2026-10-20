@@ -341,24 +341,24 @@ export default function ChatWindow() {
 
   return (
     <div className="flex h-full">
-      {/* Conversation sidebar */}
-      <div className="w-[260px] border-r border-[var(--hairline)] bg-[var(--surface)] flex flex-col">
-        <div className="p-4 border-b border-[var(--hairline)]">
-          <button onClick={handleNewConversation} className="w-full btn-primary text-center gap-2">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      {/* Conversation sidebar — New API light sidebar */}
+      <div className="w-[15rem] shrink-0 border-r border-[var(--sidebar-border)] bg-[var(--sidebar)] flex flex-col">
+        <div className="p-2">
+          <button onClick={handleNewConversation} className="w-full btn-primary">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
             新建对话
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 overflow-y-auto custom-scrollbar px-2 pb-2">
           {conversations.length === 0 ? (
-            <div className="px-4 py-8 text-center">
-              <svg className="w-8 h-8 mx-auto text-[var(--stone)] mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+            <div className="px-3 py-8 text-center">
+              <svg className="w-7 h-7 mx-auto text-[var(--muted-foreground)] mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
-              <p className="text-xs text-[var(--stone)]">暂无对话记录</p>
+              <p className="text-xs text-[var(--muted-foreground)]">暂无对话记录</p>
             </div>
           ) : (
             conversations.map((conv) => {
@@ -367,27 +367,27 @@ export default function ChatWindow() {
                 <div
                   key={conv.id}
                   onClick={() => handleSelectConversation(conv.id)}
-                  className={`group px-4 py-3 cursor-pointer border-b border-[var(--hairline-soft)] transition-all duration-200 ${
+                  className={`group px-2.5 py-2 mb-0.5 cursor-pointer rounded-md transition-colors ${
                     isActive
-                      ? "bg-[var(--primary-soft)] border-l-2 border-l-[var(--primary)]"
-                      : "hover:bg-[var(--canvas)] border-l-2 border-l-transparent"
+                      ? "bg-[var(--sidebar-accent)] text-[var(--sidebar-accent-foreground)]"
+                      : "text-[var(--sidebar-foreground)] hover:bg-[var(--muted)]"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-[var(--ink)] truncate flex-1">{conv.title ?? "未命名对话"}</p>
+                    <p className={`text-sm truncate flex-1 ${isActive ? "font-medium" : ""}`}>{conv.title ?? "未命名对话"}</p>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDeleteConversation(conv.id);
                       }}
-                      className="opacity-0 group-hover:opacity-100 hover:bg-[var(--error-soft)] text-[var(--stone)] hover:text-[var(--error)] rounded p-0.5 transition-all ml-2"
+                      className="opacity-0 group-hover:opacity-100 hover:bg-[var(--error-soft)] text-[var(--muted-foreground)] hover:text-[var(--error)] rounded p-0.5 transition-all ml-2"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                   </div>
-                  <p className="text-[10px] text-[var(--stone)] mt-0.5">
+                  <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">
                     {new Date(conv.created_at).toLocaleDateString("zh-CN")}
                   </p>
                 </div>
@@ -396,10 +396,10 @@ export default function ChatWindow() {
           )}
         </div>
 
-        <div className="p-4 border-t border-[var(--hairline)]">
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${isConnected ? "bg-[var(--success)]" : "bg-[var(--error)]"}`} />
-            <span className="text-xs text-[var(--steel)]">
+        <div className="p-2 border-t border-[var(--sidebar-border)]">
+          <div className="flex items-center gap-2 rounded-md px-2 py-1.5">
+            <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? "bg-[var(--success)]" : "bg-[var(--error)]"}`} />
+            <span className="text-xs text-[var(--muted-foreground)]">
               {isConnected ? "已连接" : "未连接"}
             </span>
           </div>
@@ -412,12 +412,12 @@ export default function ChatWindow() {
         <ChannelTabs activeChannel={activeChannel} onChannelChange={setActiveChannel} />
 
         {/* Header */}
-        <div className="h-14 border-b border-[var(--hairline)] bg-[var(--surface)] flex items-center px-5 justify-between">
-          <div className="flex items-center gap-2 text-sm text-[var(--steel)]">
+        <div className="h-12 border-b border-[var(--border)] bg-[var(--background)] flex items-center px-4 justify-between">
+          <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
             {selectedDatasourceName ? (
               <>
-                <div className="w-2 h-2 rounded-full bg-[var(--success)]" />
-                <span className="text-[var(--charcoal)] font-medium">{selectedDatasourceName}</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--success)]" />
+                <span className="text-[var(--foreground)] font-medium">{selectedDatasourceName}</span>
               </>
             ) : (
               "未选择数据源"

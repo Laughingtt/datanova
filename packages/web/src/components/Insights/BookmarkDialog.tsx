@@ -37,12 +37,11 @@ export default function BookmarkDialog({ dsId, onClose, onCreated }: BookmarkDia
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div ref={overlayRef} className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={close} />
-      <div ref={contentRef} className="relative w-[520px] max-w-[90vw] bg-[var(--surface)] rounded-2xl shadow-2xl">
-        <div className="sunset-stripe rounded-t-2xl" />
+      <div ref={overlayRef} className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" onClick={close} />
+      <div ref={contentRef} className="relative w-[520px] max-w-[90vw] bg-[var(--popover)] rounded-xl ring-1 ring-[color-mix(in_srgb,var(--foreground)_10%,transparent)] shadow-[var(--shadow-3)]">
         <div className="p-6">
-          <h2 className="font-display text-lg text-[var(--ink)] mb-1">添加收藏报表</h2>
-          <p className="text-xs text-[var(--steel)] mb-5">输入 SQL 查询语句，将其保存为收藏报表</p>
+          <h2 className="text-lg font-semibold text-[var(--foreground)] mb-1">添加收藏报表</h2>
+          <p className="text-xs text-[var(--muted-foreground)] mb-5">输入 SQL 查询语句，将其保存为收藏报表</p>
 
           <div className="space-y-4">
             <div>

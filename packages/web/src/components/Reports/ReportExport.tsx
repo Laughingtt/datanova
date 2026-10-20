@@ -36,12 +36,13 @@ export default function ReportExport({ rawContent, title = "report" }: ReportExp
   <meta charset="UTF-8">
   <title>${title}</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; line-height: 1.6; }
-    h1, h2 { border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem; }
-    code { background: #f3f4f6; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.875rem; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; background: #ffffff; color: #0a0a0a; line-height: 1.6; }
+    h1, h2 { border-bottom: 1px solid #e8e8e8; padding-bottom: 0.5rem; }
+    a { color: #3ea4ec; }
+    code { background: #f5f5f5; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.875rem; }
     table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
-    th, td { border: 1px solid #e5e7eb; padding: 0.5rem 0.75rem; text-align: left; }
-    th { background: #f9fafb; font-weight: 600; }
+    th, td { border: 1px solid #e8e8e8; padding: 0.5rem 0.75rem; text-align: left; }
+    th { background: #f5f5f5; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -57,16 +58,16 @@ ${htmlContent}
       <button
         onClick={exportMarkdown}
         className="btn-ghost text-xs"
-        title="Export as Markdown"
+        title="导出为 Markdown"
       >
-        Export .md
+        导出 .md
       </button>
       <button
         onClick={exportHtml}
         className="btn-ghost text-xs"
-        title="Export as HTML"
+        title="导出为 HTML"
       >
-        Export .html
+        导出 .html
       </button>
     </div>
   );

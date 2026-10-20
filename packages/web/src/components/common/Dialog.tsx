@@ -121,7 +121,7 @@ export default function Dialog({
       role="presentation"
     >
       <div
-        className="absolute inset-0 bg-[var(--ink)]/40 backdrop-blur-[1px] dialog-backdrop-enter"
+        className="absolute inset-0 bg-black/10 backdrop-blur-[2px] dialog-backdrop-enter"
         onClick={closeOnBackdrop ? onClose : undefined}
         aria-hidden="true"
       />
@@ -132,25 +132,23 @@ export default function Dialog({
         aria-labelledby={titleId}
         aria-describedby={descId}
         tabIndex={-1}
-        className={`relative w-full ${SIZE_CLASS[size]} max-h-[90vh] flex flex-col rounded-xl bg-[var(--surface)] border border-[var(--hairline)] shadow-[0_24px_48px_-8px_rgba(15,23,42,0.24)] outline-none dialog-panel-enter`}
+        className={`relative w-full ${SIZE_CLASS[size]} max-h-[90vh] flex flex-col rounded-xl bg-[var(--popover)] text-[var(--popover-foreground)] ring-1 ring-[color-mix(in_srgb,var(--foreground)_10%,transparent)] shadow-[var(--shadow-3)] outline-none dialog-panel-enter`}
       >
         {(title || description) && (
-          <div className="px-6 pt-5 pb-4 border-b border-[var(--hairline-soft)]">
+          <div className="px-5 pt-5 pb-1">
             {title && (
-              <h2 id={titleId} className="text-base font-semibold text-[var(--ink)] font-display">
+              <h2 id={titleId} className="text-base font-medium leading-none tracking-tight">
                 {title}
               </h2>
             )}
             {description && (
-              <p id={descId} className="text-sm text-[var(--steel)] mt-1">{description}</p>
+              <p id={descId} className="text-sm text-[var(--muted-foreground)] mt-1.5">{description}</p>
             )}
           </div>
         )}
-        <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
+        <div className="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar">{children}</div>
         {footer && (
-          <div className="px-6 py-4 border-t border-[var(--hairline-soft)] flex justify-end gap-2">
-            {footer}
-          </div>
+          <div className="px-5 pb-5 pt-2 flex justify-end gap-2">{footer}</div>
         )}
       </div>
     </div>

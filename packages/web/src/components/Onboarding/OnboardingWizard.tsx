@@ -96,13 +96,13 @@ export default function OnboardingWizard() {
   if (!showWizard) return null;
 
   return (
-    <div className="p-6 bg-gradient-to-b from-[var(--surface)] to-[var(--canvas)] border-b border-[var(--hairline)]">
+    <div className="p-6 bg-[var(--background)] border-b border-[var(--border)]">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-display text-heading-4 text-[var(--ink)]">🚀 设置向导</h3>
+          <h3 className="text-lg font-semibold text-[var(--foreground)]">🚀 设置向导</h3>
           <button
             onClick={() => { setShowWizard(false); setOnboardingCompleted(true); }}
-            className="text-xs text-[var(--steel)] hover:text-[var(--ink)]"
+            className="btn-ghost text-xs"
           >
             Close
           </button>
@@ -120,7 +120,7 @@ export default function OnboardingWizard() {
           {...STEP_CONFIG.connect}
         >
           <div>
-            <p className="text-sm text-[var(--slate)] mb-3">
+            <p className="text-sm text-[var(--muted-foreground)] mb-3">
               Select an existing datasource or go to the Datasources page to add a new one.
             </p>
             {datasources.filter(ds => ds.enabled).length > 0 ? (
@@ -132,11 +132,11 @@ export default function OnboardingWizard() {
                     className={`w-full text-left px-4 py-3 rounded-md border transition-colors ${
                       selectedDsId === ds.id
                         ? "border-[var(--primary)] bg-[var(--primary-soft)]"
-                        : "border-[var(--hairline)] hover:border-[var(--steel)]"
+                        : "border-[var(--border)] hover:border-[var(--muted-foreground)]"
                     }`}
                   >
-                    <p className="text-sm font-medium text-[var(--ink)]">{ds.name}</p>
-                    <p className="text-xs text-[var(--steel)] font-mono">{ds.host}:{ds.port}/{ds.database}</p>
+                    <p className="text-sm font-medium text-[var(--foreground)]">{ds.name}</p>
+                    <p className="text-xs text-[var(--muted-foreground)] font-mono">{ds.host}:{ds.port}/{ds.database}</p>
                   </button>
                 ))}
               </div>
@@ -159,15 +159,15 @@ export default function OnboardingWizard() {
           {...STEP_CONFIG.discover}
         >
           <div>
-            <p className="text-sm text-[var(--slate)] mb-2">
+            <p className="text-sm text-[var(--muted-foreground)] mb-2">
               DataNova will scan your database to:
             </p>
-            <ul className="text-sm text-[var(--slate)] space-y-1 list-disc list-inside mb-3">
+            <ul className="text-sm text-[var(--muted-foreground)] space-y-1 list-disc list-inside mb-3">
               <li>找到所有表和列</li>
               <li>映射外键关系</li>
               <li>检测值域（枚举值、数值范围）</li>
             </ul>
-            <p className="text-xs text-[var(--steel)]">
+            <p className="text-xs text-[var(--muted-foreground)]">
               Go to Schema Annotations → the schema is discovered automatically when you visit the page.
             </p>
           </div>
@@ -184,22 +184,22 @@ export default function OnboardingWizard() {
           {...STEP_CONFIG.annotate}
         >
           <div>
-            <p className="text-sm text-[var(--slate)] mb-3">
+            <p className="text-sm text-[var(--muted-foreground)] mb-3">
               Add business descriptions to tables and columns. This helps AI generate better SQL queries.
             </p>
             <div className="space-y-2">
               <div className="flex items-start gap-2 text-sm">
                 <span className="text-[var(--primary-text)] mt-0.5">🤖</span>
                 <div>
-                  <p className="text-[var(--ink)] font-medium">AI 自动标注</p>
-                  <p className="text-xs text-[var(--steel)]">Let AI analyze your schema and generate annotations automatically</p>
+                  <p className="text-[var(--foreground)] font-medium">AI 自动标注</p>
+                  <p className="text-xs text-[var(--muted-foreground)]">让 AI 自动分析 Schema 并生成业务标注</p>
                 </div>
               </div>
               <div className="flex items-start gap-2 text-sm">
                 <span className="text-[var(--primary-text)] mt-0.5">✏️</span>
                 <div>
-                  <p className="text-[var(--ink)] font-medium">手动标注</p>
-                  <p className="text-xs text-[var(--steel)]">Add descriptions yourself in the Schema Annotations page</p>
+                  <p className="text-[var(--foreground)] font-medium">手动标注</p>
+                  <p className="text-xs text-[var(--muted-foreground)]">前往「Schema 标注」页面手动补充说明</p>
                 </div>
               </div>
             </div>
@@ -217,10 +217,10 @@ export default function OnboardingWizard() {
           {...STEP_CONFIG.metrics}
         >
           <div>
-            <p className="text-sm text-[var(--slate)] mb-3">
+            <p className="text-sm text-[var(--muted-foreground)] mb-3">
               Define reusable metrics (like "Revenue", "Order Count") with pre-built SQL expressions.
             </p>
-            <div className="p-3 rounded bg-[var(--primary-soft)] text-sm text-[var(--primary-text)]">
+            <div className="p-3 rounded-lg bg-[var(--primary-soft)] text-sm text-[var(--primary-text)]">
               <strong>💡 Tip:</strong> Use the "AI Recommend Metrics" button on the Metrics page
               to let AI suggest metrics based on your schema.
             </div>

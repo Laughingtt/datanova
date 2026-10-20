@@ -24,20 +24,20 @@ export default function SqlBlock({ sql: rawSql }: SqlBlockProps) {
   const tokens = tokenizeSql(displaySql);
 
   return (
-    <div className="my-3 rounded-lg overflow-hidden border border-[var(--hairline)]">
-      <div className="bg-[var(--surface)] px-4 py-2 flex items-center justify-between border-b border-[var(--hairline)]">
-        <span className="text-xs text-[var(--steel)] font-mono uppercase tracking-wider">SQL</span>
+    <div className="my-3 rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--muted)]">
+      <div className="bg-[var(--muted)] px-4 py-2 flex items-center justify-between border-b border-[var(--border)]">
+        <span className="text-xs text-[var(--muted-foreground)] font-mono uppercase tracking-wider">SQL</span>
         <div className="flex items-center gap-3">
           <button
             onClick={handleFormat}
-            className="text-xs text-[var(--stone)] hover:text-[var(--primary)] transition-colors font-mono"
+            className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors font-mono"
           >
             {formatted ? "压缩" : "格式化"}
           </button>
           <button
             onClick={handleCopy}
             className={`text-xs transition-colors font-mono inline-flex items-center gap-1 ${
-              copied ? "text-[var(--success)]" : "text-[var(--stone)] hover:text-[var(--primary)]"
+              copied ? "text-[var(--success)]" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             }`}
             aria-live="polite"
           >
@@ -54,7 +54,7 @@ export default function SqlBlock({ sql: rawSql }: SqlBlockProps) {
           </button>
         </div>
       </div>
-      <pre className="bg-[var(--surface)] px-4 py-3 text-sm leading-relaxed overflow-x-auto">
+      <pre className="bg-[var(--muted)] px-4 py-3 text-xs leading-relaxed text-[var(--foreground)] overflow-x-auto">
         <code className="font-mono">
           {tokens.map((t, idx) => (
             <span key={idx} className={TOKEN_CLASS[t.type]}>{t.value}</span>

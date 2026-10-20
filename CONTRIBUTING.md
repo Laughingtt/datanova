@@ -64,12 +64,11 @@ docker run -d --name datanova-mysql \
   mysql:8
 ```
 
-Or use the demo dataset:
+Or use a real MySQL instance on port `3307` (you'll seed your own data):
 
 ```bash
-docker run -d --name datanova-demo -p 3307:3306 \
-  -e MYSQL_ROOT_PASSWORD=demo mysql:8
-docker exec -i datanova-demo mysql -uroot -pdemo < docs/demo-data/employees-init.sql
+docker run -d --name datanova-mysql-demo -p 3307:3306 \
+  -e MYSQL_ROOT_PASSWORD=demo -e MYSQL_DATABASE=datanova_demo mysql:8
 ```
 
 ### Configure environment
@@ -101,7 +100,7 @@ npm run dev:web
 
 ## Tests
 
-We use **Vitest** for unit tests and **Playwright** for end-to-end.
+We use **Vitest** for unit tests.
 
 ```bash
 # Unit tests (server only)
@@ -112,15 +111,9 @@ npx vitest run packages/server/src/routes/__tests__/semantic.test.ts
 
 # Watch mode
 npm run --workspace=packages/server test:watch
-
-# E2E (auto-starts dev servers)
-npx playwright test
-
-# E2E UI mode
-npx playwright test --ui
 ```
 
-E2E tests assume the servers are not already running. By default `playwright.config.ts` reuses existing servers on `:3000` and `:5173` if found.
+End-to-end browser flows are driven by the **`agent-browser`** skill (CDP-based), not Playwright. See `CLAUDE.md` for the testing convention.
 
 ---
 

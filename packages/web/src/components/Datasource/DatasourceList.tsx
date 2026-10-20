@@ -46,12 +46,14 @@ export default function DatasourceList({ datasources, onEdit, onDelete, onTest }
 
   if (datasources.length === 0) {
     return (
-      <div ref={emptyRef} className="card-base text-center py-16">
-        <svg className="empty-icon w-12 h-12 mx-auto text-[var(--stone)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-        </svg>
-        <p className="text-[var(--steel)] text-sm">暂无数据源配置</p>
-        <p className="text-[var(--stone)] text-xs mt-1">点击"添加数据源"开始配置</p>
+      <div ref={emptyRef} className="rounded-xl border border-dashed border-[var(--border)] py-16 text-center">
+        <span className="mx-auto mb-3 flex size-10 items-center justify-center rounded-lg bg-[var(--muted)]">
+          <svg className="empty-icon h-5 w-5 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+          </svg>
+        </span>
+        <p className="text-sm font-medium text-[var(--foreground)]">暂无数据源配置</p>
+        <p className="mt-1 text-sm text-[var(--muted-foreground)]">点击"添加数据源"开始配置</p>
       </div>
     );
   }
@@ -61,12 +63,12 @@ export default function DatasourceList({ datasources, onEdit, onDelete, onTest }
       {datasources.map((ds) => {
         const result = testResult[ds.id];
         return (
-          <div key={ds.id} className="ds-item card-base flex items-center justify-between group hover:shadow-md transition-all duration-200">
+          <div key={ds.id} className="ds-item group flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-[var(--shadow-xs)] transition-shadow duration-150 hover:shadow-[var(--shadow-2)]">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3">
-                <div className={`w-2.5 h-2.5 rounded-full ${ds.enabled ? "bg-[var(--success)]" : "bg-[var(--stone)]"}`} />
-                <h3 className="text-sm font-medium text-[var(--ink)] truncate">{ds.name}</h3>
-                <span className="text-[10px] font-mono text-[var(--steel)] bg-[var(--canvas)] px-2 py-0.5 rounded-full border border-[var(--hairline-soft)]">
+                <div className={`h-2 w-2 rounded-full ${ds.enabled ? "bg-[var(--success)]" : "bg-[var(--stone)]"}`} />
+                <h3 className="truncate text-sm font-medium text-[var(--foreground)]">{ds.name}</h3>
+                <span className="badge-soft bg-[var(--muted)] font-mono text-[10px] text-[var(--muted-foreground)]">
                   MySQL
                 </span>
               </div>

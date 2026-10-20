@@ -67,25 +67,24 @@ export default function QueryHistoryPage() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-[var(--canvas)]">
-      <div className="sunset-stripe" />
+    <div className="h-full flex flex-col bg-[var(--background)]">
 
       <div className="flex-1 flex flex-col min-h-0">
         <div className="px-4 md:px-8 pt-8 pb-4">
           <div className="flex items-end justify-between mb-4 gap-4 flex-wrap">
             <div>
-              <h2 className="font-display text-2xl text-[var(--ink)]">SQL 查询历史</h2>
-              <p className="text-sm text-[var(--steel)] mt-1">
+              <h2 className="text-2xl font-semibold text-[var(--foreground)]">SQL 查询历史</h2>
+              <p className="text-sm text-[var(--muted-foreground)] mt-1">
                 所有已执行的 SQL 查询记录，包括查询时间、问题、SQL 和执行结果
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 text-xs text-[var(--steel)] cursor-pointer">
+              <label className="flex items-center gap-2 text-xs text-[var(--muted-foreground)] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={showAllDs}
                   onChange={(e) => setShowAllDs(e.target.checked)}
-                  className="rounded border-[var(--hairline-strong)] text-[var(--primary)] focus:ring-[var(--primary)]"
+                  className="rounded border-[var(--input)] text-[var(--primary)] focus:ring-[var(--primary)]"
                 />
                 显示所有数据源
               </label>
@@ -103,25 +102,27 @@ export default function QueryHistoryPage() {
           <div className="w-full md:w-[480px] flex-shrink-0 flex flex-col min-h-0">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="w-6 h-6 border-2 border-[var(--accent-300)] border-t-[var(--primary)] rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-[var(--muted)] border-t-[var(--primary)] rounded-full animate-spin" />
               </div>
             ) : loadError ? (
-              <div className="card-base flex flex-col items-center text-center py-16">
-                <div className="w-12 h-12 rounded-xl bg-[var(--error-soft)] border border-[var(--hairline)] flex items-center justify-center mb-4">
+              <div className="border border-dashed border-[var(--border)] rounded-xl p-8 flex flex-col items-center text-center">
+                <div className="size-10 rounded-lg bg-[var(--muted)] flex items-center justify-center mb-4">
                   <svg className="w-6 h-6 text-[var(--error)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
                   </svg>
                 </div>
-                <p className="text-sm font-medium text-[var(--ink)] mb-1">加载失败</p>
-                <p className="text-xs text-[var(--steel)] mb-4">{loadError}</p>
+                <p className="text-sm font-medium text-[var(--foreground)] mb-1">加载失败</p>
+                <p className="text-xs text-[var(--muted-foreground)] mb-4">{loadError}</p>
                 <button onClick={loadHistory} className="btn-primary text-xs">重试</button>
               </div>
             ) : history.length === 0 ? (
-              <div className="card-base text-center py-16">
-                <svg className="w-10 h-10 mx-auto text-[var(--stone)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                </svg>
-                <p className="text-sm text-[var(--steel)]">暂无查询历史</p>
+              <div className="border border-dashed border-[var(--border)] rounded-xl p-8 text-center">
+                <div className="size-10 rounded-lg bg-[var(--muted)] flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-5 h-5 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                  </svg>
+                </div>
+                <p className="text-sm text-[var(--muted-foreground)]">暂无查询历史</p>
                 <p className="text-xs text-[var(--stone)] mt-1">在对话中执行 SQL 查询后，记录将显示在这里</p>
               </div>
             ) : (
@@ -136,14 +137,14 @@ export default function QueryHistoryPage() {
                       className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 border ${
                         isSelected
                           ? "bg-[var(--primary-soft)] border-[var(--primary)]"
-                          : "hover:bg-[var(--surface)] border-transparent hover:border-[var(--hairline)]"
+                          : "hover:bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] border-transparent hover:border-[var(--border)]"
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-medium text-[var(--ink)] truncate flex-1">
+                        <span className="text-sm font-medium text-[var(--foreground)] truncate flex-1">
                           {item.question || "（无问题记录）"}
                         </span>
-                        <span className={`flex-shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                        <span className={`flex-shrink-0 badge-soft ${
                           isError
                             ? "bg-[var(--error-soft)] text-[var(--error)]"
                             : "bg-[var(--success-soft)] text-[var(--success)]"
@@ -152,11 +153,11 @@ export default function QueryHistoryPage() {
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs font-mono text-[var(--steel)] truncate max-w-[280px]">
+                        <span className="text-xs font-mono text-[var(--muted-foreground)] truncate max-w-[280px]">
                           {item.sql}
                         </span>
                       </div>
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-[var(--steel)]">
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-[var(--muted-foreground)]">
                         <span>{formatDateTimeShort(item.executed_at)}</span>
                         {item.datasource_name && (
                           <span className="text-[var(--primary-text)] font-medium">{item.datasource_name}</span>
@@ -181,7 +182,7 @@ export default function QueryHistoryPage() {
                 <div className="space-y-5">
                   <div>
                     <h3 className="label-mono">状态</h3>
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
+                    <span className={`badge-soft ${
                       selectedItem.status === "error"
                         ? "bg-[var(--error-soft)] text-[var(--error)]"
                         : "bg-[var(--success-soft)] text-[var(--success)]"
@@ -194,7 +195,7 @@ export default function QueryHistoryPage() {
                   {selectedItem.question && (
                     <div>
                       <h3 className="label-mono">用户问题</h3>
-                      <p className="text-sm text-[var(--ink)] bg-[var(--canvas)] rounded-lg p-3">
+                      <p className="text-sm text-[var(--foreground)] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] rounded-lg p-3">
                         {selectedItem.question}
                       </p>
                     </div>
@@ -226,14 +227,14 @@ export default function QueryHistoryPage() {
                         </button>
                       </div>
                     </div>
-                    <pre className="text-sm font-mono text-[var(--ink)] bg-[var(--canvas)] rounded-lg p-3 overflow-x-auto whitespace-pre-wrap border border-[var(--hairline-soft)]">
+                    <pre className="text-sm font-mono text-[var(--foreground)] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] rounded-lg p-3 overflow-x-auto whitespace-pre-wrap border border-[var(--border)]">
                       {selectedItem.sql}
                     </pre>
                   </div>
 
                   <div>
                     <h3 className="label-mono">数据源</h3>
-                    <p className="text-sm text-[var(--ink)]">
+                    <p className="text-sm text-[var(--foreground)]">
                       {selectedItem.datasource_name || selectedItem.datasource_id}
                     </p>
                   </div>
@@ -241,15 +242,15 @@ export default function QueryHistoryPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <h3 className="label-mono">执行时间</h3>
-                      <p className="text-sm text-[var(--ink)]">{formatTime(selectedItem.executed_at)}</p>
+                      <p className="text-sm text-[var(--foreground)]">{formatTime(selectedItem.executed_at)}</p>
                     </div>
                     <div>
                       <h3 className="label-mono">耗时</h3>
-                      <p className="text-sm text-[var(--ink)]">{formatDuration(selectedItem.execution_time_ms)}</p>
+                      <p className="text-sm text-[var(--foreground)]">{formatDuration(selectedItem.execution_time_ms)}</p>
                     </div>
                     <div>
                       <h3 className="label-mono">返回行数</h3>
-                      <p className="text-sm text-[var(--ink)]">
+                      <p className="text-sm text-[var(--foreground)]">
                         {selectedItem.row_count !== null ? selectedItem.row_count : "-"}
                       </p>
                     </div>
@@ -266,11 +267,13 @@ export default function QueryHistoryPage() {
                 </div>
               </div>
             ) : (
-              <div className="card-base text-center py-16">
-                <svg className="w-10 h-10 mx-auto text-[var(--stone)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-                </svg>
-                <p className="text-sm text-[var(--steel)]">选择一条记录查看详情</p>
+              <div className="border border-dashed border-[var(--border)] rounded-xl p-8 text-center">
+                <div className="size-10 rounded-lg bg-[var(--muted)] flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-5 h-5 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                  </svg>
+                </div>
+                <p className="text-sm text-[var(--muted-foreground)]">选择一条记录查看详情</p>
               </div>
             )}
           </div>

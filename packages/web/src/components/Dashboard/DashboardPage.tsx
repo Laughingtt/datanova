@@ -18,21 +18,21 @@ function StatCard({ label, value, change, changeUp, icon, valueRef }: StatCardPr
   return (
     <div className="stat-card">
       <div className="flex items-start justify-between mb-3">
-        <div className="w-10 h-10 rounded-lg bg-[var(--primary-soft)] flex items-center justify-center">
-          <svg className="w-5 h-5 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="size-9 rounded-lg border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-xs)] flex items-center justify-center text-[var(--muted-foreground)]">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d={icon} />
           </svg>
         </div>
         {change && (
-          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+          <span className={`badge-soft ${
             changeUp ? "bg-[var(--success-soft)] text-[var(--success)]" : "bg-[var(--error-soft)] text-[var(--error)]"
           }`}>
             {changeUp ? "+" : ""}{change}
           </span>
         )}
       </div>
-      <div ref={valueRef} className="text-2xl font-semibold text-[var(--ink)] tracking-tight font-body">{value}</div>
-      <div className="text-xs text-[var(--steel)] mt-1">{label}</div>
+      <div ref={valueRef} className="text-2xl font-semibold text-[var(--foreground)] tracking-tight font-body">{value}</div>
+      <div className="text-xs text-[var(--muted-foreground)] mt-1">{label}</div>
     </div>
   );
 }
@@ -44,7 +44,7 @@ function MiniBarChart({ data, height = 40 }: { data: number[]; height?: number }
       {data.map((v, i) => (
         <div
           key={i}
-          className="flex-1 rounded-sm bg-[var(--accent-400)] transition-all duration-300 hover:bg-[var(--primary)]"
+          className="flex-1 rounded-sm bg-[var(--primary)] transition-all duration-300 hover:opacity-80"
           style={{ height: `${(v / max) * 100}%`, minHeight: 2 }}
         />
       ))}
@@ -137,7 +137,7 @@ export default function DashboardPage() {
   if (loading) {
     // 骨架屏：与真实布局对应（Header / 4×StatCard / 5 列两栏）
     return (
-      <div className="h-full overflow-auto bg-[var(--canvas)]">
+      <div className="h-full overflow-auto bg-[var(--background)]">
         <div className="max-w-[1200px] mx-auto px-8 py-8">
           <div className="mb-8 space-y-2">
             <div className="h-7 w-40 rounded shimmer-bg" />
@@ -173,16 +173,16 @@ export default function DashboardPage() {
 
   if (loadError && datasources.length === 0) {
     return (
-      <div className="h-full overflow-auto bg-[var(--canvas)]">
+      <div className="h-full overflow-auto bg-[var(--background)]">
         <div className="max-w-[1200px] mx-auto px-8 py-8">
           <div className="card-base flex flex-col items-center text-center py-16">
-            <div className="w-12 h-12 rounded-xl bg-[var(--error-soft)] border border-[var(--hairline)] flex items-center justify-center mb-4">
+            <div className="size-10 rounded-lg bg-[var(--muted)] flex items-center justify-center mb-4">
               <svg className="w-6 h-6 text-[var(--error)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
               </svg>
             </div>
-            <h3 className="text-base font-semibold text-[var(--ink)] mb-1">加载失败</h3>
-            <p className="text-sm text-[var(--steel)] mb-4">{loadError}</p>
+            <h3 className="text-base font-semibold text-[var(--foreground)] mb-1">加载失败</h3>
+            <p className="text-sm text-[var(--muted-foreground)] mb-4">{loadError}</p>
             <button
               onClick={() => window.location.reload()}
               className="btn-primary"
@@ -196,13 +196,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <div ref={containerRef} className="h-full overflow-auto bg-[var(--canvas)]">
+    <div ref={containerRef} className="h-full overflow-auto bg-[var(--background)]">
       <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-6 md:py-8">
         {/* Header */}
         <div className="mb-8 flex items-end justify-between gap-4">
           <div>
-            <h2 className="font-display text-2xl text-[var(--ink)]">数据概览</h2>
-            <p className="text-sm text-[var(--steel)] mt-1 flex items-center gap-2 flex-wrap">
+            <h2 className="text-2xl font-semibold text-[var(--foreground)]">数据概览</h2>
+            <p className="text-sm text-[var(--muted-foreground)] mt-1 flex items-center gap-2 flex-wrap">
               <span className="inline-flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)]" />
                 {datasources.filter((d) => d.enabled).length} 个数据源在线
@@ -256,12 +256,12 @@ export default function DashboardPage() {
           <div className="lg:col-span-3 card-base">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-[var(--ink)] font-body">近 7 日查询趋势</h3>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--canvas)] text-[var(--steel)] border border-[var(--hairline)]">
-                  7 days
+                <h3 className="text-sm font-semibold text-[var(--foreground)] font-body">近 7 日查询趋势</h3>
+                <span className="badge-soft bg-[var(--muted)] text-[var(--muted-foreground)]">
+                  近 7 天
                 </span>
               </div>
-              <div className="text-xs text-[var(--steel)]">
+              <div className="text-xs text-[var(--muted-foreground)]">
                 共 {recentQueries.length} 次查询
               </div>
             </div>
@@ -269,48 +269,48 @@ export default function DashboardPage() {
               {queriesByDay.map((count, i) => {
                 const max = Math.max(...queriesByDay, 1);
                 return (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                  <div key={i} className="flex h-full flex-1 flex-col items-center gap-1">
                     <span className="text-[10px] text-[var(--stone)] font-mono">{count || ""}</span>
-                    <div
-                      className="trend-bar w-full rounded-t-md transition-all duration-300 hover:opacity-80"
-                      style={{
-                        height: `${Math.max((count / max) * 100, count > 0 ? 8 : 0)}%`,
-                        background: count > 0
-                          ? "linear-gradient(to top, var(--accent-600), var(--accent-400))"
-                          : "var(--hairline-soft)",
-                        minHeight: count > 0 ? 4 : 0,
-                      }}
-                    />
+                    <div className="relative w-full flex-1">
+                      <div
+                        className="trend-bar absolute bottom-0 w-full rounded-t-md transition-all duration-300 hover:opacity-80"
+                        style={{
+                          height: `${Math.max((count / max) * 100, count > 0 ? 8 : 0)}%`,
+                          background: count > 0 ? "var(--primary)" : "var(--muted)",
+                          minHeight: count > 0 ? 4 : 0,
+                        }}
+                      />
+                    </div>
                     <span className="text-[10px] text-[var(--stone)]">{dayLabels[i]}</span>
                   </div>
                 );
               })}
             </div>
-            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[var(--hairline-soft)]">
+            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[var(--border)]">
               <div className="flex items-center gap-1.5 text-xs">
-                <span className="w-2 h-2 rounded-sm bg-[var(--accent-400)]" />
-                <span className="text-[var(--steel)]">成功</span>
-                <span className="text-[var(--ink)] font-mono font-medium">{successQueries.length}</span>
+                <span className="w-2 h-2 rounded-sm bg-[var(--primary)]" />
+                <span className="text-[var(--muted-foreground)]">成功</span>
+                <span className="text-[var(--foreground)] font-mono font-medium">{successQueries.length}</span>
               </div>
               <div className="flex items-center gap-1.5 text-xs">
                 <span className="w-2 h-2 rounded-sm bg-[var(--error)]" />
-                <span className="text-[var(--steel)]">失败</span>
-                <span className="text-[var(--ink)] font-mono font-medium">{errorQueries.length}</span>
+                <span className="text-[var(--muted-foreground)]">失败</span>
+                <span className="text-[var(--foreground)] font-mono font-medium">{errorQueries.length}</span>
               </div>
             </div>
           </div>
 
           {/* Datasource status */}
           <div className="lg:col-span-2 card-base">
-            <h3 className="text-sm font-semibold text-[var(--ink)] font-body mb-4">数据源状态</h3>
+            <h3 className="text-sm font-semibold text-[var(--foreground)] font-body mb-4">数据源状态</h3>
             {datasources.length === 0 ? (
-              <div className="flex flex-col items-center py-8 gap-3">
-                <div className="w-12 h-12 rounded-xl bg-[var(--primary-soft)] border border-[var(--hairline)] flex items-center justify-center">
-                  <svg className="w-6 h-6 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="border border-dashed border-[var(--border)] rounded-xl p-8 flex flex-col items-center text-center gap-3">
+                <div className="size-10 rounded-lg bg-[var(--muted)] flex items-center justify-center">
+                  <svg className="w-6 h-6 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75" />
                   </svg>
                 </div>
-                <p className="text-sm text-[var(--slate)]">暂无数据源</p>
+                <p className="text-sm text-[var(--muted-foreground)]">暂无数据源</p>
                 <button onClick={() => setView("datasources")} className="btn-primary text-xs">
                   添加数据源
                 </button>
@@ -318,14 +318,14 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 {datasources.map((ds) => (
-                  <div key={ds.id} className="flex items-center gap-3 p-3 rounded-lg bg-[var(--canvas)] border border-[var(--hairline-soft)]">
+                  <div key={ds.id} className="flex items-center gap-3 p-3 rounded-lg bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] border border-[var(--border)]">
                     <div className={`w-2 h-2 rounded-full ${ds.enabled ? "bg-[var(--success)]" : "bg-[var(--stone)]"}`} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[var(--ink)] truncate">{ds.name}</p>
-                      <p className="text-xs text-[var(--steel)] font-mono">{ds.host}:{ds.port}/{ds.database}</p>
+                      <p className="text-sm font-medium text-[var(--foreground)] truncate">{ds.name}</p>
+                      <p className="text-xs text-[var(--muted-foreground)] font-mono">{ds.host}:{ds.port}/{ds.database}</p>
                     </div>
-                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                      ds.enabled ? "bg-[var(--success-soft)] text-[var(--success)]" : "bg-[var(--canvas)] text-[var(--stone)]"
+                    <span className={`badge-soft ${
+                      ds.enabled ? "bg-[var(--success-soft)] text-[var(--success)]" : "bg-[var(--muted)] text-[var(--muted-foreground)]"
                     }`}>
                       {ds.enabled ? "已启用" : "未启用"}
                     </span>
@@ -340,8 +340,8 @@ export default function DashboardPage() {
         <div className="card-base">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-[var(--ink)] font-body">最近查询</h3>
-              <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--success-soft)] text-[var(--success)] border border-[var(--hairline)]">
+              <h3 className="text-sm font-semibold text-[var(--foreground)] font-body">最近查询</h3>
+              <span className="badge-soft bg-[var(--success-soft)] text-[var(--success)]">
                 <span className="w-1 h-1 rounded-full bg-[var(--success)]" />
                 实时
               </span>
@@ -351,38 +351,40 @@ export default function DashboardPage() {
             </button>
           </div>
           {recentQueries.length === 0 ? (
-            <div className="text-center py-10">
-              <svg className="w-12 h-12 mx-auto text-[var(--stone)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-              </svg>
-              <p className="text-sm text-[var(--steel)]">暂无查询记录</p>
+            <div className="border border-dashed border-[var(--border)] rounded-xl p-8 text-center">
+              <div className="size-10 rounded-lg bg-[var(--muted)] flex items-center justify-center mx-auto mb-3">
+                <svg className="w-5 h-5 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+              </div>
+              <p className="text-sm text-[var(--muted-foreground)]">暂无查询记录</p>
               <p className="text-xs text-[var(--stone)] mt-1">开始对话后，查询记录将显示在此处</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[var(--hairline)]">
-                    <th className="px-3 py-2 text-left text-xs font-medium text-[var(--steel)] font-body">时间</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-[var(--steel)] font-body">数据源</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-[var(--steel)] font-body">问题</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-[var(--steel)] font-body">耗时</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-[var(--steel)] font-body">行数</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-[var(--steel)] font-body">状态</th>
+                  <tr className="border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--muted)_60%,transparent)] text-xs font-medium text-[var(--muted-foreground)]">
+                    <th className="px-3 py-2 text-left">时间</th>
+                    <th className="px-3 py-2 text-left">数据源</th>
+                    <th className="px-3 py-2 text-left">问题</th>
+                    <th className="px-3 py-2 text-left">耗时</th>
+                    <th className="px-3 py-2 text-left">行数</th>
+                    <th className="px-3 py-2 text-left">状态</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recentQueries.slice(0, 8).map((q) => (
-                    <tr key={q.id} className="border-b border-[var(--hairline-soft)] hover:bg-[var(--canvas)] transition-colors">
-                      <td className="px-3 py-2.5 text-xs text-[var(--steel)] font-mono whitespace-nowrap">
+                    <tr key={q.id} className="border-b border-[var(--border)] hover:bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] transition-colors">
+                      <td className="px-3 py-2.5 text-xs text-[var(--muted-foreground)] font-mono whitespace-nowrap">
                         {formatDateTimeShort(q.executed_at)}
                       </td>
-                      <td className="px-3 py-2.5 text-xs text-[var(--charcoal)]">{q.datasource_name}</td>
-                      <td className="px-3 py-2.5 text-xs text-[var(--ink)] max-w-[200px] truncate">{q.question || "—"}</td>
-                      <td className="px-3 py-2.5 text-xs text-[var(--charcoal)] font-mono">{q.execution_time_ms ? formatDuration(q.execution_time_ms) : "—"}</td>
-                      <td className="px-3 py-2.5 text-xs text-[var(--charcoal)] font-mono">{q.row_count ?? "—"}</td>
+                      <td className="px-3 py-2.5 text-xs text-[var(--muted-foreground)]">{q.datasource_name}</td>
+                      <td className="px-3 py-2.5 text-xs text-[var(--foreground)] max-w-[200px] truncate">{q.question || "—"}</td>
+                      <td className="px-3 py-2.5 text-xs text-[var(--muted-foreground)] font-mono">{q.execution_time_ms ? formatDuration(q.execution_time_ms) : "—"}</td>
+                      <td className="px-3 py-2.5 text-xs text-[var(--muted-foreground)] font-mono">{q.row_count ?? "—"}</td>
                       <td className="px-3 py-2.5">
-                        <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
+                        <span className={`badge-soft ${
                           q.status === "success"
                             ? "bg-[var(--success-soft)] text-[var(--success)]"
                             : "bg-[var(--error-soft)] text-[var(--error)]"

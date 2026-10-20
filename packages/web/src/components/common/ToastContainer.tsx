@@ -52,9 +52,8 @@ export default function ToastContainer() {
           <div
             key={t.id}
             role="status"
-            className="toast-enter pointer-events-auto flex items-start gap-3 min-w-[280px] max-w-[420px] pl-3 pr-4 py-3 rounded-lg bg-[var(--surface)] border border-[var(--hairline)] shadow-[0_12px_24px_-4px_rgba(15,23,42,0.18)]"
+            className="toast-enter pointer-events-auto flex items-start gap-3 min-w-[280px] max-w-[420px] px-4 py-3 rounded-lg bg-[var(--popover)] text-[var(--popover-foreground)] ring-1 ring-[color-mix(in_srgb,var(--foreground)_10%,transparent)] shadow-[var(--shadow-3)]"
           >
-            <span className={`mt-0.5 w-1 self-stretch rounded-full ${a.bar}`} aria-hidden="true" />
             <span className={`mt-0.5 ${a.icon}`} aria-hidden="true">{ICON[t.type]}</span>
             <div className="flex-1 min-w-0">
               <p className={`text-sm font-medium ${a.title}`}>{t.title}</p>

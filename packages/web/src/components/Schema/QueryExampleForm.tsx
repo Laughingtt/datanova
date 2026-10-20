@@ -60,27 +60,27 @@ export default function QueryExampleForm({
 
   return (
     <div className="card-base space-y-4">
-      <h4 className="text-sm font-medium text-[var(--ink)]">
+      <h4 className="text-sm font-medium text-[var(--foreground)]">
         {isEdit ? "Edit Query Example" : "Add Query Example"}
-        <span className="ml-2 text-xs font-mono text-[var(--steel)]">
+        <span className="ml-2 text-xs font-mono text-[var(--muted-foreground)]">
           {tableName}
         </span>
       </h4>
 
       {error && (
-        <div className="p-2 rounded-md bg-[var(--error-soft)] text-[var(--error)] text-xs">
+        <div className="p-2 rounded-lg bg-[var(--error-soft)] text-[var(--error)] text-xs">
           {error}
         </div>
       )}
 
       <div>
-        <label className="label-mono">Question</label>
+        <label className="label-mono">问题</label>
         <input
           type="text"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="e.g. How many orders were placed last month?"
+          placeholder="例如：上个月下了多少订单？"
           className="input-field text-sm"
         />
       </div>

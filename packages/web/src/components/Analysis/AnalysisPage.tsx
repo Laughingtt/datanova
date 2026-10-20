@@ -48,12 +48,12 @@ function RecentQueryChip({ item, onClick }: { item: SqlQueryHistoryItem; onClick
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--canvas)] transition-colors group"
+      className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--muted)] transition-colors group"
     >
       <span className="text-[10px] font-mono text-[var(--stone)] shrink-0">
         {new Date(item.executed_at).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
       </span>
-      <span className="text-xs font-mono text-[var(--charcoal)] truncate group-hover:text-[var(--primary-text)]">
+      <span className="text-xs font-mono text-[var(--muted-foreground)] truncate group-hover:text-[var(--primary-text)]">
         {preview}
       </span>
       <span className={`ml-auto text-[10px] shrink-0 ${item.status === "success" ? "text-[var(--success)]" : "text-[var(--error)]"}`}>
@@ -77,7 +77,7 @@ function ResultsTable({ result }: { result: AnalysisResult }) {
         }
         const str = String(val);
         if (/^\d{4}[-/]\d{1,2}([-/]\d{1,2})?(T|\s|$)/.test(str)) {
-          return <span className="text-[var(--slate)]">{str}</span>;
+          return <span className="text-[var(--muted-foreground)]">{str}</span>;
         }
         if (typeof val === "number" || (!isNaN(Number(str)) && str.trim() !== "")) {
           return <span className="font-mono tabular-nums text-[var(--ink)]">{str}</span>;
@@ -94,15 +94,15 @@ function ResultsTable({ result }: { result: AnalysisResult }) {
   });
 
   return (
-    <div className="flex-1 min-h-0 overflow-auto border border-[var(--hairline)] rounded-xl">
+    <div className="flex-1 min-h-0 overflow-auto border border-[var(--border)] rounded-xl">
       <table className="w-full text-sm">
         <thead className="sticky top-0 z-10">
           {table.getHeaderGroups().map((hg) => (
-            <tr key={hg.id} className="bg-[var(--canvas)]">
+            <tr key={hg.id} className="bg-[color-mix(in_srgb,var(--muted)_60%,transparent)] text-xs font-medium text-[var(--muted-foreground)]">
               {hg.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="px-4 py-2.5 text-left font-mono text-[11px] uppercase tracking-wider text-[var(--steel)] border-b border-[var(--hairline)] whitespace-nowrap"
+                  className="px-4 py-2.5 text-left font-mono text-[11px] uppercase tracking-wider border-b border-[var(--border)] whitespace-nowrap"
                 >
                   {flexRender(header.column.columnDef.header, header.getContext())}
                 </th>
@@ -111,17 +111,15 @@ function ResultsTable({ result }: { result: AnalysisResult }) {
           ))}
         </thead>
         <tbody>
-          {table.getRowModel().rows.map((row, i) => (
+          {table.getRowModel().rows.map((row) => (
             <tr
               key={row.id}
-              className={`border-b border-[var(--hairline-soft)] ${
-                i % 2 === 0 ? "bg-[var(--surface)]" : "bg-[var(--canvas)]"
-              } hover:bg-[var(--primary-soft)] transition-colors`}
+              className="border-b border-[var(--border)] hover:bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] transition-colors"
             >
               {row.getVisibleCells().map((cell) => (
                 <td
                   key={cell.id}
-                  className="px-4 py-2 text-[13px] text-[var(--charcoal)] max-w-[320px] truncate"
+                  className="px-4 py-2 text-[13px] text-[var(--muted-foreground)] max-w-[320px] truncate"
                   title={String(cell.getValue() ?? "")}
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -181,13 +179,12 @@ function ScheduledPanel({
 
   return (
     <div className="fixed inset-0 z-50 flex">
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative ml-auto w-[560px] max-w-[90vw] h-full bg-[var(--surface)] shadow-2xl flex flex-col animate-in">
-        <div className="sunset-stripe" />
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--hairline)]">
+      <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="relative ml-auto w-[560px] max-w-[90vw] h-full bg-[var(--popover)] ring-1 ring-[color-mix(in_srgb,var(--foreground)_10%,transparent)] shadow-[var(--shadow-3)] flex flex-col animate-in">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
           <div>
-            <h2 className="font-display text-lg text-[var(--ink)]">定时查询</h2>
-            <p className="text-xs text-[var(--steel)] mt-0.5">管理定时执行的 SQL 查询任务</p>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">定时查询</h2>
+            <p className="text-xs text-[var(--muted-foreground)] mt-0.5">管理定时执行的 SQL 查询任务</p>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => { setEditingQuery(null); setShowForm(true); }} className="btn-primary text-xs">
@@ -211,9 +208,11 @@ function ScheduledPanel({
               <div className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : queries.length === 0 ? (
-            <div className="text-center py-20">
-              <svg className="w-12 h-12 mx-auto text-[var(--stone)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              <p className="text-sm text-[var(--steel)]">暂无定时查询</p>
+            <div className="border border-dashed border-[var(--border)] rounded-xl p-8 text-center">
+              <div className="size-10 rounded-lg bg-[var(--muted)] flex items-center justify-center mx-auto mb-3">
+                <svg className="w-5 h-5 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <p className="text-sm text-[var(--muted-foreground)]">暂无定时查询</p>
               <p className="text-xs text-[var(--stone)] mt-1">点击上方按钮创建您的第一个定时查询</p>
             </div>
           ) : (
@@ -223,12 +222,12 @@ function ScheduledPanel({
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-medium text-[var(--ink)] truncate">{q.name}</h4>
-                        <span className={`inline-flex items-center text-[10px] px-2 py-0.5 rounded-full font-medium ${q.enabled ? "bg-[var(--success-soft)] text-[var(--success)]" : "bg-[var(--canvas)] text-[var(--stone)]"}`}>
+                        <h4 className="text-sm font-medium text-[var(--foreground)] truncate">{q.name}</h4>
+                        <span className={`badge-soft ${q.enabled ? "bg-[var(--success-soft)] text-[var(--success)]" : "bg-[var(--muted)] text-[var(--muted-foreground)]"}`}>
                           {q.enabled ? "已启用" : "已停用"}
                         </span>
                       </div>
-                      {q.description && <p className="text-xs text-[var(--steel)] mt-0.5">{q.description}</p>}
+                      {q.description && <p className="text-xs text-[var(--muted-foreground)] mt-0.5">{q.description}</p>}
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <button onClick={() => onSelectSql(q.sql)} className="btn-ghost text-[11px]" title="使用此 SQL">使用SQL</button>
@@ -240,9 +239,9 @@ function ScheduledPanel({
                       <button onClick={() => handleDelete(q.id)} className="btn-danger text-[11px]">删除</button>
                     </div>
                   </div>
-                  <pre className="text-xs font-mono text-[var(--charcoal)] bg-[var(--canvas)] rounded-lg p-3 overflow-x-auto max-h-24">{q.sql}</pre>
+                  <pre className="text-xs font-mono text-[var(--muted-foreground)] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] rounded-lg p-3 overflow-x-auto max-h-24">{q.sql}</pre>
                   <div className="flex items-center gap-4 text-[10px] text-[var(--stone)]">
-                    <span>Cron: <code className="text-[var(--slate)]">{q.cron_expression}</code></span>
+                    <span>Cron 表达式：<code className="text-[var(--muted-foreground)]">{q.cron_expression}</code></span>
                     <span>时区: {q.timezone}</span>
                     {q.last_run_at && (
                       <span>上次执行: {new Date(q.last_run_at).toLocaleString("zh-CN")} ({q.last_run_status === "success" ? "成功" : "失败"})</span>
@@ -331,12 +330,12 @@ export default function AnalysisPage() {
   };
 
   return (
-    <div className="flex h-full bg-[var(--canvas)]">
+    <div className="flex h-full bg-[var(--background)]">
       {/* Left sidebar - recent queries */}
       {showSidebar && (
-        <div className="w-[260px] flex flex-col border-r border-[var(--hairline)] bg-[var(--surface)] shrink-0">
-          <div className="px-4 py-3 border-b border-[var(--hairline)]">
-            <h3 className="text-xs font-medium text-[var(--steel)] uppercase tracking-wider">最近查询</h3>
+        <div className="w-[260px] flex flex-col border-r border-[var(--border)] bg-[var(--surface)] shrink-0">
+          <div className="px-4 py-3 border-b border-[var(--border)]">
+            <h3 className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wider">最近查询</h3>
           </div>
           <div className="flex-1 min-h-0 overflow-auto custom-scrollbar py-1">
             {recentQueries.length === 0 ? (
@@ -354,10 +353,9 @@ export default function AnalysisPage() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="sunset-stripe" />
 
         {/* Toolbar */}
-        <div className="flex items-center gap-3 px-5 py-3 border-b border-[var(--hairline)] bg-[var(--surface)]">
+        <div className="flex items-center gap-3 px-5 py-3 border-b border-[var(--border)] bg-[var(--surface)]">
           <button onClick={() => setShowSidebar(!showSidebar)} className="btn-ghost text-xs p-1.5" title="切换侧栏">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -404,13 +402,13 @@ export default function AnalysisPage() {
         {!currentDsId ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center max-w-sm">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--primary-soft)] flex items-center justify-center">
-                <svg className="w-8 h-8 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="size-10 mx-auto mb-4 rounded-lg bg-[var(--muted)] flex items-center justify-center">
+                <svg className="w-5 h-5 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                 </svg>
               </div>
-              <h2 className="font-display text-xl text-[var(--ink)] mb-2">自助分析</h2>
-              <p className="text-sm text-[var(--steel)] mb-4">选择数据源后即可编写和执行 SQL 查询</p>
+              <h2 className="text-xl font-semibold text-[var(--foreground)] mb-2">自助分析</h2>
+              <p className="text-sm text-[var(--muted-foreground)] mb-4">选择数据源后即可编写和执行 SQL 查询</p>
               <select
                 value={currentDsId}
                 onChange={(e) => handleDatasourceChange(e.target.value)}
@@ -428,7 +426,7 @@ export default function AnalysisPage() {
             {/* SQL Editor */}
             <div className="px-5 pt-4 pb-2">
               <div className="input-well">
-                <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--hairline-soft)]">
+                <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--border)]">
                   <span className="label-mono !mb-0">SQL 查询</span>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-[var(--stone)]">Ctrl+Enter 执行</span>
@@ -456,7 +454,7 @@ export default function AnalysisPage() {
                     >
                       {executing ? (
                         <>
-                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <div className="w-3.5 h-3.5 border-2 border-[var(--primary-soft)] border-t-transparent rounded-full animate-spin" />
                           执行中...
                         </>
                       ) : (
@@ -487,14 +485,14 @@ export default function AnalysisPage() {
             {/* Results area */}
             <div className="flex-1 min-h-0 flex flex-col px-5 pb-4">
               {error && (
-                <div className="mb-3 p-4 rounded-xl bg-[var(--error-soft)] border border-[var(--error)]/20">
+                <div className="mb-3 p-4 rounded-xl bg-[var(--error-soft)] border border-[color-mix(in_srgb,var(--error)_20%,transparent)]">
                   <div className="flex items-start gap-3">
                     <svg className="w-5 h-5 text-[var(--error)] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                     </svg>
                     <div>
                       <p className="text-sm font-medium text-[var(--error)]">查询执行失败</p>
-                      <p className="text-xs text-[var(--error)]/80 mt-1 font-mono">{error}</p>
+                      <p className="text-xs text-[color-mix(in_srgb,var(--error)_80%,transparent)] mt-1 font-mono">{error}</p>
                     </div>
                   </div>
                 </div>
@@ -504,15 +502,15 @@ export default function AnalysisPage() {
                 <div className="flex-1 min-h-0 flex flex-col">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
-                      <span className="text-xs font-medium text-[var(--ink)]">查询结果</span>
-                      <span className="inline-flex items-center gap-1 text-[10px] text-[var(--success)] bg-[var(--success-soft)] px-2 py-0.5 rounded-full">
+                      <span className="text-xs font-medium text-[var(--foreground)]">查询结果</span>
+                      <span className="badge-soft bg-[var(--success-soft)] text-[var(--success)]">
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                         成功
                       </span>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-[var(--steel)]">
+                    <div className="flex items-center gap-4 text-xs text-[var(--muted-foreground)]">
                       <span>{result.rowCount} 行</span>
                       <span>{result.columns.length} 列</span>
                       <span>{result.executionTime}ms</span>
@@ -532,9 +530,11 @@ export default function AnalysisPage() {
               {!result && !error && !executing && (
                 <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
-                    <svg className="w-12 h-12 mx-auto text-[var(--hairline-strong)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
+                    <div className="size-10 rounded-lg bg-[var(--muted)] flex items-center justify-center mx-auto mb-3">
+                      <svg className="w-5 h-5 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </div>
                     <p className="text-sm text-[var(--stone)]">输入 SQL 并点击执行查看结果</p>
                   </div>
                 </div>

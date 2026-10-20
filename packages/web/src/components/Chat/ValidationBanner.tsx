@@ -15,23 +15,23 @@ export default function ValidationBanner({ level, message }: ValidationBannerPro
       case "error":
         return {
           bg: "bg-[var(--error-soft)]",
-          border: "border-[var(--error)]",
+          border: "border-l-[var(--error)]",
           icon: "🚫",
           text: "text-[var(--error)]",
         };
       case "warning":
         return {
           bg: "bg-[var(--warning-soft)]",
-          border: "border-[var(--warning)]",
+          border: "border-l-[var(--warning)]",
           icon: "⚠️",
           text: "text-[var(--warning)]",
         };
       case "info":
         return {
-          bg: "bg-[var(--surface)]",
-          border: "border-[var(--primary)]",
+          bg: "bg-[var(--info-soft)]",
+          border: "border-l-[var(--info)]",
           icon: "ℹ️",
-          text: "text-[var(--primary-text)]",
+          text: "text-[var(--info)]",
         };
     }
   };
@@ -39,7 +39,7 @@ export default function ValidationBanner({ level, message }: ValidationBannerPro
   const styles = getStyles();
 
   return (
-    <div className={`my-3 px-4 py-3 rounded-lg ${styles.bg} border-l-4 ${styles.border}`}>
+    <div className={`my-3 px-4 py-3 rounded-xl border border-[var(--border)] border-l-4 ${styles.bg} ${styles.border}`}>
       <div className="flex items-start gap-2">
         <span className="text-sm">{styles.icon}</span>
         <p className={`text-sm ${styles.text} leading-relaxed`}>{message}</p>

@@ -137,16 +137,15 @@ export default function QuerySkillsPage() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-[var(--canvas)]">
-      <div className="sunset-stripe" />
+    <div className="h-full flex flex-col bg-[var(--background)]">
 
       <div className="flex-1 flex flex-col min-h-0">
         {/* Header */}
         <div className="px-8 pt-8 pb-4">
           <div className="flex items-end justify-between mb-4">
             <div>
-              <h2 className="font-display text-heading-2 text-[var(--ink)]">查询技能</h2>
-              <p className="text-body-sm text-[var(--slate)] mt-1">
+              <h2 className="text-2xl font-semibold text-[var(--foreground)]">查询技能</h2>
+              <p className="text-sm text-[var(--muted-foreground)] mt-1">
                 让 AI 掌握你的业务查询经验，提升复杂查询准确度
               </p>
             </div>
@@ -170,14 +169,15 @@ export default function QuerySkillsPage() {
         {/* Content: 3-column layout */}
         <div className="flex-1 flex min-h-0 px-8 pb-8 gap-4">
           {/* Left: Domain list (140px) */}
-          <div className="w-[140px] flex-shrink-0 flex flex-col min-h-0">
+          <div className="w-[140px] flex-shrink-0 flex flex-col min-h-0 rounded-xl border border-[var(--border)] bg-[var(--card)] p-1">
             <div className="flex-1 overflow-y-auto custom-scrollbar space-y-0.5">
               <button
                 onClick={() => setSelectedDomain("__all__")}
-                className={`w-full text-left px-3 py-2.5 rounded-md transition-colors text-sm ${
+                data-active={selectedDomain === "__all__"}
+                className={`w-full text-left px-2.5 py-2 rounded-md transition-colors text-sm ${
                   selectedDomain === "__all__"
-                    ? "bg-[var(--primary-soft)] border border-[var(--primary)] text-[var(--primary-text)]"
-                    : "hover:bg-[var(--surface)] border border-transparent text-[var(--ink)]"
+                    ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                    : "hover:bg-[var(--muted)] text-[var(--foreground)]"
                 }`}
               >
                 📋 全部
@@ -186,10 +186,11 @@ export default function QuerySkillsPage() {
                 <button
                   key={domain}
                   onClick={() => setSelectedDomain(domain)}
-                  className={`w-full text-left px-3 py-2.5 rounded-md transition-colors text-sm ${
+                  data-active={selectedDomain === domain}
+                  className={`w-full text-left px-2.5 py-2 rounded-md transition-colors text-sm ${
                     selectedDomain === domain
-                      ? "bg-[var(--primary-soft)] border border-[var(--primary)] text-[var(--primary-text)]"
-                      : "hover:bg-[var(--surface)] border border-transparent text-[var(--ink)]"
+                      ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                      : "hover:bg-[var(--muted)] text-[var(--foreground)]"
                   }`}
                 >
                   🎯 {domain}
@@ -201,18 +202,18 @@ export default function QuerySkillsPage() {
           {/* Middle: Skill list (240px) */}
           <div className="w-[240px] flex-shrink-0 flex flex-col min-h-0">
             <div className="mb-2">
-              <h4 className="text-xs font-medium text-[var(--steel)] uppercase tracking-wide">
+              <h4 className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide">
                 查询技能
               </h4>
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1">
               {loading ? (
-                <p className="text-sm text-[var(--steel)] py-4">加载中...</p>
+                <p className="text-sm text-[var(--muted-foreground)] py-4">加载中...</p>
               ) : skills.length === 0 ? (
-                <div className="py-8 text-center">
-                  <p className="text-sm text-[var(--steel)]">暂无技能</p>
-                  <p className="text-xs text-[var(--stone)] mt-1">
+                <div className="rounded-xl border border-dashed border-[var(--border)] p-8 text-center">
+                  <p className="text-sm text-[var(--muted-foreground)]">暂无技能</p>
+                  <p className="text-xs text-[var(--muted-foreground)] mt-1">
                     点击「新增技能」或「AI 生成」添加
                   </p>
                 </div>
@@ -224,22 +225,22 @@ export default function QuerySkillsPage() {
                     <div
                       key={skill.id}
                       onClick={() => handleSelectSkill(skill)}
-                      className={`relative px-3 py-2.5 rounded-md transition-colors cursor-pointer group ${
+                      className={`card-base relative p-2.5 rounded-xl transition-colors cursor-pointer group ${
                         isSelected
-                          ? "bg-[var(--primary-soft)] border border-[var(--primary)]"
-                          : "hover:bg-[var(--surface)] border border-transparent"
+                          ? "bg-[var(--accent)] border-[var(--primary)]"
+                          : "hover:bg-[var(--muted)]"
                       } ${!skill.enabled ? "opacity-50" : ""}`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-[var(--ink)] truncate flex-1">
+                        <span className="text-sm font-medium text-[var(--foreground)] truncate flex-1">
                           {skill.name}
                         </span>
                         <button
                           onClick={(e) => handleToggle(skill.id, e)}
                           className={`ml-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] transition-colors ${
                             skill.enabled
-                              ? "bg-[var(--success)]/20 text-[var(--success)]"
-                              : "bg-[var(--surface)] text-[var(--steel)]"
+                              ? "bg-[var(--success-soft)] text-[var(--success)]"
+                              : "bg-[var(--muted)] text-[var(--muted-foreground)]"
                           }`}
                           title={skill.enabled ? "点击禁用" : "点击启用"}
                         >
@@ -249,12 +250,12 @@ export default function QuerySkillsPage() {
                       {keywords.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1">
                           {keywords.slice(0, 3).map((kw) => (
-                            <span key={kw} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--surface-raised)] text-[var(--steel)]">
+                            <span key={kw} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--muted)] text-[var(--muted-foreground)]">
                               {kw}
                             </span>
                           ))}
                           {keywords.length > 3 && (
-                            <span className="text-[10px] text-[var(--steel)]">+{keywords.length - 3}</span>
+                            <span className="text-[10px] text-[var(--muted-foreground)]">+{keywords.length - 3}</span>
                           )}
                         </div>
                       )}
@@ -266,7 +267,7 @@ export default function QuerySkillsPage() {
           </div>
 
           {/* Right: Form / Detail (flex-1) */}
-          <div className="flex-1 min-w-0 overflow-y-auto custom-scrollbar bg-[var(--surface)] rounded-xl border border-[var(--hairline)]">
+          <div className="flex-1 min-w-0 overflow-y-auto custom-scrollbar bg-[var(--card)] rounded-xl border border-[var(--border)] shadow-[var(--shadow-xs)]">
             {showForm ? (
               <SkillForm
                 key={formKey}
@@ -280,10 +281,10 @@ export default function QuerySkillsPage() {
             ) : (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
-                  <p className="text-sm text-[var(--steel)]">
+                  <p className="text-sm text-[var(--muted-foreground)]">
                     选择左侧技能编辑，或点击「新增技能」
                   </p>
-                  <p className="text-xs text-[var(--stone)] mt-1">
+                  <p className="text-xs text-[var(--muted-foreground)] mt-1">
                     查询技能通过 Skill 渐进式加载：摘要始终注入 System Prompt，完整内容在 Agent 需要时按需加载
                   </p>
                 </div>
@@ -307,13 +308,12 @@ export default function QuerySkillsPage() {
 
       {/* Preview Modal */}
       {showPreview && previewData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--hairline)] w-full max-w-3xl mx-4 max-h-[85vh] flex flex-col">
-            <div className="sunset-stripe" />
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--hairline)]">
+        <div className="fixed inset-0 z-50 bg-black/10 backdrop-blur-[2px] flex items-center justify-center">
+          <div className="rounded-xl bg-[var(--popover)] ring-1 ring-[color-mix(in_srgb,var(--foreground)_10%,transparent)] shadow-[var(--shadow-3)] w-full max-w-3xl mx-4 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
               <div>
-                <h3 className="font-display text-lg text-[var(--ink)]">AI 视角预览</h3>
-                <p className="text-xs text-[var(--steel)] mt-0.5">
+                <h3 className="text-lg font-semibold text-[var(--foreground)]">AI 视角预览</h3>
+                <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
                   查询技能通过 Skill 渐进式加载机制注入 AI
                 </p>
               </div>
@@ -321,19 +321,19 @@ export default function QuerySkillsPage() {
             </div>
             <div className="flex-1 min-h-0 overflow-auto custom-scrollbar p-6 space-y-6">
               {previewData.skills.length === 0 ? (
-                <p className="text-sm text-[var(--steel)] text-center py-8">暂无启用的查询技能</p>
+                <p className="text-sm text-[var(--muted-foreground)] text-center py-8">暂无启用的查询技能</p>
               ) : (
                 previewData.skills.map((item, idx) => (
                   <div key={item.skillId}>
                     <div className="flex items-center gap-2 mb-2">
                       <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[var(--primary)] text-white text-[10px] font-bold">{idx + 1}</span>
-                      <h4 className="text-sm font-medium text-[var(--ink)]">{item.skillName}</h4>
-                      <span className="text-[10px] text-[var(--steel)] bg-[var(--surface-raised)] px-1.5 py-0.5 rounded">{item.skillDir}</span>
+                      <h4 className="text-sm font-medium text-[var(--foreground)]">{item.skillName}</h4>
+                      <span className="text-[10px] text-[var(--muted-foreground)] bg-[var(--muted)] px-1.5 py-0.5 rounded">{item.skillDir}</span>
                     </div>
-                    <p className="text-xs text-[var(--slate)] mb-1">
-                      System Prompt 摘要: <code className="text-[var(--primary)]">{item.skillSummary}</code>
+                    <p className="text-xs text-[var(--muted-foreground)] mb-1">
+                      System Prompt 摘要: <code className="text-[var(--primary-text)]">{item.skillSummary}</code>
                     </p>
-                    <pre className="text-sm font-mono text-[var(--ink)] whitespace-pre-wrap bg-[var(--canvas)] rounded-lg p-4 border border-[var(--hairline)] max-h-[200px] overflow-auto">
+                    <pre className="text-sm font-mono text-[var(--foreground)] whitespace-pre-wrap bg-[var(--muted)] rounded-lg p-4 max-h-[200px] overflow-auto">
                       {item.skillFullContent}
                     </pre>
                   </div>

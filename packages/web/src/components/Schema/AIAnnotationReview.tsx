@@ -65,9 +65,9 @@ export default function AIAnnotationReview({
 
   if (annotations.length === 0) {
     return (
-      <div className="card-cream text-center py-12">
-        <p className="text-sm text-[var(--on-cream)]">暂无草稿标注</p>
-        <p className="text-xs text-[var(--slate)] mt-2">
+      <div className="rounded-xl border border-dashed border-[var(--border)] p-8 py-12 text-center">
+        <p className="text-sm text-[var(--foreground)]">暂无草稿标注</p>
+        <p className="text-xs text-[var(--muted-foreground)] mt-2">
           使用 AI 自动标注来生成草稿标注
         </p>
       </div>
@@ -84,7 +84,7 @@ export default function AIAnnotationReview({
         return (
           <div
             key={ann.id}
-            className="card-base border-l-2 border-l-[var(--sunshine-500)]"
+            className="card-base"
           >
             {/* Header */}
             <div className="flex items-center gap-2 mb-2">
@@ -93,18 +93,18 @@ export default function AIAnnotationReview({
               </span>
               {ann.field_name && (
                 <>
-                  <span className="text-[var(--stone)] text-xs">.</span>
-                  <span className="text-xs font-mono text-[var(--slate)]">
+                  <span className="text-[var(--muted-foreground)] text-xs">.</span>
+                  <span className="text-xs font-mono text-[var(--muted-foreground)]">
                     {ann.field_name}
                   </span>
                 </>
               )}
               {ann.column_type && (
-                <span className="text-xs font-mono text-[var(--steel)] bg-[var(--surface)] px-1.5 py-0.5 rounded">
+                <span className="text-xs font-mono text-[var(--muted-foreground)] bg-[var(--muted)] px-1.5 py-0.5 rounded">
                   {ann.column_type}
                 </span>
               )}
-              <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded text-xs bg-[var(--warning-soft)] text-[var(--warning)] border border-[var(--warning)]/20">
+              <span className="badge-soft ml-auto bg-[var(--warning-soft)] text-[var(--warning)]">
                 draft
               </span>
             </div>
@@ -134,7 +134,7 @@ export default function AIAnnotationReview({
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-[var(--ink)] leading-relaxed mb-3">
+              <p className="text-sm text-[var(--foreground)] leading-relaxed mb-3">
                 {ann.annotation}
               </p>
             )}
@@ -142,11 +142,11 @@ export default function AIAnnotationReview({
             {/* Domain info */}
             {ann.domain_type && (
               <div className="mb-2 flex items-center gap-2 text-xs">
-                <span className="inline-flex items-center px-2 py-0.5 rounded font-mono uppercase bg-[var(--info-soft)] text-[var(--info)] border border-[var(--info)]/20">
+                <span className="badge-soft font-mono uppercase bg-[var(--info-soft)] text-[var(--info)]">
                   {ann.domain_type === "enum" ? "枚举型" : "范围型"}
                 </span>
                 {ann.domain_values && (
-                  <span className="text-[var(--steel)]">
+                  <span className="text-[var(--muted-foreground)]">
                     {ann.domain_type === "enum"
                       ? `值域: ${ann.domain_values}`
                       : `范围: ${ann.domain_values}`}
@@ -158,18 +158,18 @@ export default function AIAnnotationReview({
             {/* Sample data */}
             {samples && samples.length > 0 && (
               <div className="mb-3 text-xs">
-                <span className="text-[var(--steel)]">样本值: </span>
+                <span className="text-[var(--muted-foreground)]">样本值: </span>
                 <div className="inline-flex flex-wrap gap-1 mt-0.5">
                   {samples.slice(0, 8).map((v, i) => (
                     <span
                       key={i}
-                      className="inline-block px-1.5 py-0.5 rounded bg-[var(--surface)] text-[var(--slate)] font-mono border border-[var(--hairline)]"
+                      className="inline-block px-1.5 py-0.5 rounded-md bg-[var(--muted)] text-[var(--muted-foreground)] font-mono"
                     >
                       {v.length > 20 ? v.slice(0, 20) + "…" : v}
                     </span>
                   ))}
                   {samples.length > 8 && (
-                    <span className="text-[var(--steel)]">+{samples.length - 8}</span>
+                    <span className="text-[var(--muted-foreground)]">+{samples.length - 8}</span>
                   )}
                 </div>
               </div>

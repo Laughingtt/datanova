@@ -196,7 +196,7 @@ export function useCountUp(
   const { prefix, suffix, decimals } = opts;
   useGSAP(
     () => {
-      if (!targetRef.current || prefersReducedMotion()) return;
+      if (!targetRef.current) return;
       countUp(targetRef.current, { endValue, ...opts });
     },
     { scope: targetRef, dependencies: [endValue, prefix, suffix, decimals] }

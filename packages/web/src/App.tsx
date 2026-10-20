@@ -23,7 +23,7 @@ import CommandPalette from "./components/common/CommandPalette";
 
 // 用于"未选择数据源"空状态：避免每处重复写 SVG
 const DATASOURCE_ICON = (
-  <svg className="w-8 h-8 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+  <svg className="h-5 w-5 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75" />
   </svg>
 );
@@ -33,7 +33,7 @@ export default function App() {
   const [hasExistingDatasource, setHasExistingDatasource] = useState(false);
   const [datasourceChecked, setDatasourceChecked] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
-  const mainRef = useRef<HTMLElement>(null);
+  const mainRef = useRef<HTMLDivElement>(null);
 
   usePageTransition(mainRef);
 
@@ -90,8 +90,8 @@ export default function App() {
 
   return (
     <Layout>
-      <ConnectionBanner />
-      <main ref={mainRef} className="flex-1 min-w-0 overflow-auto">
+      {view === "chat" && <ConnectionBanner />}
+      <div ref={mainRef} className="h-full min-w-0">
         {showOnboarding && (
           <OnboardingWizard />
         )}
@@ -120,7 +120,7 @@ export default function App() {
             description="前往数据源页面选择一个数据源以管理查询技能"
           />
         )}
-      </main>
+      </div>
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
       <ToastContainer />
     </Layout>

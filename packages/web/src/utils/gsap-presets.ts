@@ -123,16 +123,23 @@ export function countUp(
   const { endValue, duration = DUR.countUp, prefix = "", suffix = "", decimals } = opts;
   // Auto-detect decimal places from endValue unless explicitly provided (e.g. 3.5 → 1, 12.345 → 3)
   const dp = decimals ?? (Number.isInteger(endValue) ? 0 : Math.min(2, (String(endValue).split(".")[1] || "").length));
+  const render = (value: number) => {
+    const display = dp === 0
+      ? Math.round(value).toLocaleString()
+      : value.toFixed(dp);
+    target.textContent = prefix + display + suffix;
+  };
+  // With reduced motion, render the final value directly — an animation that never
+  // ticks would otherwise leave the placeholder (usually "0") on screen.
+  if (prefersReducedMotion()) {
+    render(endValue);
+    return;
+  }
   const obj = { value: 0 };
   return gsap.to(obj, {
     value: endValue,
-    duration: prefersReducedMotion() ? 0 : duration,
+    duration,
     ease: EASE.smooth,
-    onUpdate: () => {
-      const display = dp === 0
-        ? Math.round(obj.value).toLocaleString()
-        : obj.value.toFixed(dp);
-      target.textContent = prefix + display + suffix;
-    },
+    onUpdate: () => render(obj.value),
   });
 }

@@ -28,19 +28,20 @@ import {
 const CHART_ANIMATION_DURATION = 800;
 const CHART_ANIMATION_EASING = "ease-out";
 
-const GRID_COLOR = "#e2e8f0";
-const AXIS_COLOR = "#64748b";
-const TOOLTIP_BG = "#ffffff";
-const TOOLTIP_BORDER = "#e2e8f0";
+const GRID_COLOR = "var(--border)";
+const AXIS_COLOR = "var(--muted-foreground)";
+const TOOLTIP_BG = "var(--popover)";
+const TOOLTIP_BORDER = "var(--border)";
 const MAX_BAR_LABEL_LEN = 6;
 
 const tooltipStyle: React.CSSProperties = {
   backgroundColor: TOOLTIP_BG,
   border: "1px solid " + TOOLTIP_BORDER,
-  borderRadius: 6,
+  borderRadius: "var(--radius-md)",
   fontSize: 12,
   padding: "6px 10px",
-  boxShadow: "0 2px 8px rgba(15,23,42,0.08)",
+  color: "var(--popover-foreground)",
+  boxShadow: "var(--shadow-2)",
 };
 
 export function BarChartRenderer({ data, config }: { data: TableData; config: ChartInference }) {
@@ -116,7 +117,7 @@ export function PieChartRenderer({ data, config }: { data: TableData; config: Ch
       <RechartsPie margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
         <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2} dataKey="value" nameKey="name" label={renderLabel} labelLine={{ stroke: AXIS_COLOR, strokeWidth: 1 }} animationDuration={CHART_ANIMATION_DURATION} animationEasing={CHART_ANIMATION_EASING}>
           {pieData.map((_, i) => (
-            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="#fff" strokeWidth={2} />
+            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="var(--card)" strokeWidth={2} />
           ))}
         </Pie>
         <Tooltip contentStyle={tooltipStyle} />
@@ -151,11 +152,11 @@ export function KpiCardRenderer({ data, config }: { data: TableData; config: Cha
         const numVal = Number(val);
         const display = isNaN(numVal) ? String(val ?? "-") : numVal.toLocaleString();
         return (
-          <div key={col} className="px-5 py-3 rounded-lg border min-w-[120px]" style={{ backgroundColor: "var(--surface)", borderColor: "var(--hairline)" }}>
+          <div key={col} className="px-5 py-3 rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-xs)] min-w-[120px]">
             <div className="text-2xl font-mono font-semibold" style={{ color: CHART_COLORS[i % CHART_COLORS.length] }}>
               {display}
             </div>
-            <div className="text-xs mt-1" style={{ color: "var(--steel)" }}>{col}</div>
+            <div className="text-xs mt-1 text-[var(--muted-foreground)]">{col}</div>
           </div>
         );
       })}

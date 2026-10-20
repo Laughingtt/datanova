@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed — Repository cleanup (post-1.1.0)
+
+Items previously listed under `[1.1.0]` were deleted as part of an open-source-hygiene pass. **Earlier entries are preserved above for historical accuracy** — the items below never existed in any released version:
+
+- `README.zh-CN.md` — Chinese README merged into top-level `README.md`
+- `AGENTS.md` — Overlapped with `CLAUDE.md`; consolidated into the latter
+- `docs/QUICKSTART.md` — Content absorbed into `README.md`
+- `docs/text2sql-data-agent-features.md` — Overlapped with `docs/01..07-*.md`
+- `docs/i18n-strategy.md` — Strategy decision; no longer needed
+- `docs/analysis/` — One-off optimization analyses
+- `docs/prd/` — Internal PRD, not open-source material
+- `docs/patent/` — Patent application drafts (not OSS material)
+- `docs/_archive/` — Legacy drafts
+- `docs/demo-data/` — Demo dataset; users now bring their own MySQL
+- `docs/screenshots/`, `docs/todo.txt` — Throwaway artifacts
+- `docs/skills-guide.md` — Indexed project-local `.agents/skills/` (gitignored)
+- `e2e/`, `playwright.config.*`, `.github/workflows/ci.yml` Playwright job, `e2e-screenshots/`, `e2e-test-data/`, `test-results/`, `scripts/test-ws-*.mjs`, `scripts/capture-screenshots.mjs` — Playwright removed; end-to-end flows now use the `agent-browser` skill
+
 ### Planned (tracked in `docs/superpowers/plans/2026-08-25-open-source-enterprise-readiness.md`)
 
 #### P1 — Enterprise capability

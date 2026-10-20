@@ -153,7 +153,7 @@ export default function DimensionForm({
 
   return (
     <div className="card-base">
-      <h3 className="font-display text-heading-4 text-[var(--ink)] mb-5">
+      <h3 className="text-base font-semibold text-[var(--foreground)] mb-5">
         {isEdit ? "编辑维度" : "新增维度"}
       </h3>
 
@@ -215,17 +215,14 @@ export default function DimensionForm({
         {/* Data Type */}
         <div>
           <label className="label-mono">数据类型</label>
-          <div className="flex gap-3">
+          <div className="tabs-track">
             {(["string", "number", "date"] as const).map((t) => (
               <button
                 key={t}
                 type="button"
                 onClick={() => setDataType(t)}
-                className={`px-4 py-2 rounded-md text-sm border transition-colors ${
-                  dataType === t
-                    ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary-text)]"
-                    : "border-[var(--hairline)] text-[var(--steel)]"
-                }`}
+                className="tab-trigger"
+                data-active={dataType === t}
               >
                 {{ string: "字符串", number: "数字", date: "日期" }[t]}
               </button>
@@ -279,26 +276,20 @@ export default function DimensionForm({
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="label-mono">可选值</label>
-            <div className="flex items-center gap-1">
+            <div className="tabs-track">
               <button
                 type="button"
                 onClick={() => setValuesMode("simple")}
-                className={`px-2 py-1 text-[11px] rounded transition-colors ${
-                  valuesMode === "simple"
-                    ? "bg-[var(--primary)] text-white"
-                    : "bg-[var(--canvas)] text-[var(--steel)] border border-[var(--hairline)]"
-                }`}
+                className="tab-trigger text-[11px] h-6 px-2"
+                data-active={valuesMode === "simple"}
               >
                 简单枚举
               </button>
               <button
                 type="button"
                 onClick={() => setValuesMode("keyvalue")}
-                className={`px-2 py-1 text-[11px] rounded transition-colors ${
-                  valuesMode === "keyvalue"
-                    ? "bg-[var(--primary)] text-white"
-                    : "bg-[var(--canvas)] text-[var(--steel)] border border-[var(--hairline)]"
-                }`}
+                className="tab-trigger text-[11px] h-6 px-2"
+                data-active={valuesMode === "keyvalue"}
               >
                 键值映射
               </button>
@@ -346,7 +337,7 @@ export default function DimensionForm({
               <button
                 type="button"
                 onClick={() => setKvPairs(prev => [...prev, { key: "", value: "" }])}
-                className="text-xs text-[var(--primary)] hover:underline inline-flex items-center gap-1"
+                className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] inline-flex items-center gap-1"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -366,7 +357,7 @@ export default function DimensionForm({
               type="checkbox"
               checked={isEnumDict}
               onChange={(e) => setIsEnumDict(e.target.checked)}
-              className="rounded border-[var(--hairline-strong)] text-[var(--primary)] focus:ring-[var(--primary)]"
+              className="rounded border-[var(--input)] accent-[var(--primary)]"
             />
             {isEnumDict ? "将在「枚举值字典」中展示此维度的可选值映射" : "不纳入枚举值字典"}
           </label>
@@ -375,7 +366,7 @@ export default function DimensionForm({
         {/* Status */}
         <div>
           <label className="label-mono">状态</label>
-          <div className="flex gap-3">
+          <div className="tabs-track">
             {(["draft", "published", "deprecated"] as const).map((s) => {
               const badge = {
                 draft: { dot: "bg-[var(--warning)]", label: "草稿" },
@@ -387,11 +378,8 @@ export default function DimensionForm({
                   key={s}
                   type="button"
                   onClick={() => setStatus(s)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm border transition-colors ${
-                    status === s
-                      ? "border-[var(--primary)] bg-[var(--primary-soft)]"
-                      : "border-[var(--hairline)] text-[var(--steel)]"
-                  }`}
+                  className="tab-trigger"
+                  data-active={status === s}
                 >
                   <span className={`w-2 h-2 rounded-full ${badge.dot}`} />
                   {badge.label}
@@ -403,7 +391,7 @@ export default function DimensionForm({
 
         {/* Actions */}
         <div className="flex items-center gap-3 pt-2">
-          <button type="submit" className="btn-dark" disabled={saving}>
+          <button type="submit" className="btn-primary" disabled={saving}>
             {saving ? "保存中..." : isEdit ? "更新" : "创建"}
           </button>
           {isEdit && (

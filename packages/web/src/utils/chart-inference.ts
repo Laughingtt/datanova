@@ -14,15 +14,16 @@ export interface ChartInference {
 
 // ==================== Color Palette ====================
 
+/** New API chart palette (chart-1..5) with two soft repeats. */
 export const CHART_COLORS = [
-  "#4f46e5", // primary - 靛蓝
-  "#0ea5e9", // info - 天蓝
-  "#f59e0b", // highlight - 琥珀
-  "#059669", // success - 翠绿
-  "#dc2626", // error - 赤红
-  "#8b5cf6", // 紫罗兰
-  "#ec4899", // 粉红
-  "#14b8a6", // 青绿
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--accent-300)",
+  "var(--accent-400)",
+  "var(--accent-500)",
 ];
 
 // ==================== Column Detection ====================
@@ -76,8 +77,9 @@ function getUniqueValues(rows: Record<string, unknown>[], col: string): unknown[
 // ==================== Main Inference ====================
 
 export function inferChartType(data: TableData): ChartInference | null {
-  const { columns, rows } = data;
+  const { columns, rows } = data ?? {};
 
+  if (!Array.isArray(columns) || !Array.isArray(rows)) return null;
   if (rows.length === 0 || columns.length === 0) return null;
 
   const dateCols = columns.filter((c) => isDateColumn(rows, c));

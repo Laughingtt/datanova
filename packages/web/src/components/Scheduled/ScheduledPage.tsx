@@ -126,29 +126,28 @@ export default function ScheduledPage() {
 
   if (!selectedDatasourceId) {
     return (
-      <div className="h-full flex items-center justify-center bg-[var(--canvas)] px-8">
+      <div className="h-full flex items-center justify-center bg-[var(--background)] px-8">
         <div className="text-center max-w-sm">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-[var(--primary-soft)] border border-[var(--hairline)] flex items-center justify-center mb-4">
-            <svg className="w-7 h-7 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <div className="size-10 mx-auto rounded-lg bg-[var(--muted)] flex items-center justify-center mb-4">
+            <svg className="w-5 h-5 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <p className="text-sm font-medium text-[var(--ink)]">请先选择一个数据源</p>
-          <p className="text-xs text-[var(--steel)] mt-1">前往数据源页面选择一个数据源以管理定时查询</p>
+          <p className="text-sm font-medium text-[var(--foreground)]">请先选择一个数据源</p>
+          <p className="text-xs text-[var(--muted-foreground)] mt-1">前往数据源页面选择一个数据源以管理定时查询</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full overflow-auto bg-[var(--canvas)]">
-      <div className="sunset-stripe" />
+    <div className="h-full overflow-auto bg-[var(--background)]">
 
       <div className="max-w-5xl mx-auto px-4 md:px-8 py-8 md:py-10">
         <div className="flex items-end justify-between mb-8">
           <div>
-            <h2 className="font-display text-2xl text-[var(--ink)]">定时查询</h2>
-            <p className="text-sm text-[var(--steel)] mt-1">
+            <h2 className="text-2xl font-semibold text-[var(--foreground)]">定时查询</h2>
+            <p className="text-sm text-[var(--muted-foreground)] mt-1">
               配置定时执行的 SQL 查询，支持 Cron 表达式与告警条件
             </p>
           </div>
@@ -161,7 +160,7 @@ export default function ScheduledPage() {
         </div>
 
         {alerts.length > 0 && (
-          <div className="mb-6 p-4 rounded-xl border border-[var(--warning)]/20 bg-[var(--warning-soft)]">
+          <div className="mb-6 p-4 rounded-xl border border-[color-mix(in_srgb,var(--warning)_20%,transparent)] bg-[var(--warning-soft)]">
             <div className="flex items-center gap-2 mb-2">
               <svg className="w-4 h-4 text-[var(--warning)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -174,8 +173,8 @@ export default function ScheduledPage() {
               {alerts.slice(0, 5).map((alert) => (
                 <div key={alert.id} className="flex items-center gap-2 text-xs">
                   <span className={`inline-block w-2 h-2 rounded-full ${alert.severity === "critical" ? "bg-[var(--error)]" : "bg-[var(--warning)]"}`} />
-                  <span className="text-[var(--ink)]">{alert.condition_triggered}</span>
-                  <span className="text-[var(--steel)]">值: {alert.actual_value} (阈值: {alert.threshold})</span>
+                  <span className="text-[var(--foreground)]">{alert.condition_triggered}</span>
+                  <span className="text-[var(--muted-foreground)]">值: {alert.actual_value} (阈值: {alert.threshold})</span>
                 </div>
               ))}
             </div>
@@ -199,41 +198,43 @@ export default function ScheduledPage() {
             ))}
           </div>
         ) : loadError ? (
-          <div className="card-base flex flex-col items-center text-center py-16">
-            <div className="w-12 h-12 rounded-xl bg-[var(--error-soft)] border border-[var(--hairline)] flex items-center justify-center mb-4">
+          <div className="border border-dashed border-[var(--border)] rounded-xl p-8 flex flex-col items-center text-center">
+            <div className="size-10 rounded-lg bg-[var(--muted)] flex items-center justify-center mb-4">
               <svg className="w-6 h-6 text-[var(--error)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
               </svg>
             </div>
-            <p className="text-base font-semibold text-[var(--ink)] mb-1">加载失败</p>
-            <p className="text-sm text-[var(--steel)] mb-4">{loadError}</p>
+            <p className="text-base font-semibold text-[var(--foreground)] mb-1">加载失败</p>
+            <p className="text-sm text-[var(--muted-foreground)] mb-4">{loadError}</p>
             <button onClick={loadQueries} className="btn-primary">重试</button>
           </div>
         ) : queries.length === 0 ? (
-          <div className="card-base text-center py-16">
-            <svg className="w-12 h-12 mx-auto text-[var(--stone)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="text-[var(--steel)] text-sm">暂无定时查询</p>
+          <div className="border border-dashed border-[var(--border)] rounded-xl p-8 text-center">
+            <div className="size-10 rounded-lg bg-[var(--muted)] flex items-center justify-center mx-auto mb-3">
+              <svg className="w-5 h-5 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-[var(--muted-foreground)] text-sm">暂无定时查询</p>
             <p className="text-[var(--stone)] text-xs mt-1">点击"新建查询"创建一个定时查询</p>
           </div>
         ) : (
           <div className="space-y-4">
             {queries.map((q) => (
-              <div key={q.id} className="card-base group hover:shadow-md transition-all duration-200">
+              <div key={q.id} className="card-base group hover:shadow-[var(--shadow-2)] transition-all duration-200">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3">
-                      <h3 className="text-sm font-medium text-[var(--ink)] truncate">{q.name}</h3>
-                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                        q.enabled ? "bg-[var(--success-soft)] text-[var(--success)]" : "bg-[var(--canvas)] text-[var(--stone)] border border-[var(--hairline)]"
+                      <h3 className="text-sm font-medium text-[var(--foreground)] truncate">{q.name}</h3>
+                      <span className={`badge-soft ${
+                        q.enabled ? "bg-[var(--success-soft)] text-[var(--success)]" : "bg-[var(--muted)] text-[var(--muted-foreground)]"
                       }`}>
                         {q.enabled ? "已启用" : "已禁用"}
                       </span>
                     </div>
-                    {q.description && <p className="text-xs text-[var(--steel)] mt-1">{q.description}</p>}
-                    <div className="flex items-center gap-4 mt-2 text-xs text-[var(--steel)]">
-                      <span className="font-mono bg-[var(--canvas)] px-2 py-0.5 rounded border border-[var(--hairline-soft)]">{q.cron_expression}</span>
+                    {q.description && <p className="text-xs text-[var(--muted-foreground)] mt-1">{q.description}</p>}
+                    <div className="flex items-center gap-4 mt-2 text-xs text-[var(--muted-foreground)]">
+                      <span className="font-mono bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] px-2 py-0.5 rounded border border-[var(--border)]">{q.cron_expression}</span>
                       <span>{q.timezone}</span>
                       {q.last_run_at && (
                         <span>上次运行: {new Date(q.last_run_at).toLocaleString("zh-CN")}
@@ -255,7 +256,7 @@ export default function ScheduledPage() {
                     </button>
                     <button onClick={() => handleRunNow(q)} disabled={executingId === q.id} className="btn-ghost text-xs gap-1">
                       {executingId === q.id ? (
-                        <><div className="w-3 h-3 border border-[var(--accent-300)] border-t-[var(--primary)] rounded-full animate-spin" />执行中</>
+                        <><div className="w-3 h-3 border border-[var(--muted)] border-t-[var(--primary)] rounded-full animate-spin" />执行中</>
                       ) : (
                         <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /></svg>执行</>
                       )}
@@ -272,22 +273,22 @@ export default function ScheduledPage() {
                 </div>
 
                 {expandedHistory.has(q.id) && (
-                  <div className="mt-3 pt-3 border-t border-[var(--hairline)]">
+                  <div className="mt-3 pt-3 border-t border-[var(--border)]">
                     {historyLoading.has(q.id) ? (
-                      <div className="flex items-center gap-2 text-xs text-[var(--steel)]">
-                        <div className="w-4 h-4 border border-[var(--accent-300)] border-t-[var(--primary)] rounded-full animate-spin" />
+                      <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+                        <div className="w-4 h-4 border border-[var(--muted)] border-t-[var(--primary)] rounded-full animate-spin" />
                         加载中...
                       </div>
                     ) : histories[q.id] && histories[q.id].length > 0 ? (
                       <div>
-                        <h4 className="text-xs font-medium text-[var(--ink)] mb-2">执行历史 ({histories[q.id].length})</h4>
+                        <h4 className="text-xs font-medium text-[var(--foreground)] mb-2">执行历史 ({histories[q.id].length})</h4>
                         <div className="space-y-1.5 max-h-[200px] overflow-y-auto custom-scrollbar">
                           {histories[q.id].slice(0, 10).map((h: any, idx: number) => {
                             const isSuccess = h.status === "success";
                             return (
                               <div key={h.id ?? idx} className="flex items-center gap-3 text-xs">
                                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isSuccess ? "bg-[var(--success)]" : "bg-[var(--error)]"}`} />
-                                <span className="text-[var(--steel)] font-mono w-[120px] flex-shrink-0">
+                                <span className="text-[var(--muted-foreground)] font-mono w-[120px] flex-shrink-0">
                                   {new Date(h.executed_at).toLocaleString("zh-CN")}
                                 </span>
                                 <span className={`font-mono ${isSuccess ? "text-[var(--success)]" : "text-[var(--error)]"}`}>
@@ -301,7 +302,7 @@ export default function ScheduledPage() {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-xs text-[var(--steel)]">暂无执行历史</p>
+                      <p className="text-xs text-[var(--muted-foreground)]">暂无执行历史</p>
                     )}
                   </div>
                 )}
@@ -318,8 +319,8 @@ export default function ScheduledPage() {
         size="sm"
         title="删除定时查询"
       >
-        <p className="text-sm text-[var(--steel)]">
-          确定要删除 <span className="font-medium text-[var(--ink)]">{deleteTarget?.name}</span> 吗？此操作不可撤销。
+        <p className="text-sm text-[var(--muted-foreground)]">
+          确定要删除 <span className="font-medium text-[var(--foreground)]">{deleteTarget?.name}</span> 吗？此操作不可撤销。
         </p>
         <div className="flex justify-end gap-2 mt-6">
           <button onClick={() => setDeleteTarget(null)} className="btn-ghost text-sm">取消</button>

@@ -51,36 +51,35 @@ export default function TableColumnPicker({
         <button
           type="button"
           onClick={() => setShowPicker(!showPicker)}
-          className="btn-ghost text-xs whitespace-nowrap px-3 py-1.5 border border-[var(--hairline)] rounded-md"
+          className="btn-secondary text-xs whitespace-nowrap px-3"
         >
-          {showPicker ? "✕ Close" : "📋 Browse"}
+          {showPicker ? "✕ 关闭" : "📋 浏览"}
         </button>
       </div>
 
       {showPicker && (
-        <div className="absolute z-50 mt-2 w-full max-h-[320px] overflow-y-auto bg-[var(--surface)] border border-[var(--hairline-strong)] rounded-lg shadow-lg p-3">
-          {loading && <p className="text-xs text-[var(--steel)] py-2">Loading schema...</p>}
+        <div className="absolute z-50 mt-2 w-full max-h-[320px] overflow-y-auto bg-[var(--popover)] border border-[var(--border)] rounded-xl shadow-[var(--shadow-2)] p-3">
+          {loading && <p className="text-xs text-[var(--muted-foreground)] py-2">正在加载 Schema…</p>}
           {error && <p className="text-xs text-[var(--error)] py-2">{error}</p>}
 
           {!loading && !error && (
             <>
               {mode === "aggregate" && (
                 <div className="mb-3 flex items-center gap-2">
-                  <label className="text-xs text-[var(--steel)]">Aggregation:</label>
-                  {["SUM", "AVG", "COUNT", "MAX", "MIN"].map(fn => (
-                    <button
-                      key={fn}
-                      type="button"
-                      onClick={() => setAggFunc(fn)}
-                      className={`text-xs px-2 py-0.5 rounded ${
-                        aggFunc === fn
-                          ? "bg-[var(--primary)] text-white"
-                          : "bg-[var(--canvas)] text-[var(--steel)] hover:bg-[var(--hairline-soft)]"
-                      }`}
-                    >
-                      {fn}
-                    </button>
-                  ))}
+                  <label className="text-xs text-[var(--muted-foreground)]">聚合方式：</label>
+                  <div className="tabs-track">
+                    {["SUM", "AVG", "COUNT", "MAX", "MIN"].map(fn => (
+                      <button
+                        key={fn}
+                        type="button"
+                        onClick={() => setAggFunc(fn)}
+                        className="tab-trigger text-[11px] h-6 px-2"
+                        data-active={aggFunc === fn}
+                      >
+                        {fn}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -99,7 +98,7 @@ export default function TableColumnPicker({
                         key={`${table.name}.${col.name}`}
                         type="button"
                         onClick={() => handleSelectColumn(table.name, col.name)}
-                        className="w-full text-left flex items-center gap-2 px-2 py-1 rounded text-xs hover:bg-[var(--primary-soft)] transition-colors"
+                        className="w-full text-left flex items-center gap-2 px-2 py-1 rounded-md text-xs hover:bg-[var(--muted)] transition-colors"
                       >
                         <span className="font-mono text-[var(--ink)]">{col.name}</span>
                         <span className="font-mono text-[var(--stone)]">{col.type}</span>
@@ -116,7 +115,7 @@ export default function TableColumnPicker({
               ))}
 
               {tables.length === 0 && (
-                <p className="text-xs text-[var(--steel)] py-2">No tables discovered. Run schema discovery first.</p>
+                <p className="text-xs text-[var(--muted-foreground)] py-2">未发现数据表，请先执行 Schema 发现。</p>
               )}
             </>
           )}

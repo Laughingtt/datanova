@@ -70,14 +70,13 @@ export default function AgentTracesPage() {
   };
 
   return (
-    <div className="h-full overflow-auto bg-[var(--canvas)]">
-      <div className="sunset-stripe" />
+    <div className="h-full overflow-auto bg-[var(--background)]">
       <div className="max-w-[1600px] mx-auto px-4 md:px-8 py-8">
         {/* Header */}
         <div className="flex items-end justify-between mb-6 gap-4 flex-wrap">
           <div>
-            <h2 className="font-display text-2xl text-[var(--ink)]">Agent 追踪</h2>
-            <p className="text-sm text-[var(--steel)] mt-1">
+            <h2 className="text-2xl font-semibold text-[var(--foreground)]">Agent 追踪</h2>
+            <p className="text-sm text-[var(--muted-foreground)] mt-1">
               监控智能问数 Agent 的决策路径、工具选择与执行质量
             </p>
           </div>
@@ -107,7 +106,7 @@ export default function AgentTracesPage() {
         {/* Tool distribution (if stats available) */}
         {stats && stats.toolDistribution.length > 0 && (
           <div className="card-base mb-6">
-            <h3 className="text-sm font-semibold text-[var(--ink)] font-body mb-3">工具使用分布</h3>
+            <h3 className="text-sm font-semibold text-[var(--foreground)] font-body mb-3">工具使用分布</h3>
             <div className="flex items-end gap-3 flex-wrap">
               {stats.toolDistribution.map((t, i) => {
                 const max = Math.max(...stats.toolDistribution.map(d => d.count), 1);
@@ -120,15 +119,14 @@ export default function AgentTracesPage() {
                 };
                 return (
                   <div key={i} className="flex flex-col items-center gap-1 min-w-[60px]">
-                    <span className="text-xs text-[var(--ink)] font-mono font-medium">{t.count}</span>
+                    <span className="text-xs text-[var(--foreground)] font-mono font-medium">{t.count}</span>
                     <div
-                      className="w-12 rounded-t-md transition-all duration-300"
+                      className="w-12 rounded-t-md bg-[var(--primary)] transition-all duration-300"
                       style={{
                         height: `${Math.max((t.count / max) * 60, 8)}px`,
-                        background: "linear-gradient(to top, var(--accent-600), var(--accent-400))",
                       }}
                     />
-                    <span className="text-[10px] text-[var(--steel)] text-center">
+                    <span className="text-[10px] text-[var(--muted-foreground)] text-center">
                       {toolLabels[t.tool] ?? t.tool}
                     </span>
                   </div>
@@ -140,24 +138,24 @@ export default function AgentTracesPage() {
 
         {/* Filters */}
         <div className="flex items-center gap-4 mb-4 flex-wrap">
-          <label className="flex items-center gap-2 text-xs text-[var(--steel)] cursor-pointer">
+          <label className="flex items-center gap-2 text-xs text-[var(--muted-foreground)] cursor-pointer">
             <input
               type="checkbox"
               checked={filterSelfCorrected}
               onChange={(e) => setFilterSelfCorrected(e.target.checked)}
-              className="rounded border-[var(--hairline-strong)] text-[var(--highlight)] focus:ring-[var(--highlight)]"
+              className="rounded border-[var(--input)] text-[var(--warning)] focus:ring-[var(--warning)]"
             />
             <span className="flex items-center gap-1">
-              <span className="text-[var(--highlight)]">⚠️</span>
+              <span className="text-[var(--warning)]">⚠️</span>
               仅看自修复
             </span>
           </label>
-          <label className="flex items-center gap-2 text-xs text-[var(--steel)] cursor-pointer">
+          <label className="flex items-center gap-2 text-xs text-[var(--muted-foreground)] cursor-pointer">
             <input
               type="checkbox"
               checked={filterNoSemanticLayer}
               onChange={(e) => setFilterNoSemanticLayer(e.target.checked)}
-              className="rounded border-[var(--hairline-strong)] text-[var(--error)] focus:ring-[var(--error)]"
+              className="rounded border-[var(--input)] text-[var(--error)] focus:ring-[var(--error)]"
             />
             <span className="flex items-center gap-1">
               <span className="text-[var(--error)]">🔴</span>
@@ -182,14 +180,16 @@ export default function AgentTracesPage() {
           <div className="w-full md:w-[520px] flex-shrink-0">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="w-6 h-6 border-2 border-[var(--accent-300)] border-t-[var(--primary)] rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-[var(--muted)] border-t-[var(--primary)] rounded-full animate-spin" />
               </div>
             ) : traces.length === 0 ? (
-              <div className="card-base text-center py-16">
-                <svg className="w-10 h-10 mx-auto text-[var(--stone)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                </svg>
-                <p className="text-sm text-[var(--steel)]">暂无 Agent 追踪记录</p>
+              <div className="border border-dashed border-[var(--border)] rounded-xl p-8 text-center">
+                <div className="size-10 rounded-lg bg-[var(--muted)] flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-5 h-5 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                  </svg>
+                </div>
+                <p className="text-sm text-[var(--muted-foreground)]">暂无 Agent 追踪记录</p>
                 <p className="text-xs text-[var(--stone)] mt-1">在智能对话中提问后，决策路径将显示在这里</p>
               </div>
             ) : (
@@ -205,21 +205,21 @@ export default function AgentTracesPage() {
                       className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 border ${
                         isSelected
                           ? "bg-[var(--primary-soft)] border-[var(--primary)]"
-                          : "hover:bg-[var(--surface)] border-transparent hover:border-[var(--hairline)]"
+                          : "hover:bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] border-transparent hover:border-[var(--border)]"
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-medium text-[var(--ink)] truncate flex-1">
+                        <span className="text-sm font-medium text-[var(--foreground)] truncate flex-1">
                           {trace.user_question || "（无问题记录）"}
                         </span>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           {trace.self_corrected === 1 && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--warning-soft)] text-[var(--highlight)]" title="发生自修复">
+                            <span className="badge-soft bg-[var(--warning-soft)] text-[var(--warning)]" title="发生自修复">
                               修复
                             </span>
                           )}
                           {trace.used_semantic_layer === 0 && trace.total_tool_calls > 0 && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--error-soft)] text-[var(--error)]" title="未使用语义层">
+                            <span className="badge-soft bg-[var(--error-soft)] text-[var(--error)]" title="未使用语义层">
                               无语义层
                             </span>
                           )}
@@ -228,7 +228,7 @@ export default function AgentTracesPage() {
                       <div className="mt-1.5">
                         <ToolChainCompact toolSequence={toolSequence} />
                       </div>
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-[var(--steel)]">
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-[var(--muted-foreground)]">
                         <span>{formatRelativeTime(trace.created_at)}</span>
                         {trace.datasource_name && (
                           <span className="text-[var(--primary-text)] font-medium">{trace.datasource_name}</span>
@@ -250,11 +250,13 @@ export default function AgentTracesPage() {
             {selectedTrace ? (
               <TraceDetail trace={selectedTrace} onCopy={copy} />
             ) : (
-              <div className="card-base text-center py-16">
-                <svg className="w-10 h-10 mx-auto text-[var(--stone)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-                </svg>
-                <p className="text-sm text-[var(--steel)]">选择一条记录查看决策详情</p>
+              <div className="border border-dashed border-[var(--border)] rounded-xl p-8 text-center">
+                <div className="size-10 rounded-lg bg-[var(--muted)] flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-5 h-5 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                  </svg>
+                </div>
+                <p className="text-sm text-[var(--muted-foreground)]">选择一条记录查看决策详情</p>
               </div>
             )}
           </div>
@@ -300,7 +302,7 @@ function TraceDetail({ trace, onCopy }: { trace: AgentTraceItem; onCopy: (text: 
         {/* User question */}
         <div>
           <h3 className="label-mono mb-1.5">用户问题</h3>
-          <p className="text-sm text-[var(--ink)] bg-[var(--canvas)] rounded-lg p-3">
+          <p className="text-sm text-[var(--foreground)] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] rounded-lg p-3">
             {trace.user_question || "（无问题记录）"}
           </p>
         </div>
@@ -309,19 +311,19 @@ function TraceDetail({ trace, onCopy }: { trace: AgentTraceItem; onCopy: (text: 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div>
             <h3 className="label-mono mb-1">Agent 类型</h3>
-            <p className="text-sm text-[var(--ink)] font-medium">{trace.agent_type}</p>
+            <p className="text-sm text-[var(--foreground)] font-medium">{trace.agent_type}</p>
           </div>
           <div>
             <h3 className="label-mono mb-1">数据源</h3>
-            <p className="text-sm text-[var(--ink)]">{trace.datasource_name || "—"}</p>
+            <p className="text-sm text-[var(--foreground)]">{trace.datasource_name || "—"}</p>
           </div>
           <div>
             <h3 className="label-mono mb-1">耗时</h3>
-            <p className="text-sm text-[var(--ink)]">{formatDuration(trace.duration_ms)}</p>
+            <p className="text-sm text-[var(--foreground)]">{formatDuration(trace.duration_ms)}</p>
           </div>
           <div>
             <h3 className="label-mono mb-1">时间</h3>
-            <p className="text-sm text-[var(--ink)]">{formatDateTimeShort(trace.created_at)}</p>
+            <p className="text-sm text-[var(--foreground)]">{formatDateTimeShort(trace.created_at)}</p>
           </div>
         </div>
 
@@ -338,7 +340,7 @@ function TraceDetail({ trace, onCopy }: { trace: AgentTraceItem; onCopy: (text: 
             <AnalysisTag
               active={trace.used_discover_schema === 1}
               label="Schema 发现"
-              activeColor="bg-[var(--accent-100)] text-[var(--accent-600)]"
+              activeColor="bg-[var(--primary-soft)] text-[var(--primary-deep)]"
             />
             <AnalysisTag
               active={trace.used_examples === 1}
@@ -348,12 +350,12 @@ function TraceDetail({ trace, onCopy }: { trace: AgentTraceItem; onCopy: (text: 
             <AnalysisTag
               active={trace.used_skill === 1}
               label="技能使用"
-              activeColor="bg-[var(--warning-soft)] text-[var(--highlight)]"
+              activeColor="bg-[var(--warning-soft)] text-[var(--warning)]"
             />
             <AnalysisTag
               active={trace.self_corrected === 1}
               label="发生自修复"
-              activeColor="bg-[var(--warning-soft)] text-[var(--highlight)]"
+              activeColor="bg-[var(--warning-soft)] text-[var(--warning)]"
             />
           </div>
         </div>
@@ -362,7 +364,7 @@ function TraceDetail({ trace, onCopy }: { trace: AgentTraceItem; onCopy: (text: 
         {trace.decision_rationale && trace.decision_rationale.trim().length > 0 && (
           <div>
             <h3 className="label-mono mb-2">链路综述 · 抉择路径</h3>
-            <pre className="text-xs text-[var(--ink)] bg-[var(--canvas)] rounded-lg p-3 whitespace-pre-wrap border border-[var(--hairline-soft)] max-h-[320px] overflow-y-auto custom-scrollbar font-body leading-relaxed">
+            <pre className="text-xs text-[var(--foreground)] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] rounded-lg p-3 whitespace-pre-wrap border border-[var(--border)] max-h-[320px] overflow-y-auto custom-scrollbar font-body leading-relaxed">
               {trace.decision_rationale}
             </pre>
           </div>
@@ -385,7 +387,7 @@ function TraceDetail({ trace, onCopy }: { trace: AgentTraceItem; onCopy: (text: 
             >
               {inferring ? (
                 <>
-                  <div className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  <div className="w-3 h-3 border-2 border-[color-mix(in_srgb,var(--primary-soft)_40%,transparent)] border-t-[var(--primary-soft)] rounded-full animate-spin" />
                   反推中…
                 </>
               ) : (
@@ -398,7 +400,7 @@ function TraceDetail({ trace, onCopy }: { trace: AgentTraceItem; onCopy: (text: 
               )}
             </button>
           </div>
-          <p className="text-xs text-[var(--steel)] mb-2">
+          <p className="text-xs text-[var(--muted-foreground)] mb-2">
             调用 infer_agent_chain，由管理员 Agent 根据本条 trace 反推出功能 Agent 的完整决策链路（每步抉择点、期望 vs 实际、自修复分析、链路判定）。
           </p>
           {inferError && (
@@ -425,14 +427,14 @@ function TraceDetail({ trace, onCopy }: { trace: AgentTraceItem; onCopy: (text: 
                 复制
               </button>
             </div>
-            <pre className="text-sm font-mono text-[var(--ink)] bg-[var(--canvas)] rounded-lg p-3 overflow-x-auto whitespace-pre-wrap border border-[var(--hairline-soft)]">
+            <pre className="text-sm font-mono text-[var(--foreground)] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] rounded-lg p-3 overflow-x-auto whitespace-pre-wrap border border-[var(--border)]">
               {trace.final_sql}
             </pre>
           </div>
         )}
 
         {/* Conversation link */}
-        <div className="text-xs text-[var(--stone)] pt-2 border-t border-[var(--hairline-soft)]">
+        <div className="text-xs text-[var(--stone)] pt-2 border-t border-[var(--border)]">
           会话 ID: <span className="font-mono">{trace.conversation_id}</span>
           {trace.total_turns > 0 && <span className="ml-3">思考步数: {trace.total_turns}</span>}
         </div>
@@ -448,7 +450,7 @@ function ChainInferenceView({ inference }: { inference: AgentChainInference }) {
 
   if (!chain) {
     return (
-      <div className="text-xs text-[var(--steel)] bg-[var(--canvas)] rounded-lg p-3 border border-[var(--hairline-soft)] whitespace-pre-wrap">
+      <div className="text-xs text-[var(--muted-foreground)] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] rounded-lg p-3 border border-[var(--border)] whitespace-pre-wrap">
         {inference.text || "（无链路反推结果）"}
       </div>
     );
@@ -456,12 +458,12 @@ function ChainInferenceView({ inference }: { inference: AgentChainInference }) {
 
   const verdictColor: Record<string, string> = {
     "合理": "bg-[var(--success-soft)] text-[var(--success)]",
-    "基本合理": "bg-[var(--warning-soft)] text-[var(--highlight)]",
+    "基本合理": "bg-[var(--warning-soft)] text-[var(--warning)]",
     "存在缺陷": "bg-[var(--error-soft)] text-[var(--error)]",
-    "信息不足": "bg-[var(--surface)] text-[var(--steel)]",
-    "信息受限": "bg-[var(--surface)] text-[var(--steel)]",
+    "信息不足": "bg-[var(--muted)] text-[var(--muted-foreground)]",
+    "信息受限": "bg-[var(--muted)] text-[var(--muted-foreground)]",
   };
-  const verdictCls = verdictColor[chain.chain_verdict] ?? "bg-[var(--surface)] text-[var(--steel)]";
+  const verdictCls = verdictColor[chain.chain_verdict] ?? "bg-[var(--muted)] text-[var(--muted-foreground)]";
 
   return (
     <div className="space-y-3">
@@ -478,7 +480,7 @@ function ChainInferenceView({ inference }: { inference: AgentChainInference }) {
         )}
       </div>
 
-      <div className="text-sm text-[var(--ink)] bg-[var(--primary-soft)] rounded-lg p-3 border border-[var(--hairline-soft)] leading-relaxed">
+      <div className="text-sm text-[var(--foreground)] bg-[var(--primary-soft)] rounded-lg p-3 border border-[var(--border)] leading-relaxed">
         {chain.chain_summary}
       </div>
 
@@ -486,36 +488,36 @@ function ChainInferenceView({ inference }: { inference: AgentChainInference }) {
         <div className="space-y-2">
           <div className="label-mono">逐步抉择点</div>
           {chain.decision_points.map((dp, i) => (
-            <div key={i} className="text-xs bg-[var(--canvas)] rounded-lg p-3 border border-[var(--hairline-soft)] space-y-1.5">
+            <div key={i} className="text-xs bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] rounded-lg p-3 border border-[var(--border)] space-y-1.5">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-mono text-[var(--stone)]">#{dp.step}</span>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium uppercase tracking-wider bg-[var(--accent-100)] text-[var(--accent-600)]">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium uppercase tracking-wider bg-[var(--muted)] text-[var(--muted-foreground)]">
                   {dp.tool}
                 </span>
               </div>
-              <div><span className="text-[var(--primary)] font-medium">抉择理由：</span><span className="text-[var(--ink)]">{dp.rationale}</span></div>
-              <div><span className="text-[var(--stone)]">期望：</span><span className="text-[var(--steel)]">{dp.expected}</span></div>
-              <div><span className="text-[var(--stone)]">实际：</span><span className="text-[var(--steel)]">{dp.actual}</span></div>
-              {dp.drove_next && <div><span className="text-[var(--stone)]">驱动下一步：</span><span className="text-[var(--steel)]">{dp.drove_next}</span></div>}
+              <div><span className="text-[var(--primary)] font-medium">抉择理由：</span><span className="text-[var(--foreground)]">{dp.rationale}</span></div>
+              <div><span className="text-[var(--stone)]">期望：</span><span className="text-[var(--muted-foreground)]">{dp.expected}</span></div>
+              <div><span className="text-[var(--stone)]">实际：</span><span className="text-[var(--muted-foreground)]">{dp.actual}</span></div>
+              {dp.drove_next && <div><span className="text-[var(--stone)]">驱动下一步：</span><span className="text-[var(--muted-foreground)]">{dp.drove_next}</span></div>}
             </div>
           ))}
         </div>
       )}
 
       {chain.self_correction_analysis && (
-        <div className="text-xs text-[var(--highlight)] bg-[var(--warning-soft)] rounded-lg p-3 border border-[var(--hairline-soft)]">
+        <div className="text-xs text-[var(--warning)] bg-[var(--warning-soft)] rounded-lg p-3 border border-[var(--border)]">
           <span className="font-medium">自修复分析：</span>{chain.self_correction_analysis}
         </div>
       )}
 
-      <div className="text-xs text-[var(--steel)] bg-[var(--surface)] rounded-lg p-3 border border-[var(--hairline-soft)]">
-        <span className="font-medium text-[var(--ink)]">判定依据：</span>{chain.verdict_reason}
+      <div className="text-xs text-[var(--muted-foreground)] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] rounded-lg p-3 border border-[var(--border)]">
+        <span className="font-medium text-[var(--foreground)]">判定依据：</span>{chain.verdict_reason}
       </div>
 
       {chain.improvement_suggestions.length > 0 && (
-        <div className="text-xs bg-[var(--canvas)] rounded-lg p-3 border border-[var(--hairline-soft)]">
-          <div className="font-medium text-[var(--ink)] mb-1">改进建议</div>
-          <ul className="list-disc list-inside space-y-0.5 text-[var(--steel)]">
+        <div className="text-xs bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] rounded-lg p-3 border border-[var(--border)]">
+          <div className="font-medium text-[var(--foreground)] mb-1">改进建议</div>
+          <ul className="list-disc list-inside space-y-0.5 text-[var(--muted-foreground)]">
             {chain.improvement_suggestions.map((s, i) => <li key={i}>{s}</li>)}
           </ul>
         </div>
@@ -541,7 +543,7 @@ function AnalysisTag({
     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
       active
         ? activeColor
-        : inactiveColor ?? "bg-[var(--surface)] text-[var(--stone)]"
+        : inactiveColor ?? "bg-[var(--muted)] text-[var(--muted-foreground)]"
     }`}>
       <span className={`w-1.5 h-1.5 rounded-full ${active ? "bg-current" : "bg-[var(--stone)]"}`} />
       {label}

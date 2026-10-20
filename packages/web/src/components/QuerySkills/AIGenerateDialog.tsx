@@ -68,36 +68,29 @@ export default function AIGenerateDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--hairline)] w-full max-w-lg mx-4">
-        <div className="sunset-stripe" />
-        <div className="px-6 py-4 border-b border-[var(--hairline)]">
-          <h3 className="font-display text-lg text-[var(--ink)]">AI 生成查询技能</h3>
-          <p className="text-xs text-[var(--steel)] mt-0.5">
+    <div className="fixed inset-0 z-50 bg-black/10 backdrop-blur-[2px] flex items-center justify-center">
+      <div className="rounded-xl bg-[var(--popover)] ring-1 ring-[color-mix(in_srgb,var(--foreground)_10%,transparent)] shadow-[var(--shadow-3)] w-full max-w-lg mx-4">
+        <div className="px-6 py-4 border-b border-[var(--border)]">
+          <h3 className="text-lg font-semibold text-[var(--foreground)]">AI 生成查询技能</h3>
+          <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
             AI 分析数据库 Schema，自动生成查询技能攻略
           </p>
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-3">
           {/* Mode toggle */}
-          <div className="flex gap-2">
+          <div className="tabs-track">
             <button
               onClick={() => setMode("single")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                mode === "single"
-                  ? "bg-[var(--primary)] text-white"
-                  : "bg-[var(--surface-raised)] text-[var(--ink)] hover:bg-[var(--surface)]"
-              }`}
+              data-active={mode === "single"}
+              className="tab-trigger"
             >
               单个场景
             </button>
             <button
               onClick={() => setMode("batch")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                mode === "batch"
-                  ? "bg-[var(--primary)] text-white"
-                  : "bg-[var(--surface-raised)] text-[var(--ink)] hover:bg-[var(--surface)]"
-              }`}
+              data-active={mode === "batch"}
+              className="tab-trigger"
             >
               批量生成
             </button>
@@ -134,19 +127,19 @@ export default function AIGenerateDialog({
           )}
 
           {mode === "batch" && (
-            <p className="text-xs text-[var(--slate)]">
+            <p className="text-xs text-[var(--muted-foreground)]">
               AI 将自动识别「{domain || "该业务域"}」下的 3-5 个典型查询场景，为每个场景生成完整技能
             </p>
           )}
 
           {error && (
-            <div className="px-3 py-2 rounded-lg border border-[var(--error)]/20 bg-[var(--error)]/5 text-[var(--error)] text-xs">
+            <div className="px-3 py-2 rounded-lg bg-[var(--error-soft)] text-[var(--error)] text-xs">
               {error}
             </div>
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[var(--hairline)]">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[var(--border)]">
           <button onClick={onClose} className="btn-ghost">取消</button>
           <button onClick={handleGenerate} disabled={generating} className="btn-primary">
             {generating ? "生成中..." : "生成"}

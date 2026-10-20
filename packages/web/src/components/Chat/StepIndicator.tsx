@@ -47,9 +47,9 @@ export default function StepIndicator({ step }: StepIndicatorProps) {
       return (
         <div ref={containerRef} className="flex items-center gap-2 py-1">
           <ThinkingDot />
-          <span className="text-xs text-[var(--steel)]">Thinking…</span>
+          <span className="text-xs text-[var(--muted-foreground)]">思考中…</span>
           {step.content && (
-            <span className="text-xs text-[var(--stone)] truncate max-w-xs">
+            <span className="text-xs text-[var(--muted-foreground)] truncate max-w-xs">
               {step.content}
             </span>
           )}
@@ -60,12 +60,12 @@ export default function StepIndicator({ step }: StepIndicatorProps) {
       return (
         <div ref={containerRef} className="flex items-center gap-2 py-1">
           <span className="inline-flex items-center px-2 py-0.5 rounded-md
-                           bg-[var(--primary-soft)] text-[var(--primary-text)]
+                           bg-[var(--muted)] text-[var(--muted-foreground)]
                            text-xs font-mono uppercase tracking-wider font-medium">
             {step.toolName ?? "tool"}
           </span>
           {step.args && (
-            <span className="text-xs text-[var(--stone)] font-mono truncate max-w-sm">
+            <span className="text-xs text-[var(--muted-foreground)] font-mono truncate max-w-sm">
               {JSON.stringify(step.args).slice(0, 100)}
             </span>
           )}
@@ -78,7 +78,7 @@ export default function StepIndicator({ step }: StepIndicatorProps) {
           <span className={`text-xs ${step.isError ? "text-[var(--error)]" : "text-[var(--success)]"}`}>
             {step.isError ? "✗" : "✓"}
           </span>
-          <span className="text-xs text-[var(--steel)]">
+          <span className="text-xs text-[var(--muted-foreground)]">
             {step.toolName ?? "tool"} {step.isError ? "failed" : "completed"}
           </span>
         </div>

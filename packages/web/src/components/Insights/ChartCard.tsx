@@ -77,14 +77,18 @@ export default function ChartCard({
   };
 
   // Try to infer chart type from result
-  const hasChart = result && inferChartType({ columns: result.columns, rows: result.rows });
+  const table =
+    result && Array.isArray(result.columns) && Array.isArray(result.rows)
+      ? { columns: result.columns, rows: result.rows }
+      : null;
+  const hasChart = table ? inferChartType(table) : null;
 
   return (
     <div className="card-base !p-0 overflow-hidden animate-in">
       {/* Card header */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--hairline-soft)]">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--border)]">
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-[var(--ink)] truncate">{title}</h3>
+          <h3 className="text-sm font-semibold text-[var(--foreground)] truncate">{title}</h3>
           {subtitle && <p className="text-[10px] text-[var(--stone)] mt-0.5">{subtitle}</p>}
         </div>
         <div className="flex items-center gap-1 shrink-0 ml-2">
@@ -94,7 +98,7 @@ export default function ChartCard({
             className={`p-1 rounded-md transition-colors ${
               showSql
                 ? "text-[var(--primary)] bg-[var(--primary-soft)]"
-                : "text-[var(--stone)] hover:text-[var(--ink)] hover:bg-[var(--canvas)]"
+                : "text-[var(--stone)] hover:text-[var(--foreground)] hover:bg-[var(--muted)]"
             }`}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -108,8 +112,8 @@ export default function ChartCard({
             title={isBookmarked ? "取消收藏" : "收藏此查询"}
             className={`p-1 rounded-md transition-colors ${
               isBookmarked
-                ? "text-[var(--highlight)] hover:bg-[var(--warning-soft)]"
-                : "text-[var(--stone)] hover:text-[var(--highlight)] hover:bg-[var(--canvas)]"
+                ? "text-[var(--warning)] hover:bg-[var(--warning-soft)]"
+                : "text-[var(--stone)] hover:text-[var(--warning)] hover:bg-[var(--muted)]"
             }`}
           >
             <svg className="w-4 h-4" fill={isBookmarked ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -121,8 +125,8 @@ export default function ChartCard({
 
       {/* Expandable SQL block */}
       <div ref={sqlRef} style={showSql ? {} : { height: 0, overflow: "hidden", opacity: 0 }}>
-        <div className="px-5 py-3 bg-[var(--canvas)] border-b border-[var(--hairline-soft)]">
-          <pre className="text-xs font-mono text-[var(--charcoal)] whitespace-pre-wrap overflow-x-auto max-h-32">
+        <div className="px-5 py-3 bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] border-b border-[var(--border)]">
+          <pre className="text-xs font-mono text-[var(--muted-foreground)] whitespace-pre-wrap overflow-x-auto max-h-32">
             {sql}
           </pre>
         </div>
@@ -132,27 +136,27 @@ export default function ChartCard({
       <div className="p-5">
         {loading && (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <div className="w-6 h-6 border-2 border-[var(--accent-300)] border-t-[var(--primary)] rounded-full animate-spin" />
-            <span className="text-xs text-[var(--steel)]">加载中...</span>
+            <div className="w-6 h-6 border-2 border-[var(--muted)] border-t-[var(--primary)] rounded-full animate-spin" />
+            <span className="text-xs text-[var(--muted-foreground)]">加载中...</span>
           </div>
         )}
 
         {error && (
           <div className="flex flex-col items-center justify-center py-8 gap-2">
-            <svg className="w-8 h-8 text-[var(--error)]/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+            <svg className="w-8 h-8 text-[var(--error)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>
-            <p className="text-xs text-[var(--error)]/80 text-center max-w-[300px]">{error}</p>
+            <p className="text-xs text-[var(--error)] text-center max-w-[300px]">{error}</p>
           </div>
         )}
 
-        {result && hasChart && (
-          <ChartView data={{ columns: result.columns, rows: result.rows }} />
+        {table && hasChart && (
+          <ChartView data={table} />
         )}
 
-        {result && !hasChart && (
+        {table && !hasChart && (
           <div className="max-h-[300px] overflow-auto custom-scrollbar">
-            <TableResult data={{ columns: result.columns, rows: result.rows }} />
+            <TableResult data={table} />
           </div>
         )}
       </div>

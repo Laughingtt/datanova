@@ -42,28 +42,28 @@ function describeCron(expr: string): string {
   if (preset) return preset.label;
 
   const parts = expr.trim().split(/\s+/);
-  if (parts.length !== 5) return "Invalid cron expression";
+  if (parts.length !== 5) return "无效的 Cron 表达式";
 
-  const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
+  const [minute, hour, dayOfMonth, _month, dayOfWeek] = parts;
   const pieces: string[] = [];
 
   if (minute === "*" && hour === "*") {
-    pieces.push("Every minute");
+    pieces.push("每分钟");
   } else if (hour === "*") {
-    pieces.push(`Every hour at minute ${minute}`);
+    pieces.push(`每小时第 ${minute} 分钟`);
   } else if (hour.startsWith("*/")) {
-    pieces.push(`Every ${hour.slice(2)} hours at minute ${minute}`);
+    pieces.push(`每 ${hour.slice(2)} 小时的第 ${minute} 分钟`);
   } else if (dayOfWeek !== "*") {
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const days = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
     const dayIdx = parseInt(dayOfWeek, 10);
-    pieces.push(`Every ${days[dayIdx] ?? `day-of-week ${dayOfWeek}`} at ${hour}:${minute.padStart(2, "0")}`);
+    pieces.push(`每${days[dayIdx] ?? `周 ${dayOfWeek}`} ${hour}:${minute.padStart(2, "0")}`);
   } else if (dayOfMonth !== "*") {
-    pieces.push(`On day ${dayOfMonth} of each month at ${hour}:${minute.padStart(2, "0")}`);
+    pieces.push(`每月 ${dayOfMonth} 日 ${hour}:${minute.padStart(2, "0")}`);
   } else {
-    pieces.push(`At ${hour}:${minute.padStart(2, "0")} every day`);
+    pieces.push(`每天 ${hour}:${minute.padStart(2, "0")}`);
   }
 
-  return pieces.join(", ");
+  return pieces.join("，");
 }
 
 export default function ScheduledForm({ datasourceId, query, onSave, onCancel }: ScheduledFormProps) {
@@ -140,8 +140,8 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
   };
 
   return (
-    <div className="card-cream space-y-5">
-      <h3 className="font-display text-heading-4 text-[var(--ink)]">
+    <div className="card-base space-y-5">
+      <h3 className="text-lg font-semibold text-[var(--foreground)]">
         {isEdit ? "编辑定时查询" : "新建定时查询"}
       </h3>
 
@@ -153,35 +153,35 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
 
       {/* Name */}
       <div>
-        <label className="block text-sm font-medium text-[var(--ink)] mb-1">名称</label>
+        <label className="label-mono">名称</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="例如：每日营收检查"
-          className="w-full px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
+          className="input-field"
         />
       </div>
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-medium text-[var(--ink)] mb-1">描述</label>
+        <label className="label-mono">描述</label>
         <input
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="可选描述"
-          className="w-full px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
+          className="input-field"
         />
       </div>
 
       {/* AI SQL Generation */}
-      <div className="p-4 rounded-lg border border-dashed border-[var(--primary)]/40 bg-[var(--primary-soft)]/50">
-        <label className="block text-sm font-medium text-[var(--ink)] mb-2 flex items-center gap-2">
+      <div className="p-4 rounded-xl border border-dashed border-[var(--border)] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)]">
+        <label className="label-mono flex items-center gap-2">
           <svg className="w-4 h-4 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" /></svg>
           AI 生成 SQL
         </label>
-        <p className="text-xs text-[var(--steel)] mb-2">
+        <p className="text-xs text-[var(--muted-foreground)] mb-2">
           用自然语言描述查询需求，AI 将自动生成 SQL
         </p>
         <div className="flex gap-2">
@@ -191,7 +191,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
             onChange={(e) => setAiPrompt(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleGenerateSql(); } }}
             placeholder="例如：展示最近30天各地区每日营收"
-            className="flex-1 px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
+            className="input-field flex-1"
             disabled={generatingSql}
           />
           <button
@@ -210,25 +210,25 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
 
       {/* SQL */}
       <div>
-        <label className="block text-sm font-medium text-[var(--ink)] mb-1">SQL 查询</label>
+        <label className="label-mono">SQL 查询</label>
         <textarea
           value={sql}
           onChange={(e) => setSql(e.target.value)}
           placeholder="SELECT ... FROM ..."
           rows={6}
-          className="w-full px-3 py-2 text-sm font-mono bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)] resize-y"
+          className="input-field h-auto font-mono resize-y"
         />
       </div>
 
       {/* Cron + Presets */}
       <div>
-        <label className="block text-sm font-medium text-[var(--ink)] mb-1">定时规则 (Cron)</label>
+        <label className="label-mono">定时规则 (Cron)</label>
         <input
           type="text"
           value={cronExpression}
           onChange={(e) => setCronExpression(e.target.value)}
           placeholder="0 * * * *"
-          className="w-full px-3 py-2 text-sm font-mono bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
+          className="input-field font-mono"
         />
         <p className="text-xs text-[var(--primary-text)] mt-1">
           {describeCron(cronExpression)}
@@ -242,7 +242,7 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
               className={`text-xs px-2 py-1 rounded-md border transition-colors ${
                 cronExpression === preset.value
                   ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary-text)]"
-                  : "border-[var(--hairline)] text-[var(--steel)] hover:border-[var(--primary)]"
+                  : "border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]"
               }`}
             >
               {preset.label}
@@ -253,11 +253,11 @@ export default function ScheduledForm({ datasourceId, query, onSave, onCancel }:
 
       {/* Timezone */}
       <div>
-        <label className="block text-sm font-medium text-[var(--ink)] mb-1">时区</label>
+        <label className="label-mono">时区</label>
         <select
           value={timezone}
           onChange={(e) => setTimezone(e.target.value)}
-          className="w-full px-3 py-2 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] focus:outline-none focus:border-[var(--primary)]"
+          className="input-field"
         >
           {COMMON_TIMEZONES.map((tz) => (
             <option key={tz} value={tz}>{tz}</option>

@@ -171,9 +171,9 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
       closeOnBackdrop={true}
       initialFocusSelector="[data-cmd-input]"
     >
-      <div className="-mx-6 -my-5">
-        <div className="flex items-center gap-3 px-5 py-3 border-b border-[var(--hairline-soft)]">
-          <svg className="w-4 h-4 text-[var(--stone)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <div className="-mx-5 -my-4">
+        <div className="flex items-center gap-2.5 px-4 py-2 border-b border-[var(--border)]">
+          <svg className="w-4 h-4 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
@@ -181,22 +181,22 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
             value={query}
             onChange={(e) => { setQuery(e.target.value); setActiveIndex(0); }}
             placeholder="搜索页面或操作…"
-            className="flex-1 bg-transparent outline-none text-sm text-[var(--ink)] placeholder:text-[var(--stone)]"
+            className="h-7 flex-1 bg-transparent outline-none text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]"
           />
-          <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--canvas)] border border-[var(--hairline)] text-[var(--steel)]">
+          <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--muted)] text-[var(--muted-foreground)]">
             Esc
           </kbd>
         </div>
 
-        <div ref={listRef} className="max-h-[320px] overflow-y-auto py-2">
+        <div ref={listRef} className="max-h-[320px] overflow-y-auto p-1.5">
           {filtered.length === 0 ? (
-            <div className="px-5 py-8 text-center text-sm text-[var(--steel)]">
+            <div className="px-4 py-8 text-center text-sm text-[var(--muted-foreground)]">
               无匹配结果
             </div>
           ) : (
             grouped.map(([group, items]) => (
               <div key={group} className="mb-1">
-                <div className="px-5 pt-2 pb-1 text-[10px] font-mono uppercase tracking-wider text-[var(--stone)] font-medium">
+                <div className="px-2.5 pt-2 pb-1 text-[11px] font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
                   {group}
                 </div>
                 {items.map(({ cmd, index }) => {
@@ -207,15 +207,15 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
                       data-idx={index}
                       onMouseMove={() => setActiveIndex(index)}
                       onClick={cmd.action}
-                      className={`w-full text-left px-5 py-2 flex items-center justify-between gap-3 text-sm transition-colors ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md flex items-center justify-between gap-3 text-sm transition-colors ${
                         isActive
-                          ? "bg-[var(--primary-soft)] text-[var(--primary-text)]"
-                          : "text-[var(--ink)] hover:bg-[var(--canvas)]"
+                          ? "bg-[var(--accent)] text-[var(--foreground)]"
+                          : "text-[var(--foreground)] hover:bg-[var(--muted)]"
                       }`}
                     >
                       <span>{cmd.label}</span>
                       {cmd.hint && (
-                        <span className={`text-[10px] font-mono ${isActive ? "text-[var(--primary)]" : "text-[var(--stone)]"}`}>
+                        <span className={`text-[11px] font-mono ${isActive ? "text-[var(--foreground)]" : "text-[var(--muted-foreground)]"}`}>
                           {cmd.hint}
                         </span>
                       )}

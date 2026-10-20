@@ -63,7 +63,7 @@ export default function ExportMenu({ data, filenameBase = "查询结果" }: Expo
         type="button"
         onClick={() => setOpen((o) => !o)}
         disabled={busy !== null}
-        className="text-[var(--primary)] hover:underline font-medium flex items-center gap-1 disabled:opacity-50"
+        className="inline-flex items-center gap-1 h-8 rounded-lg border border-[var(--border)] bg-[var(--background)] px-2.5 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors disabled:opacity-50"
         aria-haspopup="menu"
         aria-expanded={open}
       >
@@ -81,7 +81,7 @@ export default function ExportMenu({ data, filenameBase = "查询结果" }: Expo
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-1 w-56 rounded-lg border border-[var(--hairline)] bg-[var(--surface)] shadow-lg z-20 overflow-hidden"
+          className="absolute right-0 mt-1 w-56 rounded-lg border border-[var(--border)] bg-[var(--popover)] shadow-[var(--shadow-3)] p-1 z-20"
         >
           {OPTIONS.map((opt) => (
             <button
@@ -89,17 +89,17 @@ export default function ExportMenu({ data, filenameBase = "查询结果" }: Expo
               type="button"
               role="menuitem"
               onClick={() => handlePick(opt.key)}
-              className="block w-full text-left px-3 py-2 text-sm hover:bg-[var(--primary-soft)] focus:bg-[var(--primary-soft)] focus:outline-none"
+              className="block w-full text-left rounded-md px-2.5 py-2 text-sm hover:bg-[var(--muted)] focus:bg-[var(--muted)] focus:outline-none"
             >
-              <div className="font-medium text-[var(--ink)]">{opt.label}</div>
-              <div className="text-[11px] text-[var(--steel)] mt-0.5">{opt.hint}</div>
+              <div className="font-medium text-[var(--foreground)]">{opt.label}</div>
+              <div className="text-[11px] text-[var(--muted-foreground)] mt-0.5">{opt.hint}</div>
             </button>
           ))}
         </div>
       )}
 
       {error && (
-        <div className="absolute right-0 mt-1 px-2 py-1 text-[11px] rounded bg-red-50 text-red-700 border border-red-200 whitespace-nowrap z-30">
+        <div className="absolute right-0 mt-1 px-2 py-1 text-[11px] rounded-md bg-[var(--error-soft)] text-[var(--error)] border border-[var(--error)] whitespace-nowrap z-30">
           导出失败：{error}
         </div>
       )}

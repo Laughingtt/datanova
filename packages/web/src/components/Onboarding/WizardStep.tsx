@@ -28,27 +28,23 @@ export default function WizardStep({
           <div
             key={i}
             className={`flex-1 h-1 rounded-full ${
-              i + 1 < step
-                ? "bg-[var(--success)]"
-                : i + 1 === step
-                ? "bg-[var(--primary)]"
-                : "bg-[var(--hairline)]"
+              i + 1 <= step ? "bg-[var(--primary)]" : "bg-[var(--muted)]"
             }`}
           />
         ))}
-        <span className="text-xs text-[var(--steel)] ml-2">{step}/{totalSteps}</span>
+        <span className="text-xs text-[var(--muted-foreground)] ml-2">{step}/{totalSteps}</span>
       </div>
 
       <div className="mb-6">
         {isCompleted && <span className="text-[var(--success)] text-sm mr-2">✓</span>}
-        <h3 className="font-display text-heading-4 text-[var(--ink)]">{title}</h3>
-        <p className="text-body-sm text-[var(--slate)] mt-1">{description}</p>
+        <h3 className="text-lg font-semibold text-[var(--foreground)]">{title}</h3>
+        <p className="text-sm text-[var(--muted-foreground)] mt-1">{description}</p>
       </div>
 
       <div className="mb-6">{children}</div>
 
       {!isCompleted && (
-        <div className="flex items-center justify-between pt-4 border-t border-[var(--hairline)]">
+        <div className="flex items-center justify-between pt-4 border-t border-[var(--border)]">
           {onSkip ? (
             <button onClick={onSkip} className="btn-ghost text-xs">跳过</button>
           ) : (

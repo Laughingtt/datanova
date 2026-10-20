@@ -23,10 +23,10 @@ export default function ConfirmActionCard({ confirmAction, onConfirm, onCancel }
 
   if (cancelled) {
     return (
-      <div className="my-3 px-4 py-3 rounded-lg bg-[var(--surface)] border border-[var(--hairline)] opacity-60">
-        <div className="flex items-center gap-2">
+      <div className="my-3 p-4 rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-xs)] opacity-60">
+        <div className="flex items-center gap-2 text-sm font-medium">
           <span className="text-sm">❌</span>
-          <span className="text-sm font-medium text-[var(--steel)]">已取消</span>
+          <span className="text-[var(--muted-foreground)]">已取消</span>
         </div>
       </div>
     );
@@ -34,15 +34,15 @@ export default function ConfirmActionCard({ confirmAction, onConfirm, onCancel }
 
   if (confirmed) {
     return (
-      <div className="my-3 px-4 py-3 rounded-lg bg-[var(--surface)] border border-[var(--primary)]/30">
-        <div className="flex items-center gap-2">
+      <div className="my-3 p-4 rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-xs)]">
+        <div className="flex items-center gap-2 text-sm font-medium">
           <span className="text-sm">✅</span>
-          <span className="text-sm font-medium text-[var(--primary)]">已确认，正在执行保存...</span>
+          <span className="text-[var(--primary-text)]">已确认，正在执行保存...</span>
         </div>
         {confirmAction.items && confirmAction.items.length > 0 && (
           <div className="mt-2 space-y-0.5">
             {confirmAction.items.map((item, i) => (
-              <div key={i} className="text-xs text-[var(--steel)] flex items-center gap-1.5">
+              <div key={i} className="text-xs text-[var(--muted-foreground)] flex items-center gap-1.5">
                 <span className="text-[var(--success)]">✓</span>
                 <span>{item}</span>
               </div>
@@ -54,24 +54,24 @@ export default function ConfirmActionCard({ confirmAction, onConfirm, onCancel }
   }
 
   return (
-    <div className="my-3 px-4 py-3 rounded-lg bg-[var(--surface)] border border-[var(--hairline)] shadow-sm">
+    <div className="my-3 p-4 rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-xs)]">
       {/* Title */}
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-sm">📋</span>
-        <span className="text-sm font-medium text-[var(--ink)]">{confirmAction.title}</span>
+      <div className="flex items-center gap-2 mb-2 text-sm font-medium">
+        <span className="size-8 rounded-lg bg-[var(--muted)] flex items-center justify-center text-sm">📋</span>
+        <span className="text-[var(--foreground)]">{confirmAction.title}</span>
       </div>
 
       {/* Description */}
       {confirmAction.description && (
-        <p className="text-xs text-[var(--steel)] mb-2">{confirmAction.description}</p>
+        <p className="text-xs text-[var(--muted-foreground)] mb-2">{confirmAction.description}</p>
       )}
 
       {/* Items list */}
       {confirmAction.items && confirmAction.items.length > 0 && (
         <div className="mb-3 space-y-1">
           {confirmAction.items.map((item, i) => (
-            <div key={i} className="text-xs text-[var(--ink)] flex items-center gap-1.5 px-2 py-1 rounded bg-[var(--canvas)]">
-              <span className="text-[var(--primary)] font-medium">{i + 1}.</span>
+            <div key={i} className="text-xs text-[var(--foreground)] flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--muted)]">
+              <span className="text-[var(--primary-text)] font-medium">{i + 1}.</span>
               <span>{item}</span>
             </div>
           ))}
@@ -82,13 +82,13 @@ export default function ConfirmActionCard({ confirmAction, onConfirm, onCancel }
       <div className="flex items-center gap-2 justify-end">
         <button
           onClick={handleCancel}
-          className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors bg-[var(--canvas)] text-[var(--steel)] border border-[var(--hairline)] hover:border-[var(--error)]/40 hover:text-[var(--error)]"
+          className="btn-secondary text-xs"
         >
           取消
         </button>
         <button
           onClick={handleConfirm}
-          className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors bg-[var(--primary)] text-white hover:opacity-90"
+          className="btn-primary text-xs"
         >
           确认保存
         </button>

@@ -30,18 +30,18 @@ export default function AlertConfig({ conditions, onChange }: AlertConfigProps) 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium text-[var(--ink)]">Alert Conditions</label>
+        <label className="label-mono">告警条件</label>
         <button
           type="button"
           onClick={addCondition}
           className="btn-ghost text-xs"
         >
-          + Add Condition
+          + 添加条件
         </button>
       </div>
 
       {conditions.length === 0 && (
-        <p className="text-xs text-[var(--steel)]">No alert conditions configured</p>
+        <p className="text-xs text-[var(--muted-foreground)]">暂未配置告警条件</p>
       )}
 
       {conditions.map((cond, index) => (
@@ -51,15 +51,15 @@ export default function AlertConfig({ conditions, onChange }: AlertConfigProps) 
             value={cond.metric_column}
             onChange={(e) => updateCondition(index, "metric_column", e.target.value)}
             placeholder="列名"
-            className="flex-1 px-3 py-1.5 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
+            className="input-field flex-1"
           />
           <select
             value={cond.condition}
             onChange={(e) => updateCondition(index, "condition", e.target.value)}
-            className="px-3 py-1.5 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] focus:outline-none focus:border-[var(--primary)]"
+            className="input-field w-auto shrink-0"
           >
-            <option value="above">Above</option>
-            <option value="below">Below</option>
+            <option value="above">高于</option>
+            <option value="below">低于</option>
             <option value="change_above">环比上升 %</option>
             <option value="change_below">环比下降 %</option>
           </select>
@@ -68,14 +68,14 @@ export default function AlertConfig({ conditions, onChange }: AlertConfigProps) 
             value={cond.threshold}
             onChange={(e) => updateCondition(index, "threshold", e.target.value)}
             placeholder="阈值"
-            className="w-24 px-3 py-1.5 text-sm bg-[var(--surface)] border border-[var(--hairline)] rounded-md text-[var(--ink)] placeholder-[var(--steel)] focus:outline-none focus:border-[var(--primary)]"
+            className="input-field w-24"
           />
           <button
             type="button"
             onClick={() => removeCondition(index)}
-            className="text-[var(--error)] hover:opacity-80 text-xs px-2 py-1"
+            className="btn-danger text-xs"
           >
-            Remove
+            移除
           </button>
         </div>
       ))}

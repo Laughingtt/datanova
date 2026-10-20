@@ -181,7 +181,7 @@ export default function ModelForm({
 
   return (
     <div className="card-base">
-      <h3 className="font-display text-heading-4 text-[var(--ink)] mb-5">
+      <h3 className="text-base font-semibold text-[var(--foreground)] mb-5">
         {isEdit ? "编辑模型" : "新增模型"}
       </h3>
 
@@ -255,7 +255,7 @@ export default function ModelForm({
             </button>
           </div>
           {joins.length === 0 ? (
-            <div className="p-3 rounded-md border border-dashed border-[var(--hairline-strong)] text-xs text-[var(--stone)]">
+            <div className="rounded-lg border border-dashed border-[var(--border)] p-4 text-center text-xs text-[var(--muted-foreground)]">
               暂无关联定义，点击「+ 添加关联」添加
             </div>
           ) : (
@@ -263,7 +263,7 @@ export default function ModelForm({
               {joins.map((join, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-2 p-2 rounded-md border border-[var(--hairline)] bg-[var(--surface)]"
+                  className="flex items-center gap-2 p-2 rounded-lg border border-[var(--border)] bg-[var(--surface)]"
                 >
                   <select
                     className="input-field w-24 py-1.5 text-xs"
@@ -316,7 +316,7 @@ export default function ModelForm({
         {/* Metrics multi-select */}
         <div>
           <label className="label-mono">指标</label>
-          <div className="flex flex-wrap gap-2 p-3 rounded-md border border-[var(--hairline-strong)] bg-[var(--canvas)] min-h-[44px]">
+          <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-[var(--input)] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] min-h-[44px]">
             {metrics.length === 0 ? (
               <span className="text-xs text-[var(--stone)]">暂无可用指标</span>
             ) : (
@@ -329,8 +329,8 @@ export default function ModelForm({
                     onClick={() => toggleMetric(m.name)}
                     className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                       isSelected
-                        ? "bg-[var(--primary)] text-[var(--on-dark)]"
-                        : "bg-[var(--surface)] text-[var(--slate)] border border-[var(--hairline)]"
+                        ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                        : "bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)] hover:bg-[var(--muted)]"
                     }`}
                   >
                     {m.display_name || m.name}
@@ -344,7 +344,7 @@ export default function ModelForm({
         {/* Dimensions multi-select */}
         <div>
           <label className="label-mono">维度</label>
-          <div className="flex flex-wrap gap-2 p-3 rounded-md border border-[var(--hairline-strong)] bg-[var(--canvas)] min-h-[44px]">
+          <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-[var(--input)] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] min-h-[44px]">
             {dimensions.length === 0 ? (
               <span className="text-xs text-[var(--stone)]">暂无可用维度</span>
             ) : (
@@ -357,8 +357,8 @@ export default function ModelForm({
                     onClick={() => toggleDimension(d.name)}
                     className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                       isSelected
-                        ? "bg-[var(--primary)] text-[var(--on-dark)]"
-                        : "bg-[var(--surface)] text-[var(--slate)] border border-[var(--hairline)]"
+                        ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                        : "bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)] hover:bg-[var(--muted)]"
                     }`}
                   >
                     {d.display_name || d.name}
@@ -372,7 +372,7 @@ export default function ModelForm({
         {/* Status */}
         <div>
           <label className="label-mono">状态</label>
-          <div className="flex gap-3">
+          <div className="tabs-track">
             {(["draft", "published", "deprecated"] as const).map((s) => {
               const badge = {
                 draft: { dot: "bg-[var(--warning)]", label: "草稿" },
@@ -384,11 +384,8 @@ export default function ModelForm({
                   key={s}
                   type="button"
                   onClick={() => setStatus(s)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm border transition-colors ${
-                    status === s
-                      ? "border-[var(--primary)] bg-[var(--primary-soft)]"
-                      : "border-[var(--hairline)] text-[var(--steel)]"
-                  }`}
+                  className="tab-trigger"
+                  data-active={status === s}
                 >
                   <span className={`w-2 h-2 rounded-full ${badge.dot}`} />
                   {badge.label}
@@ -400,7 +397,7 @@ export default function ModelForm({
 
         {/* Actions */}
         <div className="flex items-center gap-3 pt-2">
-          <button type="submit" className="btn-dark" disabled={saving}>
+          <button type="submit" className="btn-primary" disabled={saving}>
             {saving ? "保存中..." : isEdit ? "更新" : "创建"}
           </button>
           {isEdit && (

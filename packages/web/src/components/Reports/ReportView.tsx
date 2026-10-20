@@ -19,37 +19,37 @@ export default function ReportView({ sections, rawContent }: ReportViewProps) {
   };
 
   return (
-    <div className="rounded-lg border border-[var(--hairline)] overflow-hidden bg-[var(--surface)]">
+    <div className="rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--card)]">
       {/* Report Header */}
-      <div className="px-5 py-3 bg-gradient-to-r from-[var(--primary-soft,rgba(59,130,246,0.08))] to-transparent border-b border-[var(--hairline)]">
-        <h3 className="text-sm font-medium text-[var(--ink)] flex items-center gap-2">
+      <div className="px-5 py-3 bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] border-b border-[var(--border)]">
+        <h3 className="text-sm font-medium text-[var(--foreground)] flex items-center gap-2">
           <span>&#x1F4C4;</span> Analysis Report
         </h3>
       </div>
 
       {/* Sections */}
-      <div className="divide-y divide-[var(--hairline)]">
+      <div className="divide-y divide-[var(--border)]">
         {sections.map((section, index) => (
           <div key={index}>
             <button
               onClick={() => toggleSection(section.title)}
-              className="w-full text-left px-5 py-3 flex items-center justify-between hover:bg-[var(--canvas)] transition-colors"
+              className="w-full text-left px-5 py-3 flex items-center justify-between hover:bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] transition-colors"
             >
-              <span className="text-sm font-medium text-[var(--ink)]">
+              <span className="text-sm font-medium text-[var(--foreground)]">
                 {section.title}
               </span>
-              <span className="text-xs text-[var(--steel)]">
+              <span className="text-xs text-[var(--muted-foreground)]">
                 {collapsed[section.title] ? "+" : "-"}
               </span>
             </button>
             {!collapsed[section.title] && (
               <div className="px-5 pb-4">
                 {section.hasTable ? (
-                  <pre className="text-xs font-mono text-[var(--ink)] whitespace-pre-wrap leading-relaxed bg-[var(--canvas)] rounded-md p-3 overflow-x-auto">
+                  <pre className="text-xs font-mono text-[var(--foreground)] whitespace-pre-wrap leading-relaxed bg-[color-mix(in_srgb,var(--muted)_40%,transparent)] rounded-md p-3 overflow-x-auto">
                     {section.content}
                   </pre>
                 ) : (
-                  <div className="text-sm text-[var(--ink)] leading-relaxed whitespace-pre-wrap">
+                  <div className="text-sm text-[var(--foreground)] leading-relaxed whitespace-pre-wrap">
                     {section.content}
                   </div>
                 )}

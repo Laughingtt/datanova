@@ -59,7 +59,6 @@ export default function DatasourcePage() {
 
   return (
     <div className="h-full overflow-auto bg-[var(--canvas)]">
-      <div className="sunset-stripe" />
 
       <div className="max-w-[960px] mx-auto px-4 md:px-8 py-8 md:py-10">
         <div className="flex items-end justify-between mb-8 gap-4">
@@ -78,7 +77,7 @@ export default function DatasourcePage() {
         </div>
 
         {showForm && (
-          <div className="card-base mb-8 border-[var(--accent-100)] bg-[var(--primary-soft)]">
+          <div className="card-base mb-8">
             <DatasourceForm
               datasource={editingDs}
               onSave={handleSave}
@@ -100,14 +99,14 @@ export default function DatasourcePage() {
             ))}
           </div>
         ) : loadError ? (
-          <div className="card-base flex flex-col items-center text-center py-16">
-            <div className="w-12 h-12 rounded-xl bg-[var(--error-soft)] border border-[var(--hairline)] flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-[var(--error)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <div className="flex flex-col items-center rounded-xl border border-dashed border-[var(--border)] px-6 py-16 text-center">
+            <div className="mb-4 flex size-10 items-center justify-center rounded-lg bg-[var(--error-soft)]">
+              <svg className="h-5 w-5 text-[var(--error)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
               </svg>
             </div>
-            <p className="text-base font-semibold text-[var(--ink)] mb-1">加载失败</p>
-            <p className="text-sm text-[var(--steel)] mb-4">{loadError}</p>
+            <p className="mb-1 text-sm font-medium text-[var(--foreground)]">加载失败</p>
+            <p className="mb-4 text-sm text-[var(--muted-foreground)]">{loadError}</p>
             <button onClick={loadDatasources} className="btn-primary">重试</button>
           </div>
         ) : (

@@ -55,15 +55,15 @@ export default function BrowseTree({
     });
   };
 
-  if (loading) return <p className="text-xs text-[var(--steel)] py-4">加载中...</p>;
+  if (loading) return <p className="text-xs text-[var(--muted-foreground)] py-4">加载中...</p>;
 
   return (
-    <div className="space-y-1">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-2 space-y-1">
       {/* Tables Section */}
       <div>
         <button
           onClick={() => toggleSection("tables")}
-          className="w-full flex items-center gap-2 px-2 py-2 text-left text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface)] rounded"
+          className="w-full flex items-center gap-2 px-2.5 py-2 text-left text-sm font-medium text-[var(--foreground)] hover:bg-[var(--muted)] rounded-md"
         >
           <span className="text-xs">{expandedSections.has("tables") ? "▼" : "▶"}</span>
           <span>📄</span> 数据表 ({tables.length})
@@ -74,18 +74,18 @@ export default function BrowseTree({
               <div key={table.name}>
                 <button
                   onClick={() => { toggleTable(table.name); onSelectTable(table.name); }}
-                  className="w-full flex items-center gap-1 px-2 py-1.5 text-left text-xs hover:bg-[var(--surface)] rounded"
+                  className="w-full flex items-center gap-1 px-2.5 py-2 text-left text-xs hover:bg-[var(--muted)] rounded-md"
                 >
                   <span className="text-[10px]">{expandedTables.has(table.name) ? "▼" : "▶"}</span>
-                  <span className="font-mono text-[var(--ink)]">{table.name}</span>
-                  <span className="text-[var(--stone)] ml-auto">{table.columns.length} 列</span>
+                  <span className="font-mono text-[var(--foreground)]">{table.name}</span>
+                  <span className="text-[var(--muted-foreground)] ml-auto">{table.columns.length} 列</span>
                 </button>
                 {expandedTables.has(table.name) && (
                   <div className="ml-6 space-y-0.5">
                     {table.columns.map(col => (
                       <div key={`${table.name}.${col.name}`} className="flex items-center gap-2 px-2 py-1 text-xs">
-                        <span className="font-mono text-[var(--ink)]">{col.name}</span>
-                        <span className="font-mono text-[var(--stone)]">{col.type}</span>
+                        <span className="font-mono text-[var(--foreground)]">{col.name}</span>
+                        <span className="font-mono text-[var(--muted-foreground)]">{col.type}</span>
                         {col.isPrimaryKey && <span className="text-[var(--primary-text)] text-[10px]">PK</span>}
                       </div>
                     ))}
@@ -101,7 +101,7 @@ export default function BrowseTree({
       <div>
         <button
           onClick={() => toggleSection("metrics")}
-          className="w-full flex items-center gap-2 px-2 py-2 text-left text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface)] rounded"
+          className="w-full flex items-center gap-2 px-2.5 py-2 text-left text-sm font-medium text-[var(--foreground)] hover:bg-[var(--muted)] rounded-md"
         >
           <span className="text-xs">{expandedSections.has("metrics") ? "▼" : "▶"}</span>
           <span>📊</span> 指标 ({metrics.length})
@@ -109,16 +109,16 @@ export default function BrowseTree({
         {expandedSections.has("metrics") && (
           <div className="ml-6 space-y-0.5">
             {metrics.length === 0 ? (
-              <p className="text-xs text-[var(--stone)] px-2 py-1">暂无指标定义</p>
+              <p className="text-xs text-[var(--muted-foreground)] px-2 py-1">暂无指标定义</p>
             ) : (
               metrics.map(m => (
                 <button
                   key={m.id}
                   onClick={() => onSelectMetric(m)}
-                  className="w-full text-left px-2 py-1.5 text-xs hover:bg-[var(--surface)] rounded"
+                  className="w-full text-left px-2.5 py-2 text-xs hover:bg-[var(--muted)] rounded-md"
                 >
-                  <span className="text-[var(--ink)]">{m.display_name || m.name}</span>
-                  <span className="text-[var(--stone)] ml-2 font-mono">{m.sql}</span>
+                  <span className="text-[var(--foreground)]">{m.display_name || m.name}</span>
+                  <span className="text-[var(--muted-foreground)] ml-2 font-mono">{m.sql}</span>
                 </button>
               ))
             )}
@@ -130,7 +130,7 @@ export default function BrowseTree({
       <div>
         <button
           onClick={() => toggleSection("dimensions")}
-          className="w-full flex items-center gap-2 px-2 py-2 text-left text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface)] rounded"
+          className="w-full flex items-center gap-2 px-2.5 py-2 text-left text-sm font-medium text-[var(--foreground)] hover:bg-[var(--muted)] rounded-md"
         >
           <span className="text-xs">{expandedSections.has("dimensions") ? "▼" : "▶"}</span>
           <span>📐</span> 维度 ({dimensions.length})
@@ -138,16 +138,16 @@ export default function BrowseTree({
         {expandedSections.has("dimensions") && (
           <div className="ml-6 space-y-0.5">
             {dimensions.length === 0 ? (
-              <p className="text-xs text-[var(--stone)] px-2 py-1">暂无维度定义</p>
+              <p className="text-xs text-[var(--muted-foreground)] px-2 py-1">暂无维度定义</p>
             ) : (
               dimensions.map(d => (
                 <button
                   key={d.id}
                   onClick={() => onSelectDimension(d)}
-                  className="w-full text-left px-2 py-1.5 text-xs hover:bg-[var(--surface)] rounded"
+                  className="w-full text-left px-2.5 py-2 text-xs hover:bg-[var(--muted)] rounded-md"
                 >
-                  <span className="text-[var(--ink)]">{d.display_name || d.name}</span>
-                  <span className="text-[var(--stone)] ml-2 font-mono">{d.data_type}</span>
+                  <span className="text-[var(--foreground)]">{d.display_name || d.name}</span>
+                  <span className="text-[var(--muted-foreground)] ml-2 font-mono">{d.data_type}</span>
                 </button>
               ))
             )}

@@ -3,85 +3,130 @@
 @tailwind utilities;
 
 /* ============================================================
-   DataNova Design System — Premium Data Analytics
-   Deep surfaces · Refined indigo accent · Editorial precision
+   DataNova Design System — New API visual language
+   Light shell · Soft blue accent · Rounded surfaces
+   Tokens mirror QuantumNous/new-api (styles/theme.css)
    ============================================================ */
 
 :root {
-  /* --- Brand & Accent --- */
-  --primary:        #4f46e5;
-  --primary-deep:   #4338ca;
-  --primary-soft:   #eef2ff;
-  --primary-text:   #4338ca;
-  --primary-glow:   rgba(79,70,229,0.15);
+  color-scheme: light;
 
-  /* --- Accent spectrum --- */
-  --accent-100:     #e0e7ff;
-  --accent-200:     #c7d2fe;
-  --accent-300:     #a5b4fc;
-  --accent-400:     #818cf8;
-  --accent-500:     #6366f1;
-  --accent-600:     #4f46e5;
-  --accent-700:     #4338ca;
+  /* --- Core surfaces (New API shadcn tokens) --- */
+  --background:        #ffffff;
+  --foreground:        #0a0a0a;
+  --card:              #ffffff;
+  --card-foreground:   #0a0a0a;
+  --popover:           #ffffff;
+  --popover-foreground:#0a0a0a;
+  --muted:             #f5f5f5;
+  --muted-foreground:  #606060;
+  --accent:            #e8f4fd;
+  --accent-foreground: #0a0a0a;
+  --border:            #e8e8e8;
+  --input:             #e8e8e8;
+  --ring:              #42a6ff;
 
-  /* --- Warm highlight --- */
-  --highlight:      #f59e0b;
-  --highlight-soft: #fffbeb;
+  /* --- Brand & Accent (New API primary, oklch(0.692 0.141 243.716)) --- */
+  --primary:           #3ea4ec;
+  --primary-deep:      #2b8fd4;
+  --primary-strong:    #1a7ec3;
+  --primary-soft:      #e8f4fd;
+  --primary-text:      #0276ea;
+  --primary-glow:      rgba(62, 164, 236, 0.24);
 
-  /* --- Surface — Cool neutral system --- */
-  --canvas:         #f8f9fb;
-  --surface:        #ffffff;
-  --surface-raised: #ffffff;
-  --surface-code:   #0f172a;
-  --hairline:       #e2e8f0;
-  --hairline-soft:  #f1f5f9;
-  --hairline-strong:#cbd5e1;
+  /* --- Accent spectrum (blue) --- */
+  --accent-100:        #dceffb;
+  --accent-200:        #b8e0f8;
+  --accent-300:        #8cccf4;
+  --accent-400:        #62b8f0;
+  --accent-500:        #4aacee;
+  --accent-600:        #3ea4ec;
+  --accent-700:        #2b8fd4;
 
-  /* --- Text — Cool gray scale --- */
-  --ink:            #0f172a;
-  --ink-tint:       #1e293b;
-  --charcoal:       #334155;
-  --slate:          #475569;
-  --steel:          #64748b;
-  --stone:          #94a3b8;
-  --muted:          #cbd5e1;
-  --on-dark:        #f8fafc;
-  --on-dark-muted:  rgba(248,250,252,0.50);
-  --on-surface:     #0f172a;
+  /* --- Secondary (New API secondary = neutral pill) --- */
+  --secondary:         #eeeeee;
+  --secondary-foreground: #004c9f;
+
+  /* --- Warm highlight (New API amber glow) --- */
+  --highlight:         #f59e0b;
+  --highlight-soft:    #fffbeb;
+
+  /* --- Surface neutral system (near-neutral, oklch neutrals) --- */
+  --canvas:            #ffffff;
+  --surface:           #ffffff;
+  --surface-raised:    #ffffff;
+  --surface-code:      #1e1e1e;
+  --hairline:          #e8e8e8;
+  --hairline-soft:     #f0f0f0;
+  --hairline-strong:   #d9d9d9;
+
+  /* --- Text — neutral scale --- */
+  --ink:               #0a0a0a;
+  --ink-tint:          #262626;
+  --charcoal:          #404040;
+  --slate:             #525252;
+  --steel:             #606060;
+  --stone:             #8f8f8f;
+  --on-dark:           #fafafa;
+  --on-dark-muted:     rgba(250, 250, 250, 0.60);
+  --on-surface:        #0a0a0a;
 
   /* --- Semantic --- */
-  --success:        #059669;
-  --success-soft:   #ecfdf5;
-  --warning:        #d97706;
-  --warning-soft:   #fffbeb;
-  --error:          #dc2626;
-  --error-soft:     #fef2f2;
-  --info:           #0ea5e9;
-  --info-soft:      #f0f9ff;
-  --link:           #4f46e5;
+  --success:           #009966;
+  --success-soft:      #e6f5f0;
+  --warning:           #d08700;
+  --warning-soft:      #fbf3e6;
+  --error:             #e7000b;
+  --error-soft:        #fde8e9;
+  --info:              #0084d1;
+  --info-soft:         #e6f3fb;
+  --link:              #0276ea;
+  --destructive:       #e7000b;
 
-  /* --- Sidebar --- */
-  --sidebar-bg:     #0f172a;
-  --sidebar-hover:  #1e293b;
-  --sidebar-active: #1e293b;
+  /* --- Sidebar (New API: foreground 0.5% mixed into background) --- */
+  --sidebar:           #fcfcfc;
+  --sidebar-bg:        #fcfcfc;
+  --sidebar-hover:     #f2f2f2;
+  --sidebar-active:    #e8f4fd;
+  --sidebar-foreground:#0a0a0a;
+  --sidebar-accent:    #e8f4fd;
+  --sidebar-accent-foreground: #0276ea;
+  --sidebar-border:    #ebebeb;
 
   /* --- Chat --- */
-  --user-bubble:    #4f46e5;
-  --user-text:      #ffffff;
-  --assistant-bg:   #ffffff;
-  --assistant-border:#e2e8f0;
+  --user-bubble:       #eeeeee;
+  --user-text:         #0a0a0a;
+  --assistant-bg:      transparent;
+  --assistant-border:  transparent;
 
-  /* --- Shadows (cool-tinted) --- */
-  --shadow-1:       0 1px 2px rgba(15,23,42,0.04);
-  --shadow-2:       0 4px 12px rgba(15,23,42,0.06);
-  --shadow-3:       0 12px 24px -4px rgba(15,23,42,0.10);
-  --shadow-glow:    0 0 0 3px rgba(79,70,229,0.12);
+  /* --- Charts (New API chart-1..5) --- */
+  --chart-1:           #35a9ff;
+  --chart-2:           #00a9b3;
+  --chart-3:           #9095e8;
+  --chart-4:           #d068d8;
+  --chart-5:           #20b46b;
+  --overview-accent-1: #35a9ff;
+  --overview-accent-2: #00a9b3;
+  --overview-accent-3: #9095e8;
 
-  /* --- Radius --- */
-  --radius-sm:      6px;
-  --radius-md:      8px;
-  --radius-lg:      12px;
-  --radius-xl:      16px;
+  /* --- Skeleton --- */
+  --skeleton-base:     #f5f5f5;
+  --skeleton-highlight:#fafafa;
+
+  /* --- Shadows (subtle, New API-style) --- */
+  --shadow-xs:      0 1px 2px rgba(10, 10, 10, 0.05);
+  --shadow-1:       0 1px 2px rgba(10, 10, 10, 0.05);
+  --shadow-2:       0 4px 12px rgba(10, 10, 10, 0.06);
+  --shadow-3:       0 12px 32px -8px rgba(10, 10, 10, 0.14);
+  --shadow-glow:    0 0 0 3px rgba(66, 166, 255, 0.28);
+
+  /* --- Radius (New API --radius: 1rem) --- */
+  --radius:         1rem;
+  --radius-sm:      calc(var(--radius) * 0.6);
+  --radius-md:      calc(var(--radius) * 0.8);
+  --radius-lg:      var(--radius);
+  --radius-xl:      calc(var(--radius) * 1.4);
+  --radius-2xl:     calc(var(--radius) * 1.8);
 
   /* --- Transitions --- */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -89,202 +134,304 @@
   --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.dark {
+  color-scheme: dark;
+  --background:        #1e1e1e;
+  --foreground:        #f3f3f3;
+  --card:              #2a2a2a;
+  --card-foreground:   #f3f3f3;
+  --popover:           #2d2d2d;
+  --popover-foreground:#f3f3f3;
+  --muted:             #2d2d2d;
+  --muted-foreground:  #c2c2c2;
+  --border:            rgba(255, 255, 255, 0.10);
+  --input:             rgba(255, 255, 255, 0.17);
+  --ring:              #3f8fd0;
+
+  --primary:           #0e72bc;
+  --primary-deep:      #0a5f9e;
+  --primary-strong:    #0a5f9e;
+  --primary-soft:      #13314a;
+  --primary-text:      #7cc2f5;
+  --primary-glow:      rgba(62, 164, 236, 0.30);
+
+  --canvas:            #1e1e1e;
+  --surface:           #2a2a2a;
+  --surface-raised:    #2d2d2d;
+  --surface-code:      #171717;
+  --hairline:          rgba(255, 255, 255, 0.10);
+  --hairline-soft:     rgba(255, 255, 255, 0.06);
+  --hairline-strong:   rgba(255, 255, 255, 0.17);
+
+  --ink:               #f3f3f3;
+  --ink-tint:          #e5e5e5;
+  --charcoal:          #d4d4d4;
+  --slate:             #c2c2c2;
+  --steel:             #a3a3a3;
+  --stone:             #8a8a8a;
+  --accent:            color-mix(in oklch, var(--primary) 20%, var(--background));
+  --accent-foreground: #f3f3f3;
+  --on-dark:           #fafafa;
+  --on-surface:        #f3f3f3;
+
+  --success:           #2eb988;
+  --success-soft:      rgba(46, 185, 136, 0.14);
+  --warning:           #e0a51e;
+  --warning-soft:      rgba(224, 165, 30, 0.14);
+  --error:             #f2555a;
+  --error-soft:        rgba(242, 85, 90, 0.14);
+  --info:              #3d9bd6;
+  --info-soft:         rgba(61, 155, 214, 0.14);
+
+  --sidebar:           #1b1b1b;
+  --sidebar-bg:        #1b1b1b;
+  --sidebar-hover:     #262626;
+  --sidebar-active:    #13314a;
+  --sidebar-foreground:#f3f3f3;
+  --sidebar-accent:    #13314a;
+  --sidebar-accent-foreground: #9ed3fa;
+  --sidebar-border:    rgba(255, 255, 255, 0.10);
+
+  --user-bubble:       #2d2d2d;
+  --user-text:         #f3f3f3;
+
+  --skeleton-base:     #333333;
+  --skeleton-highlight:#454545;
+
+  --shadow-xs:      0 1px 2px rgba(0, 0, 0, 0.30);
+  --shadow-1:       0 1px 2px rgba(0, 0, 0, 0.30);
+  --shadow-2:       0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-3:       0 12px 32px -8px rgba(0, 0, 0, 0.50);
+}
+
 /* ==================== Base ==================== */
 @layer base {
-  * { box-sizing: border-box; }
+  * {
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  html {
+    @apply overflow-x-hidden;
+  }
   body {
     @apply antialiased;
-    background: var(--canvas);
-    color: var(--ink);
-    font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
+      "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
+      sans-serif;
     font-size: 14px;
-    line-height: 1.6;
-    font-variant-numeric: tabular-nums;
+    line-height: 1.5;
+    min-height: 100svh;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Geist', system-ui, -apple-system, sans-serif;
+    font-family: inherit;
     font-weight: 600;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.011em;
   }
   ::selection {
     background: var(--accent-200);
     color: var(--ink);
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
   }
 }
 
 /* ==================== Components ==================== */
 @layer components {
   /* Scrollbar */
-  .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+  .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: var(--hairline-strong);
-    border-radius: 3px;
+    background: var(--border);
+    border-radius: 4px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: var(--steel);
+    background: var(--hairline-strong);
   }
 
-  /* ---- Buttons ---- */
+  /* ---- Buttons (New API base-nova: h-8, rounded-lg, active translate-y-px) ---- */
+  .btn-primary,
+  .btn-dark,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-danger {
+    @apply inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap
+           h-8 px-2.5 rounded-lg border border-transparent text-sm font-medium
+           outline-none select-none transition-all duration-150;
+  }
+  .btn-primary:focus-visible,
+  .btn-dark:focus-visible,
+  .btn-secondary:focus-visible,
+  .btn-ghost:focus-visible,
+  .btn-danger:focus-visible {
+    box-shadow: 0 0 0 3px rgba(66, 166, 255, 0.35);
+  }
+  .btn-primary:active:not(:disabled),
+  .btn-dark:active:not(:disabled),
+  .btn-secondary:active:not(:disabled),
+  .btn-ghost:active:not(:disabled),
+  .btn-danger:active:not(:disabled) { transform: translateY(1px); }
+
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2
-           px-4 py-2 rounded-lg text-sm font-medium
-           transition-all duration-200;
     background: var(--primary);
-    color: var(--on-dark);
-    box-shadow: 0 1px 2px rgba(79,70,229,0.2);
+    color: #ffffff;
   }
-  .btn-primary:hover {
-    background: var(--primary-deep);
-    box-shadow: 0 4px 12px rgba(79,70,229,0.25);
-    transform: translateY(-1px);
-  }
-  .btn-primary:active {
-    transform: translateY(0) scale(0.98);
-    box-shadow: 0 1px 2px rgba(79,70,229,0.2);
+  .btn-primary:hover:not(:disabled) {
+    background: color-mix(in oklch, var(--primary) 85%, #000000 15%);
   }
   .btn-primary:disabled {
-    background: var(--hairline);
-    color: var(--muted);
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
+    opacity: 0.5;
+    pointer-events: none;
   }
 
+  /* New API secondary: neutral pill with blue text */
   .btn-dark {
-    @apply inline-flex items-center justify-center gap-2
-           px-4 py-2 rounded-lg text-sm font-medium
-           transition-all duration-200;
-    background: var(--ink);
-    color: var(--on-dark);
+    background: var(--secondary);
+    color: var(--secondary-foreground);
   }
-  .btn-dark:hover {
-    background: var(--charcoal);
-    transform: translateY(-1px);
+  .btn-dark:hover:not(:disabled) {
+    background: color-mix(in oklch, var(--secondary) 85%, var(--foreground) 15%);
   }
-  .btn-dark:active { transform: translateY(0) scale(0.98); }
 
+  /* New API outline */
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2
-           px-4 py-2 rounded-lg text-sm font-medium
-           transition-all duration-200;
     background: var(--surface);
-    color: var(--ink);
-    border: 1px solid var(--hairline-strong);
+    color: var(--foreground);
+    border-color: var(--border);
   }
-  .btn-secondary:hover {
-    background: var(--canvas);
-    border-color: var(--steel);
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--muted);
+    color: var(--foreground);
   }
-  .btn-secondary:active { transform: scale(0.98); }
 
+  /* New API ghost */
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-1.5
-           px-3 py-1.5 rounded-lg text-sm font-medium
-           transition-all duration-200;
-    color: var(--slate);
+    color: var(--muted-foreground);
+    background: transparent;
   }
-  .btn-ghost:hover {
-    color: var(--ink);
-    background: var(--canvas);
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--muted);
+    color: var(--foreground);
   }
 
+  /* New API destructive (soft tint) */
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-1.5
-           px-3 py-1.5 rounded-lg text-sm font-medium
-           transition-all duration-200;
+    background: color-mix(in oklch, var(--error) 10%, var(--background));
     color: var(--error);
+    border-color: transparent;
   }
-  .btn-danger:hover { background: var(--error-soft); }
+  .btn-danger:hover:not(:disabled) {
+    background: color-mix(in oklch, var(--error) 20%, var(--background));
+  }
 
-  /* ---- Cards ---- */
+  /* ---- Cards (New API: bg-card + 1px border + shadow-xs, rounded-xl) ---- */
   .card-base {
-    @apply rounded-xl p-6;
-    background: var(--surface);
-    border: 1px solid var(--hairline-soft);
-    box-shadow: var(--shadow-1);
+    @apply rounded-xl p-4;
+    background: var(--card);
+    color: var(--card-foreground);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-xs);
   }
 
   .card-cream {
-    @apply rounded-xl p-8;
-    background: var(--primary-soft);
-    color: var(--on-surface);
-    border: 1px solid var(--accent-100);
+    @apply rounded-xl p-4;
+    background: color-mix(in oklch, var(--primary) 6%, var(--background));
+    color: var(--foreground);
+    border: 1px solid color-mix(in oklch, var(--primary) 22%, var(--background));
   }
 
-  /* ---- Chat bubbles ---- */
+  /* ---- Chat bubbles (New API flat variant: user muted pill, assistant plain) ---- */
   .bubble-user {
-    @apply px-4 py-2.5 rounded-2xl;
+    @apply px-3 py-1.5 rounded-lg;
     background: var(--user-bubble);
     color: var(--user-text);
-    box-shadow: var(--shadow-1);
-    border-bottom-right-radius: 6px;
   }
 
   .bubble-assistant {
-    @apply px-4 py-3 rounded-2xl;
-    background: var(--assistant-bg);
-    border: 1px solid var(--assistant-border);
-    box-shadow: var(--shadow-1);
-    border-bottom-left-radius: 6px;
+    @apply rounded-lg;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
   }
 
-  /* ---- Input ---- */
+  /* ---- Inputs (New API: h-8, rounded-lg, focus ring-3) ---- */
   .input-field {
-    @apply w-full px-3 py-2.5 rounded-lg text-sm;
-    background: var(--surface);
-    color: var(--ink);
-    border: 1px solid var(--hairline-strong);
+    @apply w-full h-8 px-2.5 py-1 rounded-lg text-sm;
+    background: transparent;
+    color: var(--foreground);
+    border: 1px solid var(--input);
     transition: border-color 150ms, box-shadow 150ms;
   }
-  .input-field::placeholder { color: var(--stone); }
+  .input-field::placeholder { color: var(--muted-foreground); }
   .input-field:focus {
     outline: none;
-    border-color: var(--primary);
-    box-shadow: var(--shadow-glow);
+    border-color: var(--ring);
+    box-shadow: inset 0 0 0 3px color-mix(in oklch, var(--ring) 30%, transparent);
+  }
+  .input-field:disabled {
+    opacity: 0.5;
+    pointer-events: none;
   }
 
+  /* New API input-group (prompt composer) */
   .input-well {
-    @apply rounded-xl;
-    background: var(--surface);
-    border: 1px solid var(--hairline-strong);
-    box-shadow: var(--shadow-2);
-    transition: all 200ms;
+    @apply rounded-lg;
+    background: var(--background);
+    border: 1px solid var(--input);
+    transition: border-color 150ms, box-shadow 150ms;
   }
   .input-well:focus-within {
-    border-color: var(--primary);
-    box-shadow: var(--shadow-glow), var(--shadow-2);
+    border-color: var(--ring);
+    box-shadow: inset 0 0 0 3px color-mix(in oklch, var(--ring) 30%, transparent);
   }
 
-  /* ---- Labels ---- */
+  /* ---- Form labels (New API field label) ---- */
   .label-mono {
-    @apply block mb-1.5 text-xs font-mono uppercase tracking-wider font-medium;
-    color: var(--steel);
+    @apply block mb-1.5 text-sm font-medium;
+    color: var(--foreground);
+    font-family: inherit;
+    text-transform: none;
+    letter-spacing: normal;
   }
 
-  /* ---- Accent stripe (brand signature) ---- */
-  .sunset-stripe {
-    height: 3px;
-    background: linear-gradient(
-      to right,
-      var(--accent-700) 0%,
-      var(--accent-500) 40%,
-      var(--accent-300) 70%,
-      var(--canvas) 100%
-    );
-  }
 
-  /* ---- Stat card (dashboard) ---- */
+  /* ---- Stat card ---- */
   .stat-card {
-    @apply rounded-xl p-5;
-    background: var(--surface);
-    border: 1px solid var(--hairline-soft);
-    box-shadow: var(--shadow-1);
-    transition: box-shadow 200ms, transform 200ms;
+    @apply rounded-xl p-4;
+    background: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-xs);
+    transition: box-shadow 200ms, border-color 200ms;
   }
   .stat-card:hover {
     box-shadow: var(--shadow-2);
-    transform: translateY(-1px);
+  }
+
+  /* ---- Tabs (New API default tabs: muted track, white active pill) ---- */
+  .tabs-track {
+    @apply inline-flex w-fit items-center justify-center rounded-lg p-[3px] text-muted-foreground;
+    background: var(--muted);
+  }
+  .tab-trigger {
+    @apply relative inline-flex items-center justify-center gap-1.5 h-7 px-2.5 rounded-md
+           text-sm font-medium whitespace-nowrap transition-all;
+    color: color-mix(in oklch, var(--foreground) 60%, transparent);
+  }
+  .tab-trigger:hover { color: var(--foreground); }
+  .tab-trigger[data-active="true"],
+  .tab-trigger.active {
+    background: var(--background);
+    color: var(--foreground);
+    box-shadow: var(--shadow-xs);
+  }
+
+  /* ---- Badges (New API badge: h-5 rounded-4xl text-xs) ---- */
+  .badge-soft {
+    @apply inline-flex h-5 items-center gap-1 rounded-full border border-transparent px-2 text-xs font-medium whitespace-nowrap;
   }
 }
 
@@ -292,38 +439,62 @@
 @layer utilities {
   .text-caption { font-size: 0.8125rem; line-height: 1.4; }
   .text-micro   { font-size: 0.6875rem; line-height: 1.4; }
-  .font-display { font-family: 'Geist', system-ui, -apple-system, sans-serif; font-weight: 600; letter-spacing: -0.02em; }
-  .font-body    { font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-  .font-mono    { font-family: 'Geist Mono', ui-monospace, monospace; }
+  .font-display { font-family: inherit; font-weight: 600; letter-spacing: -0.011em; }
+  .font-body    { font-family: inherit; }
+  .font-mono    { font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
 
-  /* Staggered animation helpers (GSAP-driven, these are initial states only) */
+  /* GSAP initial state */
   .gsap-hidden {
-    /* GSAP will animate from this state */
     visibility: hidden;
     opacity: 0;
   }
 
-  /* Shimmer skeleton background */
-  .shimmer-bg {
+  /* Skeleton shimmer (New API skeleton tokens) */
+  .shimmer-bg,
+  .skeleton-shimmer {
     background: linear-gradient(
       90deg,
-      var(--hairline-soft) 25%,
-      var(--hairline) 50%,
-      var(--hairline-soft) 75%
+      var(--skeleton-base) 0%,
+      var(--skeleton-base) 33%,
+      var(--skeleton-highlight) 50%,
+      var(--skeleton-base) 67%,
+      var(--skeleton-base) 100%
     );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
+    background-size: 300% 100%;
+    animation: skeleton-shimmer 1.8s ease-in-out infinite;
   }
 
-  /* 入场动画类，配合 GSAP hook 使用；DashboardPage 由 useStaggerEntrance 接管，不再使用 */
+  /* New API appear animation */
   .animate-in {
-    animation: fadeSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    opacity: 0;
+    animation: appear 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   .delay-1 { animation-delay: 80ms; }
   .delay-2 { animation-delay: 160ms; }
   .delay-3 { animation-delay: 240ms; }
   .delay-4 { animation-delay: 320ms; }
+
+  /* Fade masks (from New API) */
+  .fade-top    { mask-image: linear-gradient(to bottom, transparent 0%, black 35%); }
+  .fade-bottom { mask-image: linear-gradient(to top, transparent 0%, black 35%); }
+}
+
+@keyframes appear {
+  0% {
+    opacity: 0;
+    transform: translateY(0.75rem);
+    filter: blur(0.35rem);
+  }
+  60% { filter: blur(0); }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 100% 50%; }
+  100% { background-position: -100% 50%; }
 }
 
 @keyframes fadeSlideIn {
@@ -337,8 +508,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .shimmer-bg { animation: none; }
-  .animate-in { animation: none; opacity: 1; }
+  .shimmer-bg,
+  .skeleton-shimmer { animation: none; }
+  .animate-in { animation: none; opacity: 1; filter: none; transform: none; }
 }
 
 /* ==================== Toast ==================== */
@@ -359,11 +531,11 @@
   to   { opacity: 1; }
 }
 @keyframes dialogPanelIn {
-  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0)   scale(1); }
 }
 .dialog-backdrop-enter { animation: dialogBackdropIn 150ms ease-out both; }
-.dialog-panel-enter    { animation: dialogPanelIn    200ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+.dialog-panel-enter    { animation: dialogPanelIn    200ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 @media (prefers-reduced-motion: reduce) {
   .dialog-backdrop-enter,
   .dialog-panel-enter { animation: none; }

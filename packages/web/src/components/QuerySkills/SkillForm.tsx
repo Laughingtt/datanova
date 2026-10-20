@@ -195,7 +195,7 @@ export default function SkillForm({
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="font-display text-heading-3 text-[var(--ink)]">
+          <h3 className="text-lg font-semibold text-[var(--foreground)]">
             {skill ? "编辑" : "新增"}查询技能
           </h3>
         </div>
@@ -206,7 +206,7 @@ export default function SkillForm({
         )}
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Domain */}
         <div>
           <label className="label-mono mb-1.5 block">
@@ -245,7 +245,7 @@ export default function SkillForm({
             onChange={(e) => handleFieldChange("trigger_keywords", e.target.value)}
             placeholder="用逗号分隔，如：账单, billing, 客户明细"
           />
-          <p className="text-[10px] text-[var(--stone)] mt-1">用户提到这些词时，Agent 会自动加载此技能</p>
+          <p className="text-[10px] text-[var(--muted-foreground)] mt-1">用户提到这些词时，Agent 会自动加载此技能</p>
         </div>
 
         {/* Business Context */}
@@ -281,13 +281,13 @@ export default function SkillForm({
               />
               <button
                 onClick={() => removeCoreTable(idx)}
-                className="text-[var(--error)] text-xs hover:underline flex-shrink-0"
+                className="text-xs font-medium text-[var(--error)] hover:opacity-80 flex-shrink-0"
               >
                 移除
               </button>
             </div>
           ))}
-          <button onClick={addCoreTable} className="text-xs text-[var(--primary)] hover:underline">
+          <button onClick={addCoreTable} className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
             + 添加核心表
           </button>
         </div>
@@ -356,12 +356,12 @@ export default function SkillForm({
       </div>
 
       {error && (
-        <div className="mt-4 px-3 py-2 rounded-lg border border-[var(--error)]/20 bg-[var(--error)]/5 text-[var(--error)] text-xs">
+        <div className="mt-4 px-3 py-2 rounded-lg bg-[var(--error-soft)] text-[var(--error)] text-xs">
           {error}
         </div>
       )}
 
-      <div className="flex items-center gap-3 mt-6 pt-4 border-t border-[var(--hairline)]">
+      <div className="flex items-center gap-3 mt-6 pt-4 border-t border-[var(--border)]">
         <button onClick={handleSave} disabled={saving} className="btn-primary">
           {saving ? "保存中..." : "保存"}
         </button>
