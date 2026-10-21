@@ -13,12 +13,19 @@ export default function ModelSelector() {
   }, []);
 
   useEffect(() => {
-    if (!modelProvider && providers.length > 0) {
+    if (providers.length === 0) return;
+    // Fall back to the first available option when nothing is selected, or
+    // when the current selection is no longer offered (e.g. the provider's
+    // key was removed or an API key was reconfigured).
+    const stillAvailable = providers.some(
+      (p) => p.provider === modelProvider && p.models.some((m) => m.id === modelId)
+    );
+    if (!stillAvailable) {
       const first = providers[0];
       const firstModel = first.models[0];
       if (firstModel) setModel(first.provider, firstModel.id);
     }
-  }, [providers, modelProvider, setModel]);
+  }, [providers, modelProvider, modelId, setModel]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {

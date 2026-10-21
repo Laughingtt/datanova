@@ -1,12 +1,12 @@
 import type { WSContext } from "hono/ws";
 import { createHarness, getHarness, removeHarness, harnessMap, type CreateHarnessOptions } from "../agent/harness-factory.js";
-import type { AgentHarnessEvent, Skill, PromptTemplate } from "@earendil-works/pi-agent-core";
+import type { AgentEvent, AgentMessage } from "@earendil-works/pi-agent-core";
 import { saveMessage, listMessages, getRecentSqlContext, createAgentTrace, listDatasources } from "../store.js";
 import { discoverSchema } from "../mysql/discovery.js";
 import { setSchemaCache } from "../mysql/validator.js";
 import { agentRegistry } from "../agent/agent-registration.js";
 import type { AgentTrace } from "../types.js";
-import { setPending, getPending, markConfirmed, markCancelled } from "../agent/confirm-state.js";
+import { setPending, getPending, markConfirmed, markCancelled, clear } from "../agent/confirm-state.js";
 
 // Track conversationId -> datasourceId for context injection
 const conversationDatasourceMap = new Map<string, string>();
@@ -17,6 +17,20 @@ const conversationAgentTypeMap = new Map<string, string>();
 // accumulate into the same object. Without this, handleMessage creates its own
 // empty state that never receives events from the harness subscriber.
 const streamingStates = new Map<string, StreamingAssistantState>();
+
+/**
+ * Context prefix injected into every agent turn. Tools take datasource IDs, but
+ * the LLM only sees the datasource *name* in the system prompt — without this
+ * hint it passes the name and every tool call fails with "invalid datasource_id".
+ */
+function buildTurnContext(conversationId: string): string {
+  let prefix = `[Current conversation_id: ${conversationId}]\n`;
+  const datasourceId = conversationDatasourceMap.get(conversationId);
+  if (datasourceId) {
+    prefix += `[Current datasource_id: ${datasourceId}] 调用工具时 datasource_id 参数必须使用这个 ID，不要使用数据源名称。\n`;
+  }
+  return prefix + "\n";
+}
 
 interface WsMessage {
   type: "init" | "message" | "reset_context" | "confirm_response";
@@ -148,7 +162,7 @@ async function handleInit(ws: WSContext, data: WsMessage): Promise<void> {
 
     // Subscribe to harness events — this is the ONLY way to forward
     // streaming events (text deltas, thinking, tool calls, etc.)
-    harness.subscribe((event: AgentHarnessEvent<Skill, PromptTemplate>) => {
+    harness.subscribe((event: AgentEvent) => {
       // Accumulate streaming state for persistence
       accumulateStreamingState(streamingState, event);
 
@@ -224,6 +238,10 @@ async function handleMessage(ws: WSContext, data: WsMessage): Promise<void> {
     }
   }
 
+  // A normal message means the user moved on — never let a stale confirmation
+  // authorize writes in a later turn.
+  if (pending) clear(conversationId);
+
   try {
     // Persist user message
     saveMessage({
@@ -246,10 +264,9 @@ async function handleMessage(ws: WSContext, data: WsMessage): Promise<void> {
       }
     }
 
-    // Inject conversation_id into context so LLM can pass it to tools
-    if (conversationId) {
-      contextPrefix += `[Current conversation_id: ${conversationId}]\n\n`;
-    }
+    // Inject conversation_id / datasource_id into context so the LLM passes
+    // the real IDs (not names) to tools.
+    contextPrefix += buildTurnContext(conversationId);
 
     // Reset streaming state for this turn (shared with handleInit's subscriber)
     const streamingState = streamingStates.get(conversationId);
@@ -263,12 +280,10 @@ async function handleMessage(ws: WSContext, data: WsMessage): Promise<void> {
     // prompt() triggers the agent loop. All streaming events
     // are forwarded via the subscribe() handler in handleInit,
     // which accumulates into the shared streamingState.
-    const response = await harness.prompt(contextPrefix + text);
+    await harness.prompt(contextPrefix + text);
 
-    // Extract full response content
-    const fullContent = typeof response.content === "string"
-      ? response.content
-      : response.content.map((c: any) => c.text ?? "").join("");
+    // Extract full response content from the agent transcript
+    const fullContent = lastAssistantText(harness.state.messages);
 
     // If the LLM returned no content (e.g. API key error, rate limit),
     // the streaming error event was already forwarded via message_end handler.
@@ -333,7 +348,7 @@ async function handleResetContext(ws: WSContext, data: WsMessage): Promise<void>
     // Re-subscribe to events with shared streaming state
     const streamingState: StreamingAssistantState = { content: "", steps: [], startTime: Date.now(), pendingThinking: "" };
     streamingStates.set(conversationId, streamingState);
-    harness.subscribe((event: AgentHarnessEvent<Skill, PromptTemplate>) => {
+    harness.subscribe((event: AgentEvent) => {
       accumulateStreamingState(streamingState, event);
       forwardEvent(ws, event, conversationId);
     });
@@ -380,8 +395,12 @@ async function handleConfirmResponse(ws: WSContext, data: WsMessage): Promise<vo
   if (decision === "cancelled") {
     markCancelled(conversationId, confirmId);
     sendEvent(ws, { type: "confirm_result", decision: "cancelled", confirmId: confirmId ?? null });
-    // Re-prompt the agent so it acknowledges the cancellation rather than hanging.
-    await runAgentTurn(ws, conversationId, "用户已取消保存，请停止保存操作并向用户确认下一步。");
+    try {
+      // Re-prompt the agent so it acknowledges the cancellation rather than hanging.
+      await runAgentTurn(ws, conversationId, "用户已取消保存，请停止保存操作并向用户确认下一步。");
+    } finally {
+      clear(conversationId, confirmId);
+    }
     return;
   }
 
@@ -392,9 +411,14 @@ async function handleConfirmResponse(ws: WSContext, data: WsMessage): Promise<vo
     return;
   }
   sendEvent(ws, { type: "confirm_result", decision: "confirmed", confirmId: confirmId ?? null });
-  // Re-trigger an agent turn instructing it to execute the save. The save tools
-  // will now find status==="confirmed" and persist the draft.
-  await runAgentTurn(ws, conversationId, "用户已确认保存草稿，请立即执行 create_metric_draft / create_dimension_draft 完成保存，并传入 conversation_id 参数。");
+  try {
+    // Re-trigger an agent turn instructing it to execute the save. The write
+    // tools find status==="confirmed" for the whole turn, so one confirmation
+    // can save a batch (e.g. 8 metrics + dimensions).
+    await runAgentTurn(ws, conversationId, "用户已确认保存，请立即执行 create_metric_draft / create_dimension_draft / update_metric / update_dimension 完成操作，并传入 conversation_id 参数。");
+  } finally {
+    clear(conversationId, confirmId);
+  }
 }
 
 /**
@@ -405,8 +429,8 @@ async function handleConfirmResponse(ws: WSContext, data: WsMessage): Promise<vo
  */
 async function runAgentTurn(ws: WSContext, conversationId: string, systemPrompt: string): Promise<void> {
   try {
-    // Inject conversation_id context (same as handleMessage)
-    const contextPrefix = `[Current conversation_id: ${conversationId}]\n\n`;
+    // Inject conversation_id / datasource_id context (same as handleMessage)
+    const contextPrefix = buildTurnContext(conversationId);
 
     const streamingState = streamingStates.get(conversationId);
     if (streamingState) {
@@ -417,9 +441,7 @@ async function runAgentTurn(ws: WSContext, conversationId: string, systemPrompt:
     }
 
     const response = await harness_prompt(conversationId, contextPrefix + systemPrompt);
-    const fullContent = typeof response.content === "string"
-      ? response.content
-      : response.content.map((c: any) => c.text ?? "").join("");
+    const fullContent = response.content;
 
     const rawSteps = streamingState?.steps ?? [];
     const persistedSteps = compactThinkingSteps(rawSteps);
@@ -448,12 +470,28 @@ async function runAgentTurn(ws: WSContext, conversationId: string, systemPrompt:
   }
 }
 
-/** Prompt the harness for a conversation by id. Kept as a named helper so the
- * getHarness lookup lives in one place within this module. */
-async function harness_prompt(conversationId: string, text: string): Promise<{ content: string | Array<{ text?: string }> }> {
+/** Prompt the agent for a conversation by id and return the final assistant
+ * text. pi-agent-core 1.3 `Agent.prompt()` resolves with void — the transcript
+ * is the source of truth — so we read the last assistant message back out. */
+async function harness_prompt(conversationId: string, text: string): Promise<{ content: string }> {
   const harness = getHarness(conversationId);
   if (!harness) throw new Error("Session not initialized. Send init message first.");
-  return await harness.prompt(text) as { content: string | Array<{ text?: string }> };
+  await harness.prompt(text);
+  return { content: lastAssistantText(harness.state.messages) };
+}
+
+/** Extract plain text from the most recent assistant message. */
+function lastAssistantText(messages: ReadonlyArray<AgentMessage>): string {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const message = messages[i];
+    if (message.role !== "assistant") continue;
+    if (typeof message.content === "string") return message.content;
+    return message.content
+      .filter((part): part is { type: "text"; text: string } => part.type === "text")
+      .map((part) => part.text)
+      .join("");
+  }
+  return "";
 }
 
 /**
@@ -462,7 +500,7 @@ async function harness_prompt(conversationId: string, text: string): Promise<{ c
  */
 function accumulateStreamingState(
   state: StreamingAssistantState,
-  event: AgentHarnessEvent<Skill, PromptTemplate>
+  event: AgentEvent
 ): void {
   switch (event.type) {
     // ---- Turn boundary tracking ----
@@ -541,23 +579,6 @@ function accumulateStreamingState(
             type: "tool_result",
             result: (event as any).result,
             isError: (event as any).isError,
-          };
-          break;
-        }
-      }
-      break;
-    }
-
-    case "tool_result": {
-      const tr = event as any;
-      const toolName = tr.toolName;
-      for (let i = state.steps.length - 1; i >= 0; i--) {
-        if (state.steps[i].type === "tool_call" && state.steps[i].toolName === toolName) {
-          state.steps[i] = {
-            ...state.steps[i],
-            type: "tool_result",
-            result: tr.details ?? tr.result,
-            isError: tr.isError,
           };
           break;
         }
@@ -927,17 +948,14 @@ export function extractTraceAnalytics(
 }
 
 /**
- * Forward AgentHarness events to the WebSocket client.
+ * Forward pi-agent-core AgentEvents to the WebSocket client.
  *
- * AgentEvent types (from pi-agent-core):
+ * AgentEvent types (pi-agent-core 1.3):
  *   agent_start | agent_end | turn_start | turn_end |
  *   message_start | message_update | message_end |
  *   tool_execution_start | tool_execution_update | tool_execution_end
- *
- * AgentHarnessOwnEvent types:
- *   settled | save_point | tool_call | tool_result | ...etc
  */
-function forwardEvent(ws: WSContext, event: AgentHarnessEvent<Skill, PromptTemplate>, conversationId?: string): void {
+function forwardEvent(ws: WSContext, event: AgentEvent, conversationId?: string): void {
   switch (event.type) {
     // ---- Agent lifecycle ----
 
@@ -947,10 +965,6 @@ function forwardEvent(ws: WSContext, event: AgentHarnessEvent<Skill, PromptTempl
 
     case "agent_end":
       sendEvent(ws, { type: "agent_end" });
-      break;
-
-    case "settled":
-      sendEvent(ws, { type: "settled" });
       break;
 
     // ---- Turn lifecycle ----
@@ -1008,7 +1022,10 @@ function forwardEvent(ws: WSContext, event: AgentHarnessEvent<Skill, PromptTempl
       // result in stopReason="error" but no explicit error event from the harness.
       const msg = (event as any).message;
       if (msg && msg.stopReason === "error") {
-        const errorDetail = msg.content?.find((c: any) => c.type === "error")?.text
+        // pi-ai 1.3 reports failures via errorMessage rather than an error
+        // content block; keep the old content lookup as a fallback.
+        const errorDetail = msg.errorMessage
+          || msg.content?.find((c: any) => c.type === "error")?.text
           || "AI 服务调用失败，请检查 API Key 配置或网络连接";
         sendEvent(ws, { type: "error", error: errorDetail });
       }
@@ -1052,34 +1069,6 @@ function forwardEvent(ws: WSContext, event: AgentHarnessEvent<Skill, PromptTempl
       }
       break;
     }
-    case "tool_call":
-      // Pre-execution hook — skip, we use tool_execution_start instead
-      break;
-
-    case "tool_result": {
-      // Post-execution hook — forward details for rich UI display
-      const tr = event as any;
-      sendEvent(ws, {
-        type: "tool_result",
-        toolCallId: tr.toolCallId,
-        toolName: tr.toolName,
-        isError: tr.isError,
-        details: tr.details,
-      });
-      // Detect confirmAction in tool result and forward as confirm_action event
-      if (tr.details?.confirmAction) {
-        if (conversationId) {
-          const ca = tr.details.confirmAction;
-          setPending(conversationId, ca.id, ca.actionType, ca.items || []);
-        }
-        sendEvent(ws, {
-          type: "confirm_action",
-          confirmAction: tr.details.confirmAction,
-        });
-      }
-      break;
-    }
-
     default:
       // Silently ignore other harness events (save_point, queue_update, etc.)
       break;

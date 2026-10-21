@@ -311,6 +311,14 @@ function initTables(database: Database.Database): void {
     try { database.exec(`ALTER TABLE semantic_metrics ADD COLUMN default_sort TEXT`); } catch {}
   }
 
+  // Legacy databases stored metric SQL in `sql_expression` (NOT NULL). Backfill
+  // the new `sql` column so reads (dictionary, semantic SQL builder) never see NULL.
+  if (metricColNames.has('sql_expression')) {
+    try {
+      database.exec(`UPDATE semantic_metrics SET sql = sql_expression WHERE (sql IS NULL OR sql = '') AND sql_expression IS NOT NULL AND sql_expression <> ''`);
+    } catch { /* ignore */ }
+  }
+
   // P2-2: Add new columns to semantic_dimensions
   const dimColumns = database.prepare("PRAGMA table_info(semantic_dimensions)").all() as Array<{name: string}>;
   const dimColNames = new Set(dimColumns.map(c => c.name));
@@ -1087,16 +1095,28 @@ export function getMetric(id: string): SemanticMetric | undefined {
   return getDb().prepare(`SELECT * FROM semantic_metrics WHERE id = ?`).get(id) as SemanticMetric | undefined;
 }
 
+/**
+ * Legacy semantic_metrics tables keep the metric SQL in a `sql_expression`
+ * column that is NOT NULL and has no default. The current schema only has
+ * `sql`, so every insert must also fill `sql_expression` on those databases.
+ */
+function metricHasSqlExpressionColumn(): boolean {
+  const cols = getDb().prepare("PRAGMA table_info(semantic_metrics)").all() as Array<{ name: string }>;
+  return cols.some((c) => c.name === "sql_expression");
+}
+
 export function createMetric(input: Omit<SemanticMetric, "id" | "created_at" | "updated_at">): SemanticMetric {
   const id = generateId();
   // Normalize SQL — fix keyword粘连 (e.g. "revenueFROM" → "revenue FROM")
   const normalizedSql = normalizeSql(input.sql);
+  const legacySqlColumn = metricHasSqlExpressionColumn();
   getDb().prepare(`
-    INSERT INTO semantic_metrics (id, datasource_id, name, display_name, description, sql, dimensions, default_granularity, unit, category, aliases, metric_type, business_context, calculation_logic, applicable_scenarios, data_quality_notes, default_sort, status, version, created_by, agent_session_id, validation_status, validation_result)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, input.datasource_id, input.name, input.display_name, input.description, normalizedSql, input.dimensions, input.default_granularity ?? null, input.unit ?? null, input.category ?? null, input.aliases, input.metric_type ?? 'atomic', input.business_context ?? '', input.calculation_logic ?? '', input.applicable_scenarios ?? '', input.data_quality_notes ?? '', input.default_sort ?? null, input.status, input.version ?? 1, input.created_by ?? 'manual', input.agent_session_id ?? null, input.validation_status ?? 'unvalidated', input.validation_result ?? null);
+    INSERT INTO semantic_metrics (id, datasource_id, name, display_name, description, sql, dimensions, default_granularity, unit, category, aliases, metric_type, business_context, calculation_logic, applicable_scenarios, data_quality_notes, default_sort, status, version, created_by, agent_session_id, validation_status, validation_result${legacySqlColumn ? ", sql_expression" : ""})
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?${legacySqlColumn ? ", ?" : ""})
+  `).run(id, input.datasource_id, input.name, input.display_name, input.description, normalizedSql, input.dimensions, input.default_granularity ?? null, input.unit ?? null, input.category ?? null, input.aliases, input.metric_type ?? 'atomic', input.business_context ?? '', input.calculation_logic ?? '', input.applicable_scenarios ?? '', input.data_quality_notes ?? '', input.default_sort ?? null, input.status, input.version ?? 1, input.created_by ?? 'manual', input.agent_session_id ?? null, input.validation_status ?? 'unvalidated', input.validation_result ?? null, ...(legacySqlColumn ? [normalizedSql] : []));
   return getMetric(id)!;
 }
+
 
 export function updateMetric(id: string, input: Partial<Omit<SemanticMetric, "id" | "datasource_id" | "created_at" | "updated_at">>): SemanticMetric | undefined {
   const updates: string[] = [];
@@ -1114,6 +1134,11 @@ export function updateMetric(id: string, input: Partial<Omit<SemanticMetric, "id
     }
   }
   if (updates.length === 0) return getMetric(id);
+  // Keep the legacy `sql_expression` column in sync whenever `sql` changes.
+  if (typeof input.sql === "string" && metricHasSqlExpressionColumn()) {
+    updates.push("sql_expression = ?");
+    values.push(normalizeSql(input.sql));
+  }
   updates.push("version = version + 1");
   updates.push("updated_at = CURRENT_TIMESTAMP");
   values.push(id);

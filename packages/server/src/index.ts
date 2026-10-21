@@ -1,3 +1,5 @@
+// Must be first: re-applies .env over stale shell variables.
+import "./env.js";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";

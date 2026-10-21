@@ -2,7 +2,7 @@ import { Type, type Static } from "@sinclair/typebox";
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import { createDimension, checkDimensionNameConflict } from "../../store.js";
 import { validateSqlViaExplain } from "../../mysql/executor.js";
-import { getPending, clear } from "../confirm-state.js";
+import { getPending } from "../confirm-state.js";
 
 const CreateDimensionDraftParams = Type.Object({
   datasource_id: Type.String({ description: "数据源ID" }),
@@ -84,10 +84,7 @@ export function createCreateDimensionDraftTool(): AgentTool<typeof CreateDimensi
           agent_session_id: p.agent_session_id || null,
         });
 
-        // 保存成功后清除确认态。
-        if (p.conversation_id) {
-          clear(p.conversation_id);
-        }
+        // 确认态由 chat-handler 在本轮结束统一清除，以便一次确认可保存一批维度。
 
         return {
           content: [{ type: "text" as const, text: `✅ 维度草稿已创建: ${dim.display_name} (${dim.name})\n类型: ${dim.data_type}${dim.grain ? ` | 粒度: ${dim.grain}` : ""}\n表达式: ${dim.sql_expression}` }],

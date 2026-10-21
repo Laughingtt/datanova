@@ -24,7 +24,7 @@ const STATUS_BADGE: Record<string, { dot: string; label: string; cls: string }> 
 
 export default function MetricsPage() {
   const { selectedDatasourceId } = useAppStore();
-  const { setView, setActiveChannel } = useAppStore();
+  const { setView, setActiveChannel, setSelectedConversationId } = useAppStore();
   const metricDevEntry = getAgentEntryPoint("metrics");
   const [tab, setTab] = useState<TabKey>("metrics");
   const [showDeprecated, setShowDeprecated] = useState(false);
@@ -274,7 +274,11 @@ export default function MetricsPage() {
               {metricDevEntry && (
                 <button
                   onClick={() => {
+                    // Start a fresh metric-development conversation — reusing
+                    // a query-channel conversation leaves the new channel
+                    // without an initialized harness (no feedback on send).
                     setActiveChannel("metric_dev");
+                    setSelectedConversationId(null);
                     setView("chat");
                   }}
                   className="btn-secondary inline-flex items-center gap-1.5"

@@ -76,6 +76,10 @@ export default function ChatWindow() {
   const [isStreaming, setIsStreaming] = useState(false);
   const currentAssistantRef = useRef<ChatMessage | null>(null);
   const initializedRef = useRef<string | null>(null);
+  const pendingInitRef = useRef<string | null>(null);
+  const pendingSendRef = useRef<{ conversationId: string; text: string } | null>(null);
+  const sendMessageRef = useRef<((text: string, conversationId: string) => void) | null>(null);
+  const reinitRef = useRef<() => void>(() => {});
   const responseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // When channel changes, reset conversation state so a fresh harness is created
@@ -89,6 +93,8 @@ export default function ChatWindow() {
       setSelectedConversationId(null);
       setMessages([]);
       initializedRef.current = null;
+      pendingInitRef.current = null;
+      pendingSendRef.current = null;
       currentAssistantRef.current = null;
       if (responseTimeoutRef.current) {
         clearTimeout(responseTimeoutRef.current);
@@ -98,13 +104,31 @@ export default function ChatWindow() {
     }
   }, [activeChannel]);
 
+  /** Insert the assistant message or update it in place. */
+  const upsertMessage = useCallback((message: ChatMessage) => {
+    setMessages((prev) =>
+      prev.some((m) => m.id === message.id)
+        ? prev.map((m) => (m.id === message.id ? message : m))
+        : [...prev, message]
+    );
+  }, []);
+
   const handleWsEvent = useCallback((data: unknown) => {
     const event = data as { type: string; [key: string]: unknown };
 
     if (event.type === "connected") return;
 
     if (event.type === "init_success") {
-      initializedRef.current = event.conversationId as string;
+      const conversationId = event.conversationId as string;
+      initializedRef.current = conversationId;
+      pendingInitRef.current = null;
+      // A message sent while the session was still initializing (or while the
+      // socket was reconnecting) is delivered only now.
+      const pending = pendingSendRef.current;
+      if (pending && pending.conversationId === conversationId) {
+        pendingSendRef.current = null;
+        sendMessageRef.current?.(pending.text, conversationId);
+      }
       return;
     }
 
@@ -129,29 +153,35 @@ export default function ChatWindow() {
           responseTimeoutRef.current = null;
         }
         // Remove any timeout hint messages since agent is now responding
-        setMessages((prev) => {
-          const filtered = prev.filter(m => !m.id.startsWith("timeout-"));
-          return [...filtered, processed];
-        });
+        setMessages((prev) => prev.filter((m) => !m.id.startsWith("timeout-")));
+        upsertMessage(processed);
       } else if (event.type === "agent_end" || event.type === "error") {
         setIsStreaming(false);
-        setMessages((prev) =>
-          prev.map((m) => (m.id === processed.id ? processed : m))
-        );
+        if (event.type === "error") {
+          pendingInitRef.current = null;
+          pendingSendRef.current = null;
+        }
+        upsertMessage(processed);
         currentAssistantRef.current = null;
       } else {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === processed.id ? processed : m))
-        );
+        // message_start and error events can create a message when no agent
+        // turn is active — upsert (not map) so it is actually appended.
+        upsertMessage(processed);
       }
     }
-  }, []);
+  }, [upsertMessage]);
 
   const { send, isConnected } = useWebSocket({
     url: WS_URL,
     onMessage: handleWsEvent,
     onOpen: () => {
       conversationsApi.list(selectedDatasourceId ?? undefined).then(setConversations).catch(() => {});
+      // A (re)connected socket has no harness subscription on the server — the
+      // old one was bound to the previous socket (and may have been lost on a
+      // server restart). Reset the marker and re-initialize the active session.
+      initializedRef.current = null;
+      pendingInitRef.current = null;
+      reinitRef.current();
     },
   });
 
@@ -159,6 +189,30 @@ export default function ChatWindow() {
     send,
     onEvent: handleWsEvent,
   });
+
+  sendMessageRef.current = sendMessage;
+
+  /** Send `init` once per conversation (and once per socket connection). */
+  const requestInit = (conversationId: string) => {
+    if (!conversationId) return;
+    if (initializedRef.current === conversationId) return;
+    if (pendingInitRef.current === conversationId) return;
+    pendingInitRef.current = conversationId;
+    const state = useAppStore.getState();
+    initSession({
+      conversationId,
+      datasourceId: state.selectedDatasourceId ?? undefined,
+      datasourceName: state.selectedDatasourceName ?? undefined,
+      modelProvider: state.modelProvider ?? undefined,
+      modelId: state.modelId ?? undefined,
+      agentType: state.activeChannel,
+    });
+  };
+
+  reinitRef.current = () => {
+    const conversationId = useAppStore.getState().selectedConversationId;
+    if (conversationId) requestInit(conversationId);
+  };
 
   const handleNewConversation = async () => {
     try {
@@ -279,18 +333,22 @@ export default function ChatWindow() {
           };
           setMessages([userMsg]);
 
-          initSession({
-            conversationId: conv.id,
-            datasourceId: selectedDatasourceId ?? undefined,
-            datasourceName: selectedDatasourceName ?? undefined,
-            modelProvider: modelProvider ?? undefined,
-            modelId: modelId ?? undefined,
-            agentType: activeChannel,
-          });
-
-          setTimeout(() => {
-            sendMessage(text, conv.id);
-          }, 500);
+          // Wait for init_success before sending — a fixed delay raced with
+          // slower init work (e.g. schema discovery) and lost the message.
+          pendingSendRef.current = { conversationId: conv.id, text };
+          requestInit(conv.id);
+        })
+        .catch((err) => {
+          setIsStreaming(false);
+          const message = err instanceof Error ? err.message : String(err);
+          setMessages((prev) => [...prev, {
+            id: uniqueId("assistant"),
+            role: "assistant",
+            content: `⚠️ 创建会话失败：${message}`,
+            timestamp: Date.now(),
+            isStreaming: false,
+            steps: [],
+          }]);
         });
       return;
     }
@@ -302,7 +360,16 @@ export default function ChatWindow() {
       timestamp: Date.now(),
     };
     setMessages((prev) => [...prev, userMsg]);
-    sendMessage(text, selectedConversationId);
+
+    if (!isConnected || initializedRef.current !== selectedConversationId) {
+      // Session was never initialized on this socket (fresh page, agent
+      // channel switch, or backend restart), or the socket is reconnecting.
+      // Initialize first, then send once init_success arrives.
+      pendingSendRef.current = { conversationId: selectedConversationId, text };
+      requestInit(selectedConversationId);
+    } else {
+      sendMessage(text, selectedConversationId);
+    }
   };
 
   // Handle confirm action from ConfirmActionCard

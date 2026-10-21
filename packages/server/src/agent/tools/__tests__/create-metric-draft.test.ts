@@ -98,7 +98,7 @@ describe("create_metric_draft: confirm-state guard (Problem 2)", () => {
     expect(mockedCreateMetric).not.toHaveBeenCalled();
   });
 
-  test("saves successfully when confirmation is confirmed, then clears state", async () => {
+  test("saves successfully when confirmation is confirmed", async () => {
     setPending("conv-metric-1", "confirm-1", "save_draft", ["月度营收"]);
     markConfirmed("conv-metric-1", "confirm-1");
 
@@ -120,6 +120,18 @@ describe("create_metric_draft: confirm-state guard (Problem 2)", () => {
 
     expect(result.details.created).toBe(true);
     expect(mockedCreateMetric).toHaveBeenCalled();
+  });
+
+  test("keeps the confirmation valid for the rest of the batch", async () => {
+    setPending("conv-metric-1", "confirm-1", "save_draft", ["月度营收", "订单量"]);
+    markConfirmed("conv-metric-1", "confirm-1");
+
+    const first: any = await runTool(baseParams);
+    const second: any = await runTool({ ...baseParams, name: "order_count", display_name: "订单量" });
+
+    expect(first.details.created).toBe(true);
+    expect(second.details.created).toBe(true);
+    expect(mockedCreateMetric).toHaveBeenCalledTimes(2);
   });
 });
 

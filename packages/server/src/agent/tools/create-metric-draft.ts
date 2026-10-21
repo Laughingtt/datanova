@@ -3,7 +3,7 @@ import type { AgentTool } from "@earendil-works/pi-agent-core";
 import { createMetric, checkMetricNameConflict } from "../../store.js";
 import { validateSqlViaExplain } from "../../mysql/executor.js";
 import { normalizeSql } from "./sql-normalize.js";
-import { getPending, clear } from "../confirm-state.js";
+import { getPending } from "../confirm-state.js";
 
 const CreateMetricDraftParams = Type.Object({
   datasource_id: Type.String({ description: "数据源ID" }),
@@ -98,10 +98,7 @@ export function createCreateMetricDraftTool(): AgentTool<typeof CreateMetricDraf
           validation_result: JSON.stringify({ validated_at: new Date().toISOString() }),
         });
 
-        // 保存成功后清除确认态，避免同一确认被重复用于多次保存。
-        if (p.conversation_id) {
-          clear(p.conversation_id);
-        }
+        // 确认态由 chat-handler 在本轮结束统一清除，以便一次确认可保存一批指标。
 
         return {
           content: [{ type: "text" as const, text: `✅ 指标草稿已创建: ${metric.display_name} (${metric.name})\n类型: ${metric.metric_type} | 状态: 草稿 | 验证: 通过\nSQL: ${metric.sql.substring(0, 100)}${metric.sql.length > 100 ? "..." : ""}\n\n请前往指标管理页面审核并发布。` }],

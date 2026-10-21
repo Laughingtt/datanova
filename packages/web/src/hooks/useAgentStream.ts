@@ -249,7 +249,7 @@ export function processWsEvent(
     case "tool_execution_start": {
       if (!currentAssistantMessage) return null;
       const step: AgentStep = {
-        id: `step-${Date.now()}`,
+        id: uniqueId("step"),
         type: "tool_call",
         toolName: (event.toolName as string) ?? "unknown",
         args: (event.args as Record<string, unknown>) ?? {},

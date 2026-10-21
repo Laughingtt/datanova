@@ -1,103 +1,126 @@
-import { getModel, type Model } from "@earendil-works/pi-ai";
+import {
+  createProvider,
+  envApiKeyAuth,
+  type Model,
+} from "@earendil-works/pi-ai";
+import { openAICompletionsApi } from "@earendil-works/pi-ai/api/openai-completions.lazy";
+import { builtinModels } from "@earendil-works/pi-ai/providers/all";
+
+/**
+ * Shared pi-ai model collection (pi-ai 1.3.x).
+ *
+ * `builtinModels()` registers every built-in provider factory, so requests
+ * resolve auth (ANTHROPIC_API_KEY, OPENAI_API_KEY, DEEPSEEK_API_KEY, …) from
+ * the environment automatically — no `getEnvApiKey` plumbing is required.
+ */
+export const models = builtinModels();
+
+/**
+ * Stream function handed to every pi Agent. `Models.streamSimple` satisfies
+ * pi-agent-core's `StreamFn` contract and handles provider dispatch + auth.
+ */
+export const streamFn = models.streamSimple.bind(models);
 
 /**
  * Custom (OpenAI-compatible) models that aren't in pi-ai's built-in registry
- * but should be selectable in the UI. Each entry pairs a provider with the
- * list of model ids that resolveModel() can construct for it.
- *
- * Listed alongside pi-ai's built-ins by /api/models so users can pick them
- * explicitly. The actual API key is still resolved by getEnvApiKey(provider).
+ * (or whose built-in provider targets a different endpoint) but should still
+ * be selectable in the UI.
  */
 export const CUSTOM_MODELS: ReadonlyArray<{ provider: string; id: string; name: string; contextWindow: number }> = [
-  // MiniMax M-series — OpenAI-compatible, https://api.minimaxi.com/v1
-  { provider: "minimax", id: "MiniMax-M3",     name: "MiniMax M3",         contextWindow: 1_000_000 },
-  { provider: "minimax", id: "MiniMax-Text-01", name: "MiniMax Text-01",    contextWindow: 1_000_000 },
-  // MiniMax M-series — China endpoint, https://api.minimaxi.cn/v1
-  { provider: "minimax-cn", id: "MiniMax-M3",     name: "MiniMax M3 (中国版)",   contextWindow: 1_000_000 },
+  { provider: "minimax", id: "MiniMax-M3", name: "MiniMax M3", contextWindow: 1_000_000 },
+  { provider: "minimax", id: "MiniMax-Text-01", name: "MiniMax Text-01", contextWindow: 1_000_000 },
+  { provider: "minimax-cn", id: "MiniMax-M3", name: "MiniMax M3 (中国版)", contextWindow: 1_000_000 },
   { provider: "minimax-cn", id: "MiniMax-Text-01", name: "MiniMax Text-01 (中国版)", contextWindow: 1_000_000 },
 ];
 
 /**
- * Resolve a Model for a given provider/modelId pair.
+ * Build a MiniMax chat model on the OpenAI-compatible endpoint.
  *
- * Two strategies, applied in order:
+ * pi-ai 1.3's built-in `minimax` provider targets the Anthropic-compatible
+ * international endpoint (`api.minimax.io/anthropic`), which rejects keys
+ * issued for the OpenAI-compatible endpoints used by this deployment. We
+ * override the provider below so existing MINIMAX_API_KEY values keep working.
+ */
+function buildMiniMaxModel(
+  provider: "minimax" | "minimax-cn",
+  baseUrl: string,
+  id: string,
+  name: string,
+): Model<"openai-completions"> {
+  return {
+    id,
+    name,
+    api: "openai-completions",
+    provider,
+    baseUrl,
+    reasoning: true,
+    input: ["text"],
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    contextWindow: 1_000_000,
+    maxTokens: 8192,
+    compat: {
+      // MiniMax returns token usage even when streaming.
+      supportsUsageInStreaming: true,
+      // MiniMax streams thinking inline (<think>...</think>) rather than as
+      // separate reasoning_content blocks, so pi-ai needs to parse it.
+      requiresThinkingAsText: true,
+      // MiniMax uses the legacy OpenAI `max_tokens` field, not `max_completion_tokens`.
+      maxTokensField: "max_tokens",
+      // MiniMax expects the OpenAI `tool` role in tool results (default).
+      requiresToolResultName: true,
+    },
+  };
+}
+
+function registerMiniMaxProviders(): void {
+  models.setProvider(createProvider({
+    id: "minimax",
+    name: "MiniMax",
+    baseUrl: "https://api.minimaxi.com/v1",
+    auth: { apiKey: envApiKeyAuth("MiniMax API key", ["MINIMAX_API_KEY"]) },
+    models: [
+      buildMiniMaxModel("minimax", "https://api.minimaxi.com/v1", "MiniMax-M3", "MiniMax M3"),
+      buildMiniMaxModel("minimax", "https://api.minimaxi.com/v1", "MiniMax-Text-01", "MiniMax Text-01"),
+    ],
+    api: openAICompletionsApi(),
+  }));
+
+  models.setProvider(createProvider({
+    id: "minimax-cn",
+    name: "MiniMax (China)",
+    baseUrl: "https://api.minimaxi.cn/v1",
+    auth: { apiKey: envApiKeyAuth("MiniMax China API key", ["MINIMAX_CN_API_KEY"]) },
+    models: [
+      buildMiniMaxModel("minimax-cn", "https://api.minimaxi.cn/v1", "MiniMax-M3", "MiniMax M3 (中国版)"),
+      buildMiniMaxModel("minimax-cn", "https://api.minimaxi.cn/v1", "MiniMax-Text-01", "MiniMax Text-01 (中国版)"),
+    ],
+    api: openAICompletionsApi(),
+  }));
+}
+
+registerMiniMaxProviders();
+
+/**
+ * Resolve a Model for a provider/modelId pair from the registered catalog.
  *
- * 1. Try the pi-ai built-in model registry (covers Anthropic, OpenAI, Gemini,
- *    DeepSeek, Moonshot, ZAI, MiniMax-M2.7, etc.). This works for any provider
- *    whose ENV-key + base URL is hardcoded in pi-ai.
- *
- * 2. Construct a custom OpenAI-compatible Model on the fly. Used for models
- *    that aren't yet in pi-ai's generated MODELS table (e.g. newer MiniMax
- *    checkpoints such as MiniMax-M3) but speak the standard OpenAI chat-
- *    completions protocol on a custom base URL.
- *
- * API keys are resolved separately by `getEnvApiKey(model.provider)` in each
- * harness's `getApiKeyAndHeaders` callback. pi-ai already maps provider →
- * env var name (see env-api-keys.js); the provider strings used here must
- * match what pi-ai expects.
+ * To support a model that isn't in the catalog yet, register a provider with
+ * `createProvider()` on `models` (see registerMiniMaxProviders above).
  */
 export function resolveModel(provider: string, modelId: string): Model<any> {
-  // Strategy 1 — built-in registry
-  try {
-    const known = getModel(provider as any, modelId as any);
-    if (known) return known as Model<any>;
-  } catch {
-    // Unknown combination — fall through to custom construction.
-  }
-
-  // Strategy 2 — custom OpenAI-compatible construction
-  const custom = buildCustomModel(provider, modelId);
-  if (custom) return custom;
+  const model = models.getModel(provider, modelId);
+  if (model) return model as Model<any>;
 
   throw new Error(
     `Unsupported model "${modelId}" for provider "${provider}". ` +
-    `Either upgrade @earendil-works/pi-ai, or add a builder in model-provider.ts.`
+    `Either upgrade @earendil-works/pi-ai, or register a provider in model-provider.ts.`
   );
 }
 
-/**
- * Custom-model factories keyed by provider. Add new providers here when a
- * vendor publishes a new model that's OpenAI-compatible on a custom base URL.
- */
-function buildCustomModel(provider: string, modelId: string): Model<any> | null {
-  // ---- MiniMax (MiniMax AI, https://api.minimaxi.com/v1) ----
-  // Compatible with OpenAI /v1/chat/completions. Supports streaming + thinking
-  // (model emits inline <think>...</think> markers in its content, so we
-  // configure pi-ai to extract them as proper thinking blocks).
-  if (provider === "minimax" || provider === "MiniMax") {
-    return {
-      id: modelId,
-      name: `MiniMax ${modelId.replace(/^MiniMax-/i, "")}`,
-      api: "openai-completions",
-      provider: "minimax",
-      baseUrl: "https://api.minimaxi.com/v1",
-      reasoning: true,
-      input: ["text"],
-      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-      contextWindow: 1_000_000,
-      maxTokens: 8192,
-      compat: {
-        // MiniMax returns token usage even when streaming.
-        supportsUsageInStreaming: true,
-        // MiniMax streams thinking inline (<think>...</think>) rather than as
-        // separate reasoning_content blocks, so pi-ai needs to parse it.
-        requiresThinkingAsText: true,
-        // MiniMax uses the legacy OpenAI `max_tokens` field, not `max_completion_tokens`.
-        maxTokensField: "max_tokens",
-        // MiniMax expects the OpenAI `tool` role in tool results (default).
-        requiresToolResultName: true,
-      },
-    };
+/** True when the provider has complete auth configuration (env key, stored credential, …). */
+export async function isProviderConfigured(provider: string): Promise<boolean> {
+  try {
+    return !!(await models.checkAuth(provider));
+  } catch {
+    return false;
   }
-
-  // ---- MiniMax 中国大陆版 (https://api.minimaxi.cn/v1) ----
-  if (provider === "minimax-cn") {
-    return {
-      ...buildCustomModel("minimax", modelId)!,
-      provider: "minimax-cn",
-      baseUrl: "https://api.minimaxi.cn/v1",
-    };
-  }
-
-  return null;
 }

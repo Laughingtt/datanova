@@ -45,18 +45,22 @@ function registerAllAgents(): void {
     description: "AI辅助开发业务指标和维度",
     color: "var(--success)",
     version: "1.0.0",
-    capabilities: ["探索数据源", "生成指标SQL", "自动验证修复", "检查指标冲突", "创建指标草稿"],
+    capabilities: ["探索数据源", "生成指标SQL", "自动验证修复", "检查指标冲突", "创建指标草稿", "编辑/发布/删除指标与维度"],
     toolSet: [
       "discover_schema", "execute_sql", "lookup_semantic_layer",
       "lookup_examples", "read_skill",
       "validate_and_test_metric", "check_metric_conflict",
       "create_metric_draft", "create_dimension_draft",
+      "list_semantic_definitions",
+      "update_metric", "delete_metric",
+      "update_dimension", "delete_dimension",
+      "update_semantic_model", "delete_semantic_model",
       "request_user_confirm",
     ],
     systemPromptBuilder: (ctx) => buildMetricDevSystemPrompt(ctx),
     harnessFactory: (options, tools) => createMetricDevHarness(options, tools),
     entryPoints: [{ view: "metrics", label: "🤖 AI开发指标" }],
-    welcomeMessage: "你好！我是指标开发助手，可以帮你开发和验证业务指标。\n\n我可以：\n• 根据你的描述生成指标SQL\n• 自动验证SQL正确性并测试\n• 检查与已有指标的冲突\n• 创建指标和维度草稿\n\n请描述你需要什么指标？",
+    welcomeMessage: "你好！我是指标开发助手，可以帮你开发和维护业务指标。\n\n我可以：\n• 根据你的描述生成指标SQL\n• 自动验证SQL正确性并测试\n• 检查与已有指标的冲突\n• 创建指标和维度草稿\n• 编辑、发布、弃用或删除已有指标/维度/模型\n\n请描述你需要什么指标？",
   });
 
   // 链路审计Agent（管理员视角）— 不查询用户数据库，只根据 trace 反推功能 Agent 决策链

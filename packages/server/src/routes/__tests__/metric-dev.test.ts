@@ -14,9 +14,9 @@ describe("Agent Registry", () => {
     expect(agents.find(a => a.id === "metric_dev")).toBeDefined();
   });
 
-  it("metric_dev agent should have 10 tools", () => {
+  it("metric_dev agent should have 17 tools", () => {
     const tools = agentRegistry.getAgentTools("metric_dev");
-    expect(tools.length).toBe(10);
+    expect(tools.length).toBe(17);
     const toolNames = tools.map(t => t.name);
     expect(toolNames).toContain("discover_schema");
     expect(toolNames).toContain("execute_sql");
@@ -25,6 +25,14 @@ describe("Agent Registry", () => {
     expect(toolNames).toContain("create_metric_draft");
     expect(toolNames).toContain("create_dimension_draft");
     expect(toolNames).toContain("request_user_confirm");
+    // 指标管理页面同等操作
+    expect(toolNames).toContain("list_semantic_definitions");
+    expect(toolNames).toContain("update_metric");
+    expect(toolNames).toContain("delete_metric");
+    expect(toolNames).toContain("update_dimension");
+    expect(toolNames).toContain("delete_dimension");
+    expect(toolNames).toContain("update_semantic_model");
+    expect(toolNames).toContain("delete_semantic_model");
   });
 
   it("query agent should have 6 tools", () => {

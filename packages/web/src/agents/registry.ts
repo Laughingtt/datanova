@@ -17,9 +17,9 @@ export const AGENT_REGISTRY: AgentInfo[] = [
     icon: "📊",
     description: "AI辅助开发业务指标和维度",
     color: "var(--success)",
-    capabilities: ["探索数据源", "生成指标SQL", "自动验证修复", "检查指标冲突", "创建指标草稿"],
+    capabilities: ["探索数据源", "生成指标SQL", "自动验证修复", "检查指标冲突", "创建指标草稿", "编辑/发布/删除指标与维度"],
     entryPoints: [{ view: "metrics", label: "🤖 AI开发指标" }],
-    welcomeMessage: "你好！我是指标开发助手，可以帮你开发和验证业务指标。\n\n我可以：\n• 根据你的描述生成指标SQL\n• 自动验证SQL正确性并测试\n• 检查与已有指标的冲突\n• 创建指标和维度草稿\n\n请描述你需要什么指标？",
+    welcomeMessage: "你好！我是指标开发助手，可以帮你开发和维护业务指标。\n\n我可以：\n• 根据你的描述生成指标SQL\n• 自动验证SQL正确性并测试\n• 检查与已有指标的冲突\n• 创建指标和维度草稿\n• 编辑、发布、弃用或删除已有指标/维度/模型\n\n请描述你需要什么指标？",
   },
 ];
 

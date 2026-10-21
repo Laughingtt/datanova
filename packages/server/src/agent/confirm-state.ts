@@ -84,8 +84,19 @@ export function markCancelled(conversationId: string, confirmId?: string): boole
   return true;
 }
 
-/** Clear confirmation state for a conversation (e.g. after a successful save). */
-export function clear(conversationId: string): void {
+/**
+ * Clear confirmation state for a conversation.
+ *
+ * When `confirmId` is given, only that confirmation is cleared. The whole
+ * confirmed batch (e.g. 8 metrics saved after one confirmation card) relies on
+ * this: the state is cleared after the confirmed turn finishes, not after the
+ * first successful write.
+ */
+export function clear(conversationId: string, confirmId?: string): void {
+  if (confirmId) {
+    const state = store.get(conversationId);
+    if (state && state.confirmId !== confirmId) return;
+  }
   store.delete(conversationId);
 }
 

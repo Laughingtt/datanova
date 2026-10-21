@@ -1,6 +1,6 @@
 import { Type, type Static } from "@sinclair/typebox";
-import type { AgentTool, Skill } from "@earendil-works/pi-agent-core";
-import { formatSkillInvocation } from "@earendil-works/pi-agent-core";
+import type { AgentTool } from "@earendil-works/pi-agent-core";
+import { formatSkillInvocation, type Skill } from "../skills-format.js";
 
 const ReadSkillParams = Type.Object({
   skill_name: Type.String({
@@ -13,9 +13,9 @@ type ReadSkillParams = Static<typeof ReadSkillParams>;
 /**
  * Create the read_skill tool for progressive skill loading.
  *
- * Uses the SDK's formatSkillInvocation() to format the full skill content
- * when the Agent requests it. Skills are looked up from the resources.skills
- * array that was loaded at harness creation time.
+ * Uses the local formatSkillInvocation() to format the full skill content
+ * when the Agent requests it. Skills are looked up from the loader callback
+ * (skills-format.ts defines the Skill type and formatters).
  *
  * For query skills (qs- prefix), the tool loads fresh content
  * from the database to ensure the latest query strategies are applied.

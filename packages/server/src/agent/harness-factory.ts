@@ -1,6 +1,6 @@
-import { AgentHarness, InMemorySessionRepo, type Skill, type AgentTool, type ExecutionEnv } from "@earendil-works/pi-agent-core";
-import { getEnvApiKey } from "@earendil-works/pi-ai";
-import { resolveModel } from "./model-provider.js";
+import { Agent, type AgentTool } from "@earendil-works/pi-agent-core";
+import { createInitialSystemMessage, toToolDeclaration } from "@earendil-works/pi-ai";
+import { resolveModel, streamFn } from "./model-provider.js";
 import { createDiscoverSchemaTool } from "./tools/discover-schema.js";
 import { createExecuteSqlTool } from "./tools/execute-sql.js";
 import { createAiAnnotateSchemaTool } from "./tools/ai-annotate-schema.js";
@@ -11,8 +11,10 @@ import { createReadSkillTool } from "./tools/read-skill.js";
 import { buildDataNovaSystemPrompt, type DataNovaSystemPromptOptions } from "./prompt-builder.js";
 import { loadAllSkills } from "./skill-manager.js";
 
-export const harnessMap = new Map<string, AgentHarness>();
-const sessionRepo = new InMemorySessionRepo();
+/** Conversation id → running pi Agent. */
+export const harnessMap = new Map<string, Agent>();
+/** Conversation id → creation options, kept so the system prompt can be rebuilt. */
+const harnessOptionsMap = new Map<string, CreateHarnessOptions>();
 
 export interface CreateHarnessOptions {
   conversationId: string;
@@ -23,7 +25,7 @@ export interface CreateHarnessOptions {
   customInstructions?: string;
 }
 
-export async function createHarness(options: CreateHarnessOptions): Promise<AgentHarness> {
+export async function createHarness(options: CreateHarnessOptions): Promise<Agent> {
   // Remove existing harness if any
   if (harnessMap.has(options.conversationId)) {
     await removeHarness(options.conversationId);
@@ -52,55 +54,62 @@ export async function createHarness(options: CreateHarnessOptions): Promise<Agen
     customInstructions: options.customInstructions,
   };
 
-  // Create session
-  const session = await sessionRepo.create({ id: options.conversationId });
-
   // Get model
   const provider = options.modelProvider ?? process.env.DATANOVA_PROVIDER ?? "anthropic";
   const modelId = options.modelId ?? process.env.DATANOVA_MODEL ?? "claude-sonnet-5";
   const model = resolveModel(provider, modelId);
 
-  // Create harness — API key is resolved automatically by pi-ai from
-  // environment variables (ANTHROPIC_API_KEY, OPENAI_API_KEY, etc.)
-  // via getEnvApiKey(). We provide getApiKeyAndHeaders so that
-  // compact() / navigateTree() also work (they require explicit auth).
-  const harness = new AgentHarness({
-    env: createMinimalEnv(),
-    session,
-    tools,
-    resources: {
-      skills,
+  // pi-agent-core 1.3: Agent owns transcript + tool execution. Auth is resolved
+  // by pi-ai's Models collection from environment variables (ANTHROPIC_API_KEY,
+  // OPENAI_API_KEY, DEEPSEEK_API_KEY, …) on every request.
+  //
+  // toolExecution is "sequential" because several tools mutate shared draft /
+  // confirmation state in call order (request_user_confirm → create_*_draft).
+  const agent = new Agent({
+    initialState: {
+      systemPrompt: buildDataNovaSystemPrompt(promptOptions),
+      model,
+      tools,
     },
-    systemPrompt: buildDataNovaSystemPrompt(promptOptions),
-    model,
-    getApiKeyAndHeaders: async (model) => {
-      const apiKey = getEnvApiKey(model.provider);
-      if (!apiKey) {
-        throw new Error(
-          `No API key found for provider "${model.provider}". ` +
-          `Please set the corresponding environment variable (e.g. ANTHROPIC_API_KEY, OPENAI_API_KEY).`
-        );
-      }
-      return { apiKey, headers: {} };
-    },
+    streamFn,
+    sessionId: options.conversationId,
+    toolExecution: "sequential",
   });
 
-  harnessMap.set(options.conversationId, harness);
-  return harness;
+  harnessMap.set(options.conversationId, agent);
+  harnessOptionsMap.set(options.conversationId, options);
+  return agent;
 }
 
-export function getHarness(conversationId: string): AgentHarness | undefined {
+export function getHarness(conversationId: string): Agent | undefined {
   return harnessMap.get(conversationId);
 }
 
 export async function refreshHarnessSkills(conversationId: string): Promise<void> {
   const harness = harnessMap.get(conversationId);
-  if (!harness) return;
+  const options = harnessOptionsMap.get(conversationId);
+  if (!harness || !options) return;
+  // Never rewrite the transcript while a run is in flight.
+  if (harness.state.isStreaming) return;
 
   const skills = loadAllSkills();
-  await harness.setResources({
+  const systemPrompt = buildDataNovaSystemPrompt({
+    datasourceId: options.datasourceId,
+    datasourceName: options.datasourceName,
     skills,
+    customInstructions: options.customInstructions,
   });
+
+  const systemMessage = createInitialSystemMessage(
+    systemPrompt,
+    harness.state.tools.map(toToolDeclaration),
+  );
+  if (!systemMessage) return;
+
+  // Replace the leading system message (prompt + tool declarations) and keep
+  // the conversation transcript intact.
+  const transcript = harness.state.messages.filter((message) => message.role !== "system");
+  harness.state.messages = [systemMessage, ...transcript];
 }
 
 /**
@@ -121,42 +130,11 @@ export async function removeHarness(conversationId: string): Promise<void> {
   const harness = harnessMap.get(conversationId);
   if (harness) {
     try {
-      await harness.abort();
+      harness.abort();
     } catch {
       // Ignore abort errors
     }
     harnessMap.delete(conversationId);
+    harnessOptionsMap.delete(conversationId);
   }
-}
-
-/**
- * Create a minimal ExecutionEnv for the harness.
- * DataNova doesn't need shell or filesystem access.
- * We use a type assertion since all stub methods are intentionally disabled
- * but the full interface requires specific parameter signatures.
- */
-function createMinimalEnv(): ExecutionEnv {
-  return {
-    cwd: process.cwd(),
-    absolutePath: async (p: string) => ({ ok: true as const, value: p }),
-    joinPath: async (parts: string[]) => ({ ok: true as const, value: parts.join("/") }),
-    readTextFile: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
-    readTextLines: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
-    readBinaryFile: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
-    writeFile: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
-    appendFile: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
-    fileInfo: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
-    listDir: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
-    canonicalPath: async (p: string) => ({ ok: true as const, value: p }),
-    exists: async () => ({ ok: true as const, value: false }),
-    createDir: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
-    remove: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
-    createTempDir: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
-    createTempFile: async () => ({ ok: false as const, error: new Error("Not supported") as any }),
-    cleanup: async () => {},
-    exec: async () => ({
-      ok: false as const,
-      error: new Error("Shell not available in DataNova") as any,
-    }),
-  } as ExecutionEnv;
 }

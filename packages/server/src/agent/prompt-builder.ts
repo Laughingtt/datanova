@@ -1,5 +1,4 @@
-import { formatSkillsForSystemPrompt } from "@earendil-works/pi-agent-core";
-import type { Skill } from "@earendil-works/pi-agent-core";
+import { formatSkillsForSystemPrompt, type Skill } from "./skills-format.js";
 import { getAnnotations } from "../store.js";
 import { listDatasources } from "../store.js";
 import { discoverSchema } from "../mysql/discovery.js";
@@ -183,7 +182,7 @@ For example, if a skill named "qs-abc123" has description "账单: 客户账单�
 
 /**
  * Build a dynamic system prompt that includes schema context.
- * This is used as a callback in AgentHarness options.
+ * Legacy helper kept for callers that rebuild the prompt per run.
  */
 export function createSystemPromptCallback(
   baseOptions: DataNovaSystemPromptOptions

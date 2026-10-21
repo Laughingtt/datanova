@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { SKILLS_DIR } from "../config.js";
-import type { Skill } from "@earendil-works/pi-agent-core";
+import type { Skill } from "./skills-format.js";
 
 export interface SkillFile {
   name: string;

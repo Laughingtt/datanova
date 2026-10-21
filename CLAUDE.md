@@ -11,7 +11,7 @@ DataNova is an AI-powered SQL data query assistant. Users interact via natural l
 - **Monorepo**: npm workspaces (`packages/server`, `packages/web`)
 - **Backend**: Hono + Node.js (ESM, `"type": "module"`), better-sqlite3 (metadata), mysql2 (user queries)
 - **Frontend**: React 19 + Vite 6 + TailwindCSS 3 + Zustand 5 + TanStack Table + Recharts
-- **AI**: @earendil-works/pi-agent-core (AgentHarness), @earendil-works/pi-ai (multi-provider LLM config — NOT a callable client)
+- **AI**: @earendil-works/pi-agent-core 1.3.x (`Agent`), @earendil-works/pi-ai 1.3.x (`createModels` / `builtinModels`, provider factories — `Model` is config only)
 - **Chinese NLP**: nodejieba (中文分词, used in tokenizer for semantic layer & example lookup)
 - **Schema validation**: @sinclair/typebox
 - **Encryption**: AES-256-GCM (datasource passwords)
@@ -56,7 +56,7 @@ chat-handler.ts → agentType routing:
   "query" → harnessMap.get(conversationId) → harness.prompt(text)
   other   → agentRegistry.createHarness(agentType, opts)
   ↓
-AgentHarness → LLM API (multi-turn tool calls)
+Agent (pi-agent-core) → LLM API (multi-turn tool calls)
   ↓
 forwardEvent(ws, event) → WebSocket → processWsEvent() → React re-render
 ```
@@ -68,7 +68,7 @@ DataNova uses a **Multi-Agent framework** built on `AgentRegistry` (agent-regist
 | Agent | ID | Tools | System Prompt |
 |---|---|---|---|
 | 智能问数 | `query` | discover_schema, execute_sql, lookup_semantic_layer, lookup_examples, read_skill, ai_annotate_schema | `buildDataNovaSystemPrompt()` |
-| 指标开发 | `metric_dev` | discover_schema, execute_sql, lookup_semantic_layer, lookup_examples, read_skill, validate_and_test_metric, check_metric_conflict, create_metric_draft, create_dimension_draft, request_user_confirm | `buildMetricDevSystemPrompt()` |
+| 指标开发 | `metric_dev` | discover_schema, execute_sql, lookup_semantic_layer, lookup_examples, read_skill, validate_and_test_metric, check_metric_conflict, create_metric_draft, create_dimension_draft, list_semantic_definitions, update_metric, delete_metric, update_dimension, delete_dimension, update_semantic_model, delete_semantic_model, request_user_confirm | `buildMetricDevSystemPrompt()` |
 
 **Agent routing flow**: `chat-handler.ts` reads `agentType` from the init payload. `query` uses the existing `createHarness()`, other agents go through `agentRegistry.createHarness()`.
 
@@ -141,7 +141,14 @@ Registered in `tool-registration.ts` into a shared pool, then each agent picks i
 | `check_metric_conflict` | `tools/check-metric-conflict.ts` | Check name/display_name conflicts against existing metrics | metric_dev |
 | `create_metric_draft` | `tools/create-metric-draft.ts` | Create metric as draft with EXPLAIN validation + conflict check | metric_dev |
 | `create_dimension_draft` | `tools/create-dimension-draft.ts` | Create dimension as draft | metric_dev |
-| `request_user_confirm` | `tools/request-confirm.ts` | Show confirmation card in chat UI before saving drafts | metric_dev |
+| `list_semantic_definitions` | `tools/list-semantic-definitions.ts` | List metrics/dimensions/models **including drafts** (mirrors the 指标管理 list; `lookup_semantic_layer` only returns published) | metric_dev |
+| `update_metric` | `tools/update-metric.ts` | Edit/publish/deprecate a metric (EXPLAIN-checks new SQL) | metric_dev |
+| `delete_metric` | `tools/delete-metric.ts` | Delete a metric | metric_dev |
+| `update_dimension` | `tools/update-dimension.ts` | Edit/publish/deprecate a dimension | metric_dev |
+| `delete_dimension` | `tools/delete-dimension.ts` | Delete a dimension | metric_dev |
+| `update_semantic_model` | `tools/update-semantic-model.ts` | Edit/publish/deprecate a semantic model | metric_dev |
+| `delete_semantic_model` | `tools/delete-semantic-model.ts` | Delete a semantic model | metric_dev |
+| `request_user_confirm` | `tools/request-confirm.ts` | Show confirmation card in chat UI before saving/updating/deleting definitions | metric_dev |
 
 Tool execute signature: `async (_toolCallId: string, params: any) => { content: [{type: "text", text}], details: {}, isError? }`
 
@@ -228,8 +235,12 @@ EXPLAIN + sql → 成功 {valid:true} / 失败 {valid:false, error}
 
 The pi-ai `Model` type only contains config fields (id, name, provider, cost, contextWindow) — it does NOT have call methods like `sendMessage`. Actual LLM interaction goes through:
 
-1. **AgentHarness** (pi-agent-core) — for multi-turn agent conversations with tool use
+1. **`Agent`** (pi-agent-core 1.3+) — for multi-turn agent conversations with tool use. Construct it with `initialState: { systemPrompt, model, tools }` and `streamFn` (shared `models.streamSimple` from `model-provider.ts`). `agent.prompt()` resolves with void; read the transcript (`agent.state.messages`) for the final text, and subscribe via `agent.subscribe()` for streaming events (`agent_start`, `turn_start`, `message_update`, `tool_execution_start/end`, `agent_end`).
 2. **Direct `fetch()`** — for single-shot AI calls (e.g., `generate-sql` in scheduled.ts, `ai-suggest-semantic` in semantic.ts)
+
+Model providers live in `agent/model-provider.ts`: `builtinModels()` registers all pi-ai providers (auth auto-resolved from env), and DataNova overrides `minimax` / `minimax-cn` with OpenAI-compatible providers because the built-in ones target the Anthropic-compatible endpoint.
+
+Skills are no longer a pi-agent-core concept: `skills-format.ts` provides the local `Skill` type, `formatSkillsForSystemPrompt()`, and `formatSkillInvocation()`.
 
 When using direct fetch, read the API key from `process.env.ANTHROPIC_API_KEY` or `process.env.DEEPSEEK_API_KEY` and call the provider's HTTP API directly.
 
@@ -301,7 +312,7 @@ See `.env.example`:
 - **Chain Auditor Agent (`chain_auditor`)**: A 管理员审计 agent (registered in `agent-registration.ts`, harness factory `chain-auditor-harness.ts`, prompt `prompt-builder-chain-auditor.ts`) that does NOT query user databases. Its sole tool is `infer_agent_chain`, which loads a trace's per-tool rationale + outcomes and uses an LLM (Anthropic, DeepSeek fallback, or deterministic fallback when no key) to reconstruct the full decision chain as structured JSON (`chain_summary`, `decision_points[]`, `self_correction_analysis`, `chain_verdict`, `verdict_reason`, `improvement_suggestions[]`). This is the "管理员能否根据功能 Agent 追踪推断出 Agent 链路" capability. Also exposed as `POST /api/agent-traces/:id/infer-chain` for direct UI invocation. Tool implementation: `agent/tools/infer-agent-chain.ts` (exports `inferAgentChain` core + `createInferAgentChainTool` wrapper).
 - **Single WebSocket connection**: All conversations share one WS connection; switch via `init` message with `agentType` parameter
 - **Optimistic UI**: User messages appear immediately without server confirmation
-- **InMemorySessionRepo**: Agent conversation context lives in memory — lost on restart. Messages themselves are persisted to SQLite via `saveMessage()`/`listMessages()`.
+- **In-memory agent transcript**: `Agent` conversation context (tool results, intermediate turns) lives in `agent.state.messages` — lost on restart. Messages themselves are persisted to SQLite via `saveMessage()`/`listMessages()`.
 - **Schema cache**: Populated by `discover_schema` tool, used by `validator.ts` for SQL validation
 - **Semantic layer SQL**: Deterministically built via `buildSemanticSql()` in `semantic-sql-builder.ts` — more reliable than LLM-generated SQL
 - **execute_sql records history**: Every SQL execution (success or error) is automatically saved to `sql_query_history` table
@@ -324,6 +335,7 @@ See `.env.example`:
   8. `request_user_confirm(title, items, action_type:"save_draft")` → 生成confirmId → details.confirmAction → chat-handler检测 → WS confirm_action事件 → 前端ConfirmActionCard渲染 → 用户[确认保存]/[取消]
   9. 用户确认后自动保存: `create_metric_draft` (冲突检查→EXPLAIN验证→createMetric({status:"draft",created_by:"agent",validation_status:"passed"})) / `create_dimension_draft` (createDimension({status:"draft",created_by:"agent"}))
   10. 通知用户 → MetricCard + DimensionCard + ValidationResult → "请前往指标管理页面审核并发布"
+- **Confirm-state lifecycle**: all metric_dev write tools (`create_*`, `update_*`, `delete_*`) require `getPending(conversation_id).status === "confirmed"`. `chat-handler` clears the confirmation **after the confirmed turn completes** (so one confirmation can save a whole batch) and also clears a stale confirmation when the user sends a new normal message. Tools no longer clear it themselves.
 - **Metric lifecycle extended**: `draft` → `published` → `deprecated`. New columns: `created_by` (manual/agent/ai_suggest), `agent_session_id`, `validation_status` (unvalidated/passed/failed), `validation_result`.
 - **Dimension lifecycle extended**: Same `draft` → `published` → `deprecated`. New columns: `created_by`, `agent_session_id`.
 - **Chinese tokenization**: `tokenizer.ts` (nodejieba) provides `tokenize()` function used by `lookup-semantic-layer` and `lookup-examples` for Chinese word segmentation

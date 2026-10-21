@@ -9,6 +9,13 @@ import { createValidateAndTestMetricTool } from "./tools/validate-and-test-metri
 import { createCheckMetricConflictTool } from "./tools/check-metric-conflict.js";
 import { createCreateMetricDraftTool } from "./tools/create-metric-draft.js";
 import { createCreateDimensionDraftTool } from "./tools/create-dimension-draft.js";
+import { createListSemanticDefinitionsTool } from "./tools/list-semantic-definitions.js";
+import { createUpdateMetricTool } from "./tools/update-metric.js";
+import { createDeleteMetricTool } from "./tools/delete-metric.js";
+import { createUpdateDimensionTool } from "./tools/update-dimension.js";
+import { createDeleteDimensionTool } from "./tools/delete-dimension.js";
+import { createUpdateSemanticModelTool } from "./tools/update-semantic-model.js";
+import { createDeleteSemanticModelTool } from "./tools/delete-semantic-model.js";
 import { createRequestUserConfirmTool } from "./tools/request-confirm.js";
 import { createInferAgentChainTool } from "./tools/infer-agent-chain.js";
 import { loadAllSkills } from "./skill-manager.js";
@@ -28,6 +35,14 @@ export function registerAllTools(registry: AgentRegistry): void {
   registry.registerTool(createCheckMetricConflictTool());
   registry.registerTool(createCreateMetricDraftTool());
   registry.registerTool(createCreateDimensionDraftTool());
+  // 指标管理页面同等操作：列出（含草稿）/ 编辑 / 发布 / 弃用 / 删除
+  registry.registerTool(createListSemanticDefinitionsTool());
+  registry.registerTool(createUpdateMetricTool());
+  registry.registerTool(createDeleteMetricTool());
+  registry.registerTool(createUpdateDimensionTool());
+  registry.registerTool(createDeleteDimensionTool());
+  registry.registerTool(createUpdateSemanticModelTool());
+  registry.registerTool(createDeleteSemanticModelTool());
   registry.registerTool(createRequestUserConfirmTool());
 
   // 管理员审计工具 — 供 chain_auditor Agent 反推功能 Agent 的决策链路
